@@ -1,0 +1,165 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from 'react';
+
+// circular progress ring
+interface CircularProgressProps {
+  currentDay: number;
+  totalDays: number;
+  status?: string;
+  size?: number;
+}
+
+export const CircularProgressRing: React.FC<CircularProgressProps> = ({
+  currentDay,
+  totalDays,
+  status = 'EM_ANDAMENTO',
+  size = 192,
+}) => {
+  const normDay = Math.max(0, currentDay);
+  const normTotal = Math.max(1, totalDays);
+  const percent = Math.min(100, Math.round((normDay / normTotal) * 100));
+  
+  const radius = 80;
+  const strokeWidth = 8;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  // Let's decide colors based on status
+  let ringColor = "text-sky-400";
+  let filterColor = "rgba(125, 211, 252, 0.3)";
+  if (status === 'PROXIMA') {
+    ringColor = "text-purple-400";
+    filterColor = "rgba(200, 160, 240, 0.3)";
+  } else if (status === 'ATRASADA') {
+    ringColor = "text-red-400";
+    filterColor = "rgba(255, 107, 107, 0.3)";
+  } else if (status === 'FINALIZADA') {
+    ringColor = "text-emerald-400";
+    filterColor = "rgba(74, 222, 128, 0.3)";
+  }
+
+  return (
+    <div className="relative flex flex-col items-center justify-center" style={{ width: size, height: size }}>
+      <svg className="w-full h-full transform -rotate-90">
+        {/* Background Circle */}
+        <circle
+          className="text-slate-800"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+        />
+        {/* Active Progress Circle */}
+        <circle
+          className={`transition-all duration-500 ease-out ${ringColor}`}
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="transparent"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          style={{
+            filter: `drop-shadow(0 0 6px ${filterColor})`
+          }}
+        />
+      </svg>
+      {/* Centered label */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        {status === 'ATRASADA' ? (
+          <>
+            <span className="text-3xl font-extrabold text-red-400">D+{normDay - normTotal}</span>
+            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Atraso</span>
+          </>
+        ) : (
+          <>
+            <span className="text-4xl font-extrabold text-slate-100">Dia {normDay}</span>
+            <span className="text-xs font-semibold text-slate-400">de {normTotal} Dias</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Historical temperature variation graph
+export const TempBarChart: React.FC = () => {
+  // Mocking 12 bars for 24h temperature fluctuation
+  const heights = [75, 80, 68, 100, 75, 82, 50, 75, 85, 80, 66, 100];
+  
+  return (
+    <div className="h-24 w-full flex items-end gap-1 px-1">
+      {heights.map((h, i) => (
+        <div key={i} className="flex-1 flex flex-col justify-end h-full">
+          <div 
+            style={{ height: `${h}%` }}
+            className="w-full bg-gradient-to-t from-sky-400/20 to-sky-400/60 rounded-t shadow-[0_0_8px_rgba(125,211,252,0.15)] hover:to-sky-300 hover:from-sky-500/30 transition-all duration-300 cursor-pointer"
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Mini progress bars for listings
+export const MiniProgressRing: React.FC<{ day: number; total: number; status?: string }> = ({
+  day,
+  total,
+  status = 'EM_ANDAMENTO',
+}) => {
+  const percent = Math.min(100, Math.round((day / total) * 100));
+  
+  const radius = 14;
+  const strokeWidth = 3;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  let color = "text-sky-400";
+  if (status === 'PROXIMA') color = "text-purple-400";
+  if (status === 'ATRASADA') color = "text-red-400";
+  if (status === 'FINALIZADA') color = "text-emerald-400";
+
+  return (
+    <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
+      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+        <circle
+          className="text-slate-800"
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          className={`${color} transition-all duration-500`}
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={`text-[9px] font-extrabold ${color}`}>
+          {status === 'ATRASADA' ? 'D+' : `D${day}`}
+        </span>
+        <span className="text-[7px] text-slate-500 font-medium leading-none">
+          {status === 'ATRASADA' ? 'Atr' : `f.${total}`}
+        </span>
+      </div>
+    </div>
+  );
+};

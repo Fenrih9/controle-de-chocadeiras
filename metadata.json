@@ -1,0 +1,6 @@
+{
+  "name": "Controle de Chocadeiras",
+  "description": "Aplicativo para controle, monitoramento e relatórios de chocadas de aves com interface moderna baseada em glassmorfismo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
