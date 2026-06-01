@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Egg, Search, Plus, Calendar, Thermometer, Droplets, ChevronLeft, Save, Sparkles, FileText, Check, Clipboard, Activity } from 'lucide-react';
-import { repo, DURACAO_INCUBACAO, addDays } from '../repository';
+import { Egg, Search, Plus, Calendar, Thermometer, Droplets, ChevronLeft, Save, Sparkles, FileText, Check, Clipboard, Activity, Pencil, Trash2 } from 'lucide-react';
+import { repo, DURACAO_INCUBACAO, addDays, getCurrentDateString } from '../repository';
 import { Chocada } from '../types';
-import { Button, Card, StatusChip, Input, Select } from './GlacierUI';
+import { Button, Card, StatusChip, Input, Select, ConfirmDialog } from './GlacierUI';
 import { CircularProgressRing, TempBarChart, MiniProgressRing } from './Charts';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,6 +21,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'TODOS' | 'ANDAMENTO' | 'ATRASADA' | 'FINALIZADA'>('TODOS');
   const [filteredChocadas, setFilteredChocadas] = useState<Chocada[]>([]);
+  const [delTarget, setDelTarget] = useState<string | null>(null);
 
   useEffect(() => {
     const list = repo.getChocadas();
@@ -41,6 +42,13 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
 
     setFilteredChocadas(result);
   }, [searchTerm, activeFilter]);
+
+  const handleConfirmDelete = () => {
+    if (!delTarget) return;
+    repo.deleteChocada(delTarget);
+    setFilteredChocadas(prev => prev.filter(ch => ch.id !== delTarget));
+    setDelTarget(null);
+  };
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
@@ -110,7 +118,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
             filteredChocadas.map((ch) => {
               const duration = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
               const start = new Date(ch.dataInicio + 'T12:00:00');
-              const now = new Date('2026-05-21T12:00:00');
+              const now = new Date(getCurrentDateString() + 'T12:00:00');
               const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
               const remaining = Math.max(0, duration - elapsed);
               const progressPercent = Math.min(100, Math.round((elapsed / duration) * 100));
@@ -133,7 +141,35 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                           <span>Início: {repo.formatReadableDate(ch.dataInicio)}</span>
                         </div>
                       </div>
-                      <StatusChip status={ch.status} />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <StatusChip status={ch.status} />
+                        {currentUser?.role !== 'LEITOR' && (
+                          <>
+                            <button
+                              type="button"
+                              title="Editar chocada"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onNavigate('chocada_editar', { id: ch.id });
+                              }}
+                              className="p-2 bg-slate-900/70 hover:bg-sky-500/10 text-slate-500 hover:text-sky-300 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              title="Excluir chocada"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setDelTarget(ch.id);
+                              }}
+                              className="p-2 bg-slate-900/70 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-1">
@@ -158,6 +194,15 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={delTarget !== null}
+        title="Excluir Chocada"
+        message="Deseja realmente remover esta chocada do cadastro? Os registros vinculados ficam preservados no banco, mas o lote sai das listas ativas."
+        confirmLabel="Excluir"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDelTarget(null)}
+      />
     </div>
   );
 };
@@ -173,6 +218,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   const { currentUser } = useAuth();
   const [chocada, setChocada] = useState<Chocada | undefined>(undefined);
   const [logs, setLogs] = useState<any[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     const data = repo.getChocadaById(id);
@@ -193,8 +239,14 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
 
   const duration = DURACAO_INCUBACAO[chocada.tipoOvo] || 21;
   const start = new Date(chocada.dataInicio + 'T12:00:00');
-  const now = new Date('2026-05-21T12:00:00');
+  const now = new Date(getCurrentDateString() + 'T12:00:00');
   const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+
+  const handleDelete = () => {
+    repo.deleteChocada(chocada.id);
+    setDeleteOpen(false);
+    onNavigate('chocadas_lista');
+  };
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
@@ -209,12 +261,20 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
           </span>
         </div>
         {currentUser?.role !== 'LEITOR' && (
-          <button 
-            onClick={() => onNavigate('chocada_editar', { id: chocada.id })}
-            className="text-xs font-bold text-sky-400 hover:underline uppercase"
-          >
-            Editar
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigate('chocada_editar', { id: chocada.id })}
+              className="text-xs font-bold text-sky-400 hover:underline uppercase"
+            >
+              Editar
+            </button>
+            <button
+              onClick={() => setDeleteOpen(true)}
+              className="text-xs font-bold text-red-400 hover:underline uppercase"
+            >
+              Excluir
+            </button>
+          </div>
         )}
       </header>
 
@@ -341,6 +401,15 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteOpen}
+        title="Excluir Chocada"
+        message={`Deseja realmente remover a chocada "${chocada.nome}" do cadastro?`}
+        confirmLabel="Excluir"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteOpen(false)}
+      />
     </div>
   );
 };
@@ -356,7 +425,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
   const [nome, setNome] = useState('');
   const [tipoOvo, setTipoOvo] = useState('Galinha');
   const [quantidadeOvosInicial, setQuantidadeInicial] = useState<number>(24);
-  const [dataInicio, setDataInicio] = useState('2026-05-21');
+  const [dataInicio, setDataInicio] = useState(getCurrentDateString());
   const [chocadeiraId, setChocadeiraId] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -392,24 +461,29 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
 
   const handleSave = () => {
     setErrorMsg('');
+    const existing = idToEdit ? repo.getChocadaById(idToEdit) : undefined;
+    if (idToEdit && !existing) {
+      setErrorMsg('Chocada nÃ£o encontrada para ediÃ§Ã£o.');
+      return;
+    }
     const formPayload: Chocada = {
-      id: idToEdit || '',
+      id: existing?.id || '',
       nome,
       tipoOvo,
       quantidadeOvosInicial,
-      quantidadeOvosAtivos: quantidadeOvosInicial, // defaults
+      quantidadeOvosAtivos: existing?.quantidadeOvosAtivos ?? quantidadeOvosInicial,
       dataInicio,
       dataPrevistaNascimento: birthPrediction,
       chocadeiraId,
-      temperaturaIdeal: 37.5,
-      umidadeIdeal: tipoOvo === 'Pato' ? 60 : 55, // customized default
-      status: 'EM_ANDAMENTO',
+      temperaturaIdeal: existing?.temperaturaIdeal ?? 37.5,
+      umidadeIdeal: existing?.umidadeIdeal ?? (tipoOvo === 'Pato' ? 60 : 55),
+      status: existing?.status ?? 'EM_ANDAMENTO',
       observacoes,
-      finalizada: false,
-      cancelada: false,
-      criadoEm: '',
-      atualizadoEm: '',
-      excluido: false
+      finalizada: existing?.finalizada ?? false,
+      cancelada: existing?.cancelada ?? false,
+      criadoEm: existing?.criadoEm || '',
+      atualizadoEm: existing?.atualizadoEm || '',
+      excluido: existing?.excluido ?? false
     };
 
     const result = repo.saveChocada(formPayload);

@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Egg, LogIn, Bell, Thermometer, Droplets, TrendingUp, Inbox, Calendar, AlertTriangle, ChevronRight, Plus } from 'lucide-react';
-import { repo } from '../repository';
+import { repo, DURACAO_INCUBACAO, getCurrentDateString } from '../repository';
 import { Chocada } from '../types';
 import { Button, Card, StatusChip } from './GlacierUI';
 import { MiniProgressRing } from './Charts';
@@ -255,9 +255,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {chocadasAtivas.slice(0, 3).map((ch) => {
-              const totalDays = 21; // Standard Galinha days
+              const totalDays = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
               const start = new Date(ch.dataInicio + 'T12:00:00');
-              const now = new Date('2026-05-21T12:00:00');
+              const now = new Date(getCurrentDateString() + 'T12:00:00');
               const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
               const progressPercent = Math.min(100, Math.round((elapsed / totalDays) * 100));
 

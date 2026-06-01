@@ -19,6 +19,14 @@ export function daysBetween(startStr: string, endStr: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+export function getCurrentDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export const DURACAO_INCUBACAO: Record<string, number> = {
   'Galinha': 21,
   'Codorna': 17,
@@ -26,7 +34,7 @@ export const DURACAO_INCUBACAO: Record<string, number> = {
   'Peru': 28,
 };
 
-export const CURRENT_DATE_STRING = '2026-05-21';
+export const CURRENT_DATE_STRING = getCurrentDateString();
 
 // Seed Initial Data definition omitted for brevity, but used if DB is completely empty
 const SEED_PROPRIEDADE: Propriedade = {
@@ -106,7 +114,7 @@ class AppRepository {
           senhaMock: 'admin123',
           role: 'ADMIN',
           ativo: true,
-          criadoEm: '2026-05-21',
+          criadoEm: CURRENT_DATE_STRING,
         };
         this.cache.usuarios.push(seedAdmin);
         this.upsertToSupabase('usuarios', seedAdmin);
@@ -268,7 +276,7 @@ class AppRepository {
   }
 
   public getChocadaById(id: string): Chocada | undefined {
-    const chocada = this.cache.chocadas.find(item => item.id === id);
+    const chocada = this.cache.chocadas.find(item => item.id === id && !item.excluido);
     if (chocada) {
       return this.recalculateChocadaStatusAndBalance(chocada);
     }
@@ -295,7 +303,7 @@ class AppRepository {
     } else if (chocada.finalizada) {
       chocada.status = 'FINALIZADA';
     } else {
-      const todayStr = CURRENT_DATE_STRING;
+      const todayStr = getCurrentDateString();
       const elapsed = daysBetween(chocada.dataInicio, todayStr);
       const remaining = duration - elapsed;
 
@@ -316,6 +324,17 @@ class AppRepository {
     if (!chocada.dataInicio) return { success: false, message: 'A data de início é obrigatória.' };
     if (chocada.quantidadeOvosInicial <= 0) return { success: false, message: 'A quantidade de ovos deve ser maior que zero.' };
 
+    const perdasRegistradas = this.getOvoscopias(chocada.id).reduce(
+      (total, ov) => total + ov.ovosDescartados + ov.ovosInferteis,
+      0
+    );
+    if (perdasRegistradas > chocada.quantidadeOvosInicial) {
+      return {
+        success: false,
+        message: `A quantidade inicial não pode ser menor que as perdas já registradas (${perdasRegistradas} ovos).`,
+      };
+    }
+
     const duration = DURACAO_INCUBACAO[chocada.tipoOvo] || 21;
     chocada.dataPrevistaNascimento = addDays(chocada.dataInicio, duration);
 
@@ -326,6 +345,7 @@ class AppRepository {
     if (index >= 0) {
       chocada.atualizadoEm = dateStr;
       list[index] = { ...list[index], ...chocada };
+      chocada = this.recalculateChocadaStatusAndBalance(list[index]);
     } else {
       chocada.id = chocada.id || `chocada-${Date.now()}`;
       chocada.quantidadeOvosAtivos = chocada.quantidadeOvosInicial;
@@ -336,6 +356,7 @@ class AppRepository {
       chocada.cancelada = false;
       list.push(chocada);
     }
+    chocada = this.recalculateChocadaStatusAndBalance(chocada);
     this.upsertToSupabase('chocadas', chocada);
     const saved = this.getChocadaById(chocada.id);
     return { success: true, message: 'Lote registrado com sucesso.', data: saved };
@@ -528,33 +549,34 @@ class AppRepository {
   public getAlertas(): Alerta[] {
     const alerts: Alerta[] = [];
     const chocadas = this.getChocadas();
+    const todayStr = getCurrentDateString();
     
     chocadas.forEach(ch => {
       if (ch.status === 'ATRASADA') {
-        const diff = daysBetween(ch.dataPrevistaNascimento, CURRENT_DATE_STRING);
+        const diff = daysBetween(ch.dataPrevistaNascimento, todayStr);
         alerts.push({
           id: `al-atrasada-${ch.id}`,
           titulo: `Lote "${ch.nome}" está atrasado!`,
           msg: `Lote atrasado em D+${diff} dia(s). Realize a verificação sanitária ou ovoscopia final.`,
           tipo: 'error',
           chocadaId: ch.id,
-          data: CURRENT_DATE_STRING,
+          data: todayStr,
         });
       }
 
       if (ch.status === 'PROXIMA') {
-        const daysLeft = daysBetween(CURRENT_DATE_STRING, ch.dataPrevistaNascimento);
+        const daysLeft = daysBetween(todayStr, ch.dataPrevistaNascimento);
         alerts.push({
           id: `al-proxima-${ch.id}`,
           titulo: `Próximo Nascimento: ${ch.nome}`,
           msg: `Faltam apenas ${daysLeft} dia(s) para o nascimento. Eleve a umidade ideal para ~70%.`,
           tipo: 'warning',
           chocadaId: ch.id,
-          data: CURRENT_DATE_STRING,
+          data: todayStr,
         });
       }
 
-      const hojeStr = CURRENT_DATE_STRING;
+      const hojeStr = todayStr;
       const registrosHoje = this.getRegistrosDiarios(ch.id).filter(r => r.data === hojeStr);
       if (registrosHoje.length === 0 && (ch.status === 'EM_ANDAMENTO' || ch.status === 'PROXIMA')) {
         alerts.push({
@@ -563,7 +585,7 @@ class AppRepository {
           msg: `Inspeção pendente para hoje. Lembrar de virar os ovos e analisar parâmetros.`,
           tipo: 'info',
           chocadaId: ch.id,
-          data: CURRENT_DATE_STRING,
+          data: todayStr,
         });
       }
     });

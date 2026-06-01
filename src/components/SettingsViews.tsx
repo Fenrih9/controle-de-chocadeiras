@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Settings, Landmark, Users, HardHat, Clock, FileChartLine, Save, MapPin, Phone, User, AlertOctagon, ChevronRight, TrendingUp, Calendar, Filter, CheckCircle, Egg, Activity, FileText, BarChart2, Award, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Settings, Landmark, Users, HardHat, Clock, FileChartLine, Save, MapPin, Phone, User, AlertOctagon, ChevronRight, TrendingUp, Calendar, Filter, CheckCircle, Egg, Activity, FileText, BarChart2, Award, ArrowRight, Pencil } from 'lucide-react';
 import { repo } from '../repository';
 import { Chocadeira, Propriedade, Usuario, Role } from '../types';
 import { Button, Card, Input, Select, ConfirmDialog } from './GlacierUI';
@@ -181,8 +181,17 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
               </div>
 
               <button 
+                onClick={() => onNavigate('chocadeira_nova', { id: ch.id })}
+                className="p-2.5 bg-slate-900/50 hover:bg-sky-500/10 text-slate-500 hover:text-sky-300 rounded-lg transition-colors cursor-pointer"
+                title="Editar chocadeira"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+
+              <button 
                 onClick={() => setDelTarget(ch.id)}
                 className="p-2.5 bg-slate-900/50 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                title="Excluir chocadeira"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -203,8 +212,12 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 };
 
 
+interface ChocadeiraFormProps extends SettingsViewsProps {
+  idToEdit?: string;
+}
+
 // --- VIEW: CADASTRO CHOCADEIRA ---
-export const ChocadeiraNovaView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
+export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, idToEdit }) => {
   const [nome, setNome] = useState('');
   const [modelo, setModelo] = useState('');
   const [capacidade, setCapacidade] = useState<number>(100);
@@ -213,23 +226,43 @@ export const ChocadeiraNovaView: React.FC<SettingsViewsProps> = ({ onNavigate })
   const [observacoes, setObservacoes] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (!idToEdit) return;
+    const existing = repo.getChocadeiraById(idToEdit);
+    if (!existing) {
+      setError('Chocadeira nÃ£o encontrada.');
+      return;
+    }
+    setNome(existing.nome);
+    setModelo(existing.modelo);
+    setCapacidade(existing.capacidadeMaximaOvos);
+    setLocalizacao(existing.localizacao);
+    setStatus(existing.status);
+    setObservacoes(existing.observacoes);
+  }, [idToEdit]);
+
   const handleSave = () => {
     if (!nome.trim() || !modelo.trim()) {
       setError('Nome e Modelo são obrigatórios.');
       return;
     }
 
+    const existing = idToEdit ? repo.getChocadeiraById(idToEdit) : undefined;
+    if (idToEdit && !existing) {
+      setError('Chocadeira nÃ£o encontrada para ediÃ§Ã£o.');
+      return;
+    }
     const payload: Chocadeira = {
-      id: '',
+      id: existing?.id || '',
       nome,
       modelo,
       capacidadeMaximaOvos: capacidade,
       localizacao,
       status,
       observacoes,
-      criadoEm: '',
-      atualizadoEm: '',
-      excluido: false
+      criadoEm: existing?.criadoEm || '',
+      atualizadoEm: existing?.atualizadoEm || '',
+      excluido: existing?.excluido ?? false
     };
 
     repo.saveChocadeira(payload);
@@ -242,7 +275,9 @@ export const ChocadeiraNovaView: React.FC<SettingsViewsProps> = ({ onNavigate })
         <button onClick={() => onNavigate('chocadeiras_lista')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
           Cancelar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Nova Chocadeira</span>
+        <span className="font-headline font-bold text-slate-200 text-sm">
+          {idToEdit ? 'Editar Chocadeira' : 'Nova Chocadeira'}
+        </span>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
@@ -310,7 +345,7 @@ export const ChocadeiraNovaView: React.FC<SettingsViewsProps> = ({ onNavigate })
           </div>
 
           <Button onClick={handleSave}>
-            <Save className="w-4 h-4" /> Registrar Chocadeira
+            <Save className="w-4 h-4" /> {idToEdit ? 'Salvar AlteraÃ§Ãµes' : 'Registrar Chocadeira'}
           </Button>
         </Card>
       </div>

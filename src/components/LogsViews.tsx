@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, Thermometer, Droplets, Save, FileSpreadsheet, Plus, Moon, HelpCircle, Sparkles, ChevronLeft, Trash } from 'lucide-react';
-import { repo } from '../repository';
+import { repo, getCurrentDateString } from '../repository';
 import { Chocada, RegistroDiario, Ovoscopia, RegistroNascimento } from '../types';
 import { Button, Card, Input } from './GlacierUI';
 
@@ -317,7 +317,7 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
 // --- VIEW: REGISTRO DE NASCIMENTO ---
 export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) => {
   const [chocada, setChocada] = useState<Chocada | undefined>(undefined);
-  const [dataNascimentoReal, setDataNascimentoReal] = useState('2026-05-21');
+  const [dataNascimentoReal, setDataNascimentoReal] = useState(getCurrentDateString());
   const [pintinhosNascidos, setPintinhosNascidos] = useState<number>(0);
   const [ovosNaoEclodidos, setOvosNaoEclodidos] = useState<number>(0);
   const [perdas, setPerdas] = useState<number>(0);

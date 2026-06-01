@@ -107,7 +107,7 @@ export default function App() {
       case 'chocadeiras_lista':
         return <ChocadeirasListaView onNavigate={onNavigate} />;
       case 'chocadeira_nova':
-        return <ChocadeiraNovaView onNavigate={onNavigate} />;
+        return <ChocadeiraNovaView onNavigate={onNavigate} idToEdit={screenParams?.id} />;
       case 'propriedade_editar':
         return <PropriedadeEditarView onNavigate={onNavigate} />;
       case 'usuarios_lista':
