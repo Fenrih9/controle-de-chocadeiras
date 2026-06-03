@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Egg, LogIn, Bell, Thermometer, Droplets, TrendingUp, Inbox, Calendar, AlertTriangle, ChevronRight, Plus } from 'lucide-react';
+import { Egg, LogIn, Bell, Thermometer, Droplets, TrendingUp, Inbox, Calendar, AlertTriangle, ChevronRight, Plus, ShieldCheck, RotateCcw, Sprout } from 'lucide-react';
 import { repo, DURACAO_INCUBACAO, getCurrentDateString } from '../repository';
 import { Chocada } from '../types';
 import { Button, Card, StatusChip } from './GlacierUI';
@@ -144,11 +144,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   const taxaMediaEclosao = totalEggCount > 0 ? Math.round((totalHatched / totalEggCount) * 100) : 0;
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
       {/* Top Banner Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 backdrop-blur-md sticky top-0 shrink-0 z-10">
+      <header className="flex justify-between items-center w-full px-5 lg:px-8 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-sky-400/20">
+          <div className="w-10 h-10 rounded-full overflow-hidden border border-[#465336]/15">
             <img
               alt="Perfil"
               className="w-full h-full object-cover"
@@ -156,23 +156,76 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             />
           </div>
           <div>
-            <span className="text-[10px] uppercase tracking-widest text-[#7dd3fc] font-bold">Produtor Rural</span>
-            <h1 className="font-headline font-bold text-slate-100 text-sm leading-tight">Olá, Criador</h1>
+            <span className="text-[10px] uppercase tracking-widest text-[#6f756a] font-bold">Produtor Rural</span>
+            <h1 className="font-headline font-bold text-[#263225] text-sm leading-tight">Olá, {currentUser?.username || 'criador'}</h1>
           </div>
         </div>
         <button 
           onClick={() => onNavigate('alertas')}
-          className="p-2 bg-slate-900 border border-sky-400/20 hover:border-sky-400/40 rounded-xl relative hover:scale-105 transition-all text-sky-400"
+          className="p-2 bg-[#fffaf2] border border-[#465336]/15 hover:border-[#3f5f31]/35 rounded-xl relative hover:scale-105 transition-all text-[#3f5f31] shadow-sm"
         >
           <Bell className="w-5 h-5" />
           {alertas.length > 0 && (
-            <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#ff6b6b] rounded-full animate-ping"></div>
+            <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#b85745] rounded-full animate-ping"></div>
           )}
         </button>
       </header>
 
       {/* Main scrolling viewport content */}
-      <div className="flex-grow overflow-y-auto px-5 py-6 space-y-6 scrollbar-thin pb-20">
+      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-24">
+        <section className="relative overflow-hidden rounded-2xl bg-[#eee5d8] border border-[#465336]/10 min-h-[320px] lg:min-h-[360px] shadow-sm">
+          <div className="absolute inset-0">
+            <img
+              alt="Ovos em incubação"
+              className="h-full w-full object-cover opacity-55"
+              src="https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=1600"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#f7f2e9] via-[#f7f2e9]/82 to-[#f7f2e9]/18"></div>
+          </div>
+
+          <div className="relative z-10 max-w-xl px-6 py-8 lg:px-10 lg:py-12">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#3f5f31]">Controle de Incubação</span>
+            <h2 className="mt-3 text-3xl md:text-5xl font-semibold leading-tight text-[#263225]">
+              Ciclos mais simples. Resultados mais claros.
+            </h2>
+            <p className="mt-4 text-sm md:text-base leading-relaxed text-[#5f6659] max-w-md">
+              Acompanhe chocadas, alertas e previsões em uma tela mais limpa, pronta para rotina de granja no celular ou desktop.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              {currentUser?.role !== 'LEITOR' && (
+                <button
+                  onClick={() => onNavigate('chocada_nova')}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#3f5f31] px-5 py-3 text-sm font-bold text-[#fffaf2] shadow-sm transition hover:bg-[#314b27]"
+                >
+                  <Plus className="w-4 h-4" /> Nova Chocada
+                </button>
+              )}
+              <button
+                onClick={() => onNavigate('chocadas_lista')}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#465336]/15 bg-[#fffaf2]/90 px-5 py-3 text-sm font-bold text-[#263225] transition hover:bg-[#fffaf2]"
+              >
+                Ver Ciclos <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { icon: ShieldCheck, title: 'Dados seguros', text: 'Histórico sincronizado' },
+            { icon: RotateCcw, title: 'Rotina simples', text: 'Ações rápidas por ciclo' },
+            { icon: Sprout, title: 'Produção clara', text: 'Indicadores fáceis de ler' },
+          ].map((item) => (
+            <div key={item.title} className="bg-[#3f5f31] text-[#fffaf2] rounded-xl px-4 py-3 flex items-center gap-3">
+              <item.icon className="w-5 h-5 shrink-0" />
+              <div>
+                <h3 className="text-xs font-bold">{item.title}</h3>
+                <p className="text-[11px] text-[#fffaf2]/75">{item.text}</p>
+              </div>
+            </div>
+          ))}
+        </section>
+
         {/* Grid Metrics Bento style matching screens precisely */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
           <Card glow borderAccent="primary">
@@ -309,7 +362,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         <button
           onClick={() => onNavigate('chocada_nova')}
           title="Cadastrar Nova Chocada"
-          className="lg:hidden fixed bottom-20 right-5 w-14 h-14 bg-sky-500 text-slate-900 rounded-2xl flex items-center justify-center cursor-pointer shadow-[0_0_20px_rgba(125,211,252,0.4)] active:scale-90 hover:brightness-110 transition-all z-40"
+          className="lg:hidden fixed bottom-20 right-5 w-14 h-14 bg-[#3f5f31] text-[#fffaf2] rounded-2xl flex items-center justify-center cursor-pointer shadow-[0_14px_35px_rgba(66,55,39,0.22)] active:scale-90 hover:brightness-110 transition-all z-40"
         >
           <Plus className="w-8 h-8 stroke-[2.5]" />
         </button>

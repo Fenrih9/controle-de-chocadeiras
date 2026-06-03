@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Home, Egg, Settings, Landmark, LogOut } from 'lucide-react';
+import { Home, Egg, Settings, Landmark, LogOut, Bell, ChartNoAxesCombined, Wrench } from 'lucide-react';
 import { repo } from './repository';
 import { useAuth } from './contexts/AuthContext';
 
@@ -134,7 +134,7 @@ export default function App() {
   // Se não estiver logado, exibe apenas a tela de login cheia
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] text-slate-100 flex flex-col justify-between relative overflow-hidden">
+      <div className="min-h-screen bg-[#f7f2e9] text-slate-900 flex flex-col justify-between relative overflow-hidden">
         {renderScreenContent()}
       </div>
     );
@@ -142,31 +142,31 @@ export default function App() {
 
   // Se estiver logado, exibe o painel administrativo responsivo
   return (
-    <div className="min-h-screen bg-[#070b13] text-slate-100 flex flex-col lg:flex-row overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#f7f2e9] text-slate-900 flex flex-col lg:flex-row overflow-hidden font-sans">
 
       {/* 1. SIDEBAR DE DESKTOP (Visível apenas em telas grandes lg:) */}
-      <aside className="hidden lg:flex lg:w-64 bg-slate-950 border-r border-sky-950/40 flex-col justify-between shrink-0 select-none">
+      <aside className="hidden lg:flex lg:w-72 bg-[#fffaf2] border-r border-[#465336]/15 flex-col justify-between shrink-0 select-none">
         <div className="flex flex-col">
           {/* Logo */}
-          <div className="p-6 border-b border-sky-950/30 flex items-center gap-3">
-            <div className="w-9 h-9 bg-sky-500/10 rounded-xl flex items-center justify-center border border-sky-500/20 shadow-[0_0_15px_rgba(125,211,252,0.15)]">
-              <Egg className="w-5 h-5 text-sky-400 fill-sky-400/10" />
+          <div className="p-6 border-b border-[#465336]/10 flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#3f5f31] rounded-xl flex items-center justify-center shadow-sm">
+              <Egg className="w-5 h-5 text-[#fffaf2]" />
             </div>
             <div>
-              <h1 className="text-sm font-black text-slate-100 tracking-tight leading-none">Laranjeiras</h1>
-              <span className="text-[10px] text-sky-400 font-bold uppercase tracking-widest">Chocadeiras</span>
+              <h1 className="text-sm font-black text-[#263225] tracking-tight leading-none">Laranjeiras</h1>
+              <span className="text-[10px] text-[#6f756a] font-bold uppercase tracking-widest">Chocadeiras</span>
             </div>
           </div>
 
           {/* Navegação Principal */}
           <nav className="p-4 space-y-1.5 flex-1">
-            <span className="px-3 text-[10px] font-bold text-sky-400/60 uppercase tracking-widest block mb-2">Painel Geral</span>
+            <span className="px-3 text-[10px] font-bold text-[#6f756a] uppercase tracking-widest block mb-2">Painel Geral</span>
 
             <button
               onClick={() => onNavigate('dashboard')}
-              className={`w-full text-left py-2.5 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'dashboard'
-                  ? 'bg-sky-500/10 text-sky-300 border-sky-500/20 shadow-[0_0_10px_rgba(125,211,252,0.05)]'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'dashboard'
+                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
+                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
                 }`}
             >
               <Home className="w-4 h-4" />
@@ -175,9 +175,9 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('chocadas_lista')}
-              className={`w-full text-left py-2.5 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'chocadas_lista'
-                  ? 'bg-sky-500/10 text-sky-300 border-sky-500/20 shadow-[0_0_10px_rgba(125,211,252,0.05)]'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'chocadas_lista'
+                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
+                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
                 }`}
             >
               <Egg className="w-4 h-4" />
@@ -186,35 +186,35 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('alertas')}
-              className={`w-full text-left py-2.5 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'alertas'
-                  ? 'bg-sky-500/10 text-sky-300 border-sky-500/20 shadow-[0_0_10px_rgba(125,211,252,0.05)]'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'alertas'
+                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
+                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
                 }`}
             >
               <div className="relative w-4 h-4 flex items-center justify-center">
-                <span>🔔</span>
-                <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#ff6b6b] rounded-full"></div>
+                <Bell className="w-4 h-4" />
+                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#b85745] rounded-full"></div>
               </div>
               <span>Feed de Alertas</span>
             </button>
 
             <button
               onClick={() => onNavigate('relatorios_gerais')}
-              className={`w-full text-left py-2.5 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'relatorios_gerais'
-                  ? 'bg-sky-500/10 text-sky-300 border-sky-500/20 shadow-[0_0_10px_rgba(125,211,252,0.05)]'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'relatorios_gerais'
+                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
+                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
                 }`}
             >
-              <div className="w-4 h-4 flex items-center justify-center">📈</div>
+              <ChartNoAxesCombined className="w-4 h-4" />
               <span>Relatórios Gerais</span>
             </button>
 
             {currentUser?.role === 'ADMIN' && (
               <button
                 onClick={() => onNavigate('configuracoes')}
-                className={`w-full text-left py-2.5 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'configuracoes'
-                    ? 'bg-sky-500/10 text-sky-300 border-sky-500/20 shadow-[0_0_10px_rgba(125,211,252,0.05)]'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200 border-transparent'
+                className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'configuracoes'
+                    ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
+                    : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
                   }`}
               >
                 <Settings className="w-4 h-4" />
@@ -223,17 +223,17 @@ export default function App() {
             )}
 
             {currentUser?.role !== 'LEITOR' && (
-              <div className="pt-4 border-t border-sky-950/20 mt-4">
-                <span className="px-3 text-[10px] font-bold text-sky-400/60 uppercase tracking-widest block mb-2">Cadastros</span>
+              <div className="pt-4 border-t border-[#465336]/10 mt-4">
+                <span className="px-3 text-[10px] font-bold text-[#6f756a] uppercase tracking-widest block mb-2">Cadastros</span>
 
                 <button
                   onClick={() => onNavigate('chocadeiras_lista')}
                   className={`w-full text-left py-2 px-3.5 rounded-lg text-xs font-medium cursor-pointer transition-all flex items-center gap-3 border ${currentScreen === 'chocadeiras_lista' || currentScreen === 'chocadeira_nova'
-                      ? 'text-sky-300 bg-white/5 border-sky-500/10'
-                      : 'text-slate-400 hover:text-slate-250 border-transparent'
+                      ? 'text-[#3f5f31] bg-[#3f5f31]/10 border-[#3f5f31]/10'
+                      : 'text-[#5f6659] hover:text-[#263225] border-transparent'
                     }`}
                 >
-                  <div className="w-3.5 h-3.5 flex items-center justify-center">🛠️</div>
+                  <Wrench className="w-3.5 h-3.5" />
                   <span>Chocadeiras</span>
                 </button>
 
@@ -241,8 +241,8 @@ export default function App() {
                   <button
                     onClick={() => onNavigate('propriedade_editar')}
                     className={`w-full text-left py-2 px-3.5 rounded-lg text-xs font-medium cursor-pointer transition-all flex items-center gap-3 border ${currentScreen === 'propriedade_editar'
-                        ? 'text-sky-300 bg-white/5 border-sky-500/10'
-                        : 'text-slate-400 hover:text-slate-250 border-transparent'
+                        ? 'text-[#3f5f31] bg-[#3f5f31]/10 border-[#3f5f31]/10'
+                        : 'text-[#5f6659] hover:text-[#263225] border-transparent'
                       }`}
                   >
                     <Landmark className="w-3.5 h-3.5" />
@@ -255,9 +255,9 @@ export default function App() {
         </div>
 
         {/* Rodapé da Sidebar */}
-        <div className="p-4 border-t border-sky-950/30 flex flex-col gap-3">
+        <div className="p-4 border-t border-[#465336]/10 flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-sky-400/20">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-[#465336]/15">
               <img
                 alt="Perfil"
                 className="w-full h-full object-cover"
@@ -274,7 +274,7 @@ export default function App() {
               logout();
               setCurrentScreen('dashboard');
             }}
-            className="w-full py-2 bg-slate-900 border border-sky-500/10 hover:border-[#ff6b6b]/30 rounded-xl hover:text-[#ff6b6b] transition-all uppercase text-[9px] font-mono cursor-pointer text-slate-400 text-center flex items-center justify-center gap-1.5"
+            className="w-full py-2 bg-[#f1eadf] border border-[#465336]/10 hover:border-[#b85745]/30 rounded-xl hover:text-[#b85745] transition-all uppercase text-[9px] font-mono cursor-pointer text-[#5f6659] text-center flex items-center justify-center gap-1.5"
           >
             <LogOut className="w-3 h-3" /> Sair da Conta
           </button>
@@ -285,12 +285,12 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
         {/* Cabeçalho para telas móveis (lg:hidden) */}
-        <header className="lg:hidden bg-slate-950 border-b border-sky-950/40 py-3.5 px-5 flex justify-between items-center shrink-0 z-40">
+        <header className="lg:hidden bg-[#fffaf2] border-b border-[#465336]/15 py-3.5 px-5 flex justify-between items-center shrink-0 z-40">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-sky-500/10 rounded-lg flex items-center justify-center border border-sky-400/20">
-              <Egg className="w-4 h-4 text-sky-400 fill-sky-400/10" />
+            <div className="w-8 h-8 bg-[#3f5f31] rounded-lg flex items-center justify-center">
+              <Egg className="w-4 h-4 text-[#fffaf2]" />
             </div>
-            <span className="text-xs font-extrabold text-slate-100 tracking-wider uppercase">Glacier Chocadeiras</span>
+            <span className="text-xs font-extrabold text-[#263225] tracking-wider uppercase">Laranjeiras</span>
           </div>
 
           <button
@@ -298,23 +298,23 @@ export default function App() {
               logout();
               setCurrentScreen('dashboard');
             }}
-            className="px-2 py-1 bg-slate-900 border border-sky-400/10 rounded text-[9px] font-mono text-slate-400 hover:text-[#ff6b6b]"
+            className="px-2 py-1 bg-[#f1eadf] border border-[#465336]/10 rounded text-[9px] font-mono text-[#5f6659] hover:text-[#b85745]"
           >
             Sair
           </button>
         </header>
 
         {/* Viewport Renderizado */}
-        <main className="flex-1 flex flex-col min-h-0 bg-[#0a0e1a] relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-h-0 bg-[#f7f2e9] relative overflow-hidden">
           {renderScreenContent()}
         </main>
 
         {/* 3. BARRA DE NAVEGAÇÃO INFERIOR PARA MOBILE (lg:hidden) */}
         {isAuthenticated && currentScreen !== 'login' && (
-          <nav className="lg:hidden h-16 bg-slate-950/90 border-t border-sky-950/50 backdrop-blur-md flex justify-around items-center px-2 select-none z-30 shrink-0">
+          <nav className="lg:hidden h-16 bg-[#fffaf2]/95 border-t border-[#465336]/15 backdrop-blur-md flex justify-around items-center px-2 select-none z-30 shrink-0">
             <button
               onClick={() => onNavigate('dashboard')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-sky-400 font-bold scale-105' : 'text-slate-500 hover:text-slate-350'
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
               <Home className="w-5 h-5 mb-1" />
@@ -323,7 +323,7 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('chocadas_lista')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-sky-400 font-bold scale-105' : 'text-slate-500 hover:text-slate-350'
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
               <Egg className="w-5 h-5 mb-1" />
@@ -332,29 +332,29 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('alertas')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-sky-400 font-bold scale-105' : 'text-slate-500 hover:text-slate-350'
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
               <div className="w-5 h-5 mb-1 flex items-center justify-center relative">
-                <span className="text-sm font-semibold leading-none">🔔</span>
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#ff6b6b] rounded-full"></div>
+                <Bell className="w-5 h-5" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#b85745] rounded-full"></div>
               </div>
               <span className="text-[9px] uppercase tracking-wider">Alertas</span>
             </button>
 
             <button
               onClick={() => onNavigate('relatorios_gerais')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-sky-400 font-bold scale-105' : 'text-slate-500 hover:text-slate-350'
+              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
-              <div className="w-5 h-5 mb-1 flex items-center justify-center">📈</div>
+              <ChartNoAxesCombined className="w-5 h-5 mb-1" />
               <span className="text-[9px] uppercase tracking-wider">Relatórios</span>
             </button>
 
             {currentUser?.role === 'ADMIN' && (
               <button
                 onClick={() => onNavigate('configuracoes')}
-                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-sky-400 font-bold scale-105' : 'text-slate-500 hover:text-slate-350'
+                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
                   }`}
               >
                 <Settings className="w-5 h-5 mb-1" />

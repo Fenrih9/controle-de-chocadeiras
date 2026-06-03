@@ -21,10 +21,10 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyle = "w-full py-3.5 px-4 font-semibold rounded-xl text-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer";
   
   const variants = {
-    primary: "bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-300 shadow-[0_0_15px_rgba(125,211,252,0.1)]",
-    secondary: "bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200",
-    danger: "bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300",
-    glass: "bg-slate-900/60 backdrop-blur-md border border-sky-500/10 text-slate-300 hover:bg-slate-800/60",
+    primary: "bg-[#3f5f31] hover:bg-[#314b27] border border-[#3f5f31] text-[#fffaf2] shadow-sm",
+    secondary: "bg-[#fffaf2] hover:bg-[#f1eadf] border border-[#465336]/15 text-[#263225]",
+    danger: "bg-[#b85745]/10 hover:bg-[#b85745]/15 border border-[#b85745]/25 text-[#b85745]",
+    glass: "bg-[#fffaf2]/85 backdrop-blur-md border border-[#465336]/12 text-[#263225] hover:bg-[#f1eadf]",
   };
 
   return (
@@ -54,16 +54,16 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const accents = {
-    default: "border-sky-500/10",
-    error: "border-red-500/25",
-    warning: "border-yellow-500/20",
-    primary: "border-sky-500/20",
-    tertiary: "border-purple-500/20",
+    default: "border-[#465336]/12",
+    error: "border-[#b85745]/25",
+    warning: "border-[#c9854a]/25",
+    primary: "border-[#3f5f31]/20",
+    tertiary: "border-[#8a744f]/20",
   };
 
   return (
     <div
-      className={`bg-slate-950/60 backdrop-blur-md border ${accents[borderAccent]} rounded-2xl p-5 transition-all duration-300 ${glow ? 'shadow-[0_0_30px_rgba(125,211,252,0.03)]' : ''} ${className}`}
+      className={`bg-[#fffaf2] backdrop-blur-md border ${accents[borderAccent]} rounded-2xl p-5 transition-all duration-300 ${glow ? 'shadow-[0_14px_35px_rgba(66,55,39,0.08)]' : ''} ${className}`}
       {...props}
     >
       {children}
@@ -79,10 +79,10 @@ export const StatusChip: React.FC<ChipProps> = ({ status }) => {
   const normalized = status.toUpperCase();
   
   const styles: Record<string, string> = {
-    EM_ANDAMENTO: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    PROXIMA: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-    ATRASADA: "bg-red-500/10 text-red-400 border-red-500/20 animate-pulse",
-    FINALIZADA: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+    EM_ANDAMENTO: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+    PROXIMA: "bg-[#c9854a]/12 text-[#8f5a2c] border-[#c9854a]/25",
+    ATRASADA: "bg-[#b85745]/10 text-[#b85745] border-[#b85745]/25 animate-pulse",
+    FINALIZADA: "bg-[#3f5f31]/10 text-[#3f5f31] border-[#3f5f31]/20",
     CANCELADA: "bg-slate-500/10 text-slate-400 border-slate-500/20",
   };
 
@@ -124,20 +124,20 @@ export const Input: React.FC<InputProps> = ({
 }) => {
   return (
     <div className="space-y-1.5 w-full">
-      <label htmlFor={id} className="text-xs font-semibold text-slate-400 px-1 block uppercase tracking-wider">
+      <label htmlFor={id} className="text-xs font-semibold text-[#6f756a] px-1 block uppercase tracking-wider">
         {label}
       </label>
       <div className="relative group">
         {icon && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-sky-300">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7b8075] transition-colors group-focus-within:text-[#3f5f31]">
             {icon}
           </div>
         )}
         <input
           id={id}
-          className={`w-full bg-[#1a2438]/30 border border-sky-500/10 rounded-xl py-3.5 ${
+          className={`w-full bg-[#fffdf8] border border-[#465336]/15 rounded-xl py-3.5 ${
             icon ? 'pl-11' : 'px-4'
-          } pr-4 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium ${className}`}
+          } pr-4 text-[#263225] placeholder:text-[#9a9488] focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/20 focus:border-[#3f5f31] transition-all font-medium ${className}`}
           {...props}
         />
       </div>
@@ -161,24 +161,24 @@ export const Select: React.FC<SelectProps> = ({
 }) => {
   return (
     <div className="space-y-1.5 w-full">
-      <label htmlFor={id} className="text-xs font-semibold text-slate-400 px-1 block uppercase tracking-wider">
+      <label htmlFor={id} className="text-xs font-semibold text-[#6f756a] px-1 block uppercase tracking-wider">
         {label}
       </label>
       <div className="relative group">
         {icon && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-sky-400">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7b8075] transition-colors group-focus-within:text-[#3f5f31]">
             {icon}
           </div>
         )}
         <select
           id={id}
-          className={`w-full bg-[#1a2438]/30 border border-sky-500/10 rounded-xl py-3.5 ${
+          className={`w-full bg-[#fffdf8] border border-[#465336]/15 rounded-xl py-3.5 ${
             icon ? 'pl-11' : 'px-4'
-          } pr-10 text-slate-200 appearance-none focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium cursor-pointer ${className}`}
+          } pr-10 text-[#263225] appearance-none focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/20 focus:border-[#3f5f31] transition-all font-medium cursor-pointer ${className}`}
           {...props}
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-slate-900 text-slate-200">
+            <option key={opt.value} value={opt.value} className="bg-[#fffaf2] text-[#263225]">
               {opt.label}
             </option>
           ))}
