@@ -117,6 +117,7 @@ export interface LancamentoFinanceiro {
   descricao: string;
   data: string; // YYYY-MM-DD
   categoria: string; // 'Venda de Pintinhos' | 'Compra de Ração' | 'Medicamentos' | 'Energia' | 'Outros'
+  formaPagamento?: 'BANCO' | 'DINHEIRO'; // Opcional para manter compatibilidade com antigos
   quantidadePintinhos?: number; // Opcional, usado se for Venda de Pintinhos
   chocadeiraId?: string; // Opcional, vincula à chocadeira
   chocadaId?: string; // Opcional, vincula ao lote

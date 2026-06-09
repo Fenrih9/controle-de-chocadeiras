@@ -228,41 +228,103 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         </section>
 
         {/* Grid Metrics Bento style matching screens precisely */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
-          <Card glow borderAccent="primary">
-            <Egg className="w-5 h-5 text-sky-400 mb-2 fill-sky-400/10" />
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Chocadas Ativas</span>
-            <h3 className="text-2xl font-black text-slate-100 tracking-tight mt-0.5">{chocadasAtivas.length}</h3>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Card 1: Chocadas Ativas */}
+          <div className="bg-[#fffdfb] border border-[#465336]/10 rounded-2xl p-5 shadow-[0_8px_30px_rgba(66,55,39,0.015)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(70,83,54,0.06)] hover:border-[#3f5f31]/30 transition-all duration-300 flex flex-col justify-between min-h-[145px] group">
+            <div className="flex justify-between items-start">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 transition-colors group-hover:bg-blue-500/20">
+                <Egg className="w-5 h-5 fill-blue-500/5" />
+              </div>
+              <span className="text-[9px] font-extrabold text-blue-700 bg-blue-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Em Curso
+              </span>
+            </div>
+            <div className="mt-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6f756a] block">Chocadas Ativas</span>
+              <h3 className="text-3xl font-extrabold text-[#263225] tracking-tight mt-0.5">{chocadasAtivas.length}</h3>
+            </div>
+          </div>
 
-          <Card glow borderAccent="tertiary">
-            <Inbox className="w-5 h-5 text-purple-400 mb-2 fill-purple-400/10" />
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Ovos Ativos</span>
-            <h3 className="text-2xl font-black text-slate-100 tracking-tight mt-0.5">{totalOvos}</h3>
-          </Card>
+          {/* Card 2: Ovos Ativos */}
+          <div className="bg-[#fffdfb] border border-[#465336]/10 rounded-2xl p-5 shadow-[0_8px_30px_rgba(66,55,39,0.015)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(70,83,54,0.06)] hover:border-[#3f5f31]/30 transition-all duration-300 flex flex-col justify-between min-h-[145px] group">
+            <div className="flex justify-between items-start">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 transition-colors group-hover:bg-indigo-500/20">
+                <Inbox className="w-5 h-5 fill-indigo-500/5" />
+              </div>
+              <span className="text-[9px] font-extrabold text-indigo-700 bg-indigo-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Incubando
+              </span>
+            </div>
+            <div className="mt-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6f756a] block">Ovos Ativos</span>
+              <h3 className="text-3xl font-extrabold text-[#263225] tracking-tight mt-0.5">{totalOvos}</h3>
+            </div>
+          </div>
 
-          <Card glow borderAccent="primary">
-            <Sprout className="w-5 h-5 text-emerald-400 mb-2" />
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Pintinhos Disp.</span>
-            <h3 className="text-2xl font-black text-emerald-400 tracking-tight mt-0.5">{estoquePintinhos.disponivel}</h3>
-            <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
-              {estoquePintinhos.nascidos} nascidos - {estoquePintinhos.vendidos} vendidos
-            </p>
-          </Card>
+          {/* Card 3: Pintinhos Disponíveis */}
+          <div className="bg-[#fffdfb] border border-[#465336]/10 rounded-2xl p-5 shadow-[0_8px_30px_rgba(66,55,39,0.015)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(70,83,54,0.06)] hover:border-[#3f5f31]/30 transition-all duration-300 flex flex-col justify-between min-h-[145px] group">
+            <div className="flex justify-between items-start">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 transition-colors group-hover:bg-emerald-500/20">
+                <Sprout className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col gap-1 items-end">
+                <span className="text-[8px] font-extrabold text-emerald-700 bg-emerald-500/10 px-1.5 py-0.5 rounded-md">
+                  {estoquePintinhos.nascidos} Nasc.
+                </span>
+                <span className="text-[8px] font-extrabold text-slate-500 bg-slate-500/10 px-1.5 py-0.5 rounded-md">
+                  {estoquePintinhos.vendidos} Vend.
+                </span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6f756a] block">Pintinhos Disp.</span>
+              <h3 className="text-3xl font-extrabold text-emerald-600 tracking-tight mt-0.5">{estoquePintinhos.disponivel}</h3>
+            </div>
+          </div>
 
-          <Card glow borderAccent="default">
-            <Calendar className="w-5 h-5 text-slate-400 mb-2" />
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Próxima Previsão</span>
-            <h3 className="text-sm font-bold text-slate-100 tracking-tight mt-1 truncate">
-              {proximoNascimento}
-            </h3>
-          </Card>
+          {/* Card 4: Próxima Previsão */}
+          <div className="bg-[#fffdfb] border border-[#465336]/10 rounded-2xl p-5 shadow-[0_8px_30px_rgba(66,55,39,0.015)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(70,83,54,0.06)] hover:border-[#3f5f31]/30 transition-all duration-300 flex flex-col justify-between min-h-[145px] group">
+            <div className="flex justify-between items-start">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 transition-colors group-hover:bg-amber-500/20">
+                <Calendar className="w-5 h-5" />
+              </div>
+              {proximaData && (
+                <span className="text-[9px] font-extrabold text-amber-700 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Agenda
+                </span>
+              )}
+            </div>
+            <div className="mt-4">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6f756a] block">Próxima Previsão</span>
+              <h3 className="text-sm font-bold text-[#263225] tracking-tight mt-2 truncate line-clamp-2">
+                {proximoNascimento}
+              </h3>
+            </div>
+          </div>
 
-          <Card glow borderAccent="warning">
-            <TrendingUp className="w-5 h-5 text-emerald-400 mb-2" />
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">T. Média de Eclosão</span>
-            <h3 className="text-2xl font-black text-emerald-400 tracking-tight mt-0.5">{taxaMediaEclosao}%</h3>
-          </Card>
+          {/* Card 5: Taxa Média de Eclosão */}
+          <div className="bg-[#fffdfb] border border-[#465336]/10 rounded-2xl p-5 shadow-[0_8px_30px_rgba(66,55,39,0.015)] hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(70,83,54,0.06)] hover:border-[#3f5f31]/30 transition-all duration-300 flex flex-col justify-between min-h-[145px] group col-span-2 md:col-span-2 lg:col-span-1">
+            <div className="flex justify-between items-start">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-600 transition-colors group-hover:bg-teal-500/20">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <span className="text-[9px] font-extrabold text-teal-700 bg-teal-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Eficácia
+              </span>
+            </div>
+            <div className="mt-3">
+              <div className="flex justify-between items-baseline">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6f756a]">T. Média Eclosão</span>
+                <span className="text-xs font-bold text-teal-600">{taxaMediaEclosao}%</span>
+              </div>
+              <div className="w-full bg-[#f1eadf] h-1.5 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full transition-all duration-500"
+                  style={{ width: `${taxaMediaEclosao}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Dynamic Critical Notifications Alerts block */}

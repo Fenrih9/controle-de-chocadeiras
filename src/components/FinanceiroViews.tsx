@@ -40,6 +40,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   const [filtroTipo, setFiltroTipo] = useState<string>('TODOS');
   const [filtroCategoria, setFiltroCategoria] = useState<string>('TODAS');
   const [filtroChocadeira, setFiltroChocadeira] = useState<string>('TODAS');
+  const [filtroForma, setFiltroForma] = useState<string>('TODAS');
   const [dataInicio, setDataInicio] = useState<string>('');
   const [dataFim, setDataFim] = useState<string>('');
 
@@ -50,6 +51,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   
   // Campos do formulário
   const [formTipo, setFormTipo] = useState<'RECEITA' | 'DESPESA'>('RECEITA');
+  const [formFormaPagamento, setFormFormaPagamento] = useState<'BANCO' | 'DINHEIRO'>('BANCO');
   const [formValor, setFormValor] = useState<string>('');
   const [formData, setFormData] = useState<string>(getCurrentDateString());
   const [formCategoria, setFormCategoria] = useState<string>('Venda de Pintinhos');
@@ -100,6 +102,12 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
     if (filtroCategoria !== 'TODAS' && l.categoria !== filtroCategoria) return false;
     
     if (filtroChocadeira !== 'TODAS' && l.chocadeiraId !== filtroChocadeira) return false;
+
+    if (filtroForma !== 'TODAS') {
+      const isDinheiro = l.formaPagamento === 'DINHEIRO';
+      if (filtroForma === 'DINHEIRO' && !isDinheiro) return false;
+      if (filtroForma === 'BANCO' && isDinheiro) return false;
+    }
     
     if (dataInicio && l.data < dataInicio) return false;
     
@@ -109,6 +117,16 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   });
 
   // Métricas financeiras baseadas nos lançamentos filtrados (ou gerais)
+  const saldoBanco = lancamentos.reduce((sum, l) => {
+    if (l.formaPagamento === 'DINHEIRO') return sum;
+    return l.tipo === 'RECEITA' ? sum + l.valor : sum - l.valor;
+  }, 0);
+
+  const saldoDinheiro = lancamentos.reduce((sum, l) => {
+    if (l.formaPagamento !== 'DINHEIRO') return sum;
+    return l.tipo === 'RECEITA' ? sum + l.valor : sum - l.valor;
+  }, 0);
+
   const totalReceitas = lancamentos.reduce((sum, l) => l.tipo === 'RECEITA' ? sum + l.valor : sum, 0);
   const totalDespesas = lancamentos.reduce((sum, l) => l.tipo === 'DESPESA' ? sum + l.valor : sum, 0);
   const saldoCaixa = totalReceitas - totalDespesas;
@@ -128,6 +146,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
     setIsEditMode(false);
     setSelectedId(null);
     setFormTipo('RECEITA');
+    setFormFormaPagamento('BANCO');
     setFormValor('');
     setFormData(getCurrentDateString());
     setFormCategoria('Venda de Pintinhos');
@@ -146,6 +165,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
     setIsEditMode(true);
     setSelectedId(l.id);
     setFormTipo(l.tipo);
+    setFormFormaPagamento(l.formaPagamento || 'BANCO');
     setFormValor(l.valor.toString());
     setFormData(l.data);
     setFormCategoria(l.categoria);
@@ -172,6 +192,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
     const payload: LancamentoFinanceiro = {
       id: selectedId || '',
       tipo: formTipo,
+      formaPagamento: formFormaPagamento,
       valor: valorNum,
       descricao: formDescricao,
       data: formData,
@@ -254,15 +275,21 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 pb-24">
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card glow borderAccent="primary" className="flex items-center gap-4">
-            <div className="p-3.5 bg-[#3f5f31]/10 rounded-xl text-[#3f5f31]">
-              <Layers className="w-5 h-5" />
+          <Card glow borderAccent="primary" className="flex flex-col justify-center gap-1">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-[#3f5f31]/10 rounded-xl text-[#3f5f31] shrink-0">
+                <Layers className="w-4 h-4" />
+              </div>
+              <div className="w-full">
+                <span className="text-[#6f756a] text-[9px] font-bold uppercase tracking-wider block">Saldo Geral</span>
+                <h3 className={`text-xl font-black tracking-tight leading-none ${saldoCaixa >= 0 ? 'text-[#3f5f31]' : 'text-[#b85745]'}`}>
+                  R$ {saldoCaixa.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </h3>
+              </div>
             </div>
-            <div>
-              <span className="text-[#6f756a] text-[10px] font-bold uppercase tracking-wider block">Saldo Total em Caixa</span>
-              <h3 className={`text-xl font-black tracking-tight mt-0.5 ${saldoCaixa >= 0 ? 'text-[#3f5f31]' : 'text-[#b85745]'}`}>
-                R$ {saldoCaixa.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
+            <div className="flex justify-between mt-2 pt-2 border-t border-[#465336]/10 text-[9px] font-bold uppercase tracking-wider">
+              <span className="text-sky-700 flex items-center gap-1" title="Saldo em Conta Bancária">🏦 {saldoBanco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              <span className="text-emerald-700 flex items-center gap-1" title="Saldo em Dinheiro">💵 {saldoDinheiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
           </Card>
 
@@ -310,7 +337,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#6f756a]">Filtros de Movimentação</h3>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             <div>
               <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1">Tipo</label>
               <select
@@ -319,8 +346,21 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                 className="w-full bg-[#fffdf8] border border-[#465336]/15 rounded-lg py-2 px-3 text-xs text-[#263225]"
               >
                 <option value="TODOS">Todos os tipos</option>
-                <option value="RECEITA">Receitas (Entradas)</option>
-                <option value="DESPESA">Despesas (Saídas)</option>
+                <option value="RECEITA">Receitas</option>
+                <option value="DESPESA">Despesas</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1">Forma</label>
+              <select
+                value={filtroForma}
+                onChange={(e) => setFiltroForma(e.target.value)}
+                className="w-full bg-[#fffdf8] border border-[#465336]/15 rounded-lg py-2 px-3 text-xs text-[#263225]"
+              >
+                <option value="TODAS">Todas</option>
+                <option value="BANCO">Conta/Pix</option>
+                <option value="DINHEIRO">Dinheiro Vivo</option>
               </select>
             </div>
 
@@ -399,6 +439,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                   <tr className="bg-[#fffaf2]/50 border-b border-[#465336]/10 text-[#6f756a]">
                     <th className="p-4 font-bold uppercase tracking-wider text-[10px]">Data</th>
                     <th className="p-4 font-bold uppercase tracking-wider text-[10px]">Tipo</th>
+                    <th className="p-4 font-bold uppercase tracking-wider text-[10px]">Forma</th>
                     <th className="p-4 font-bold uppercase tracking-wider text-[10px]">Categoria</th>
                     <th className="p-4 font-bold uppercase tracking-wider text-[10px]">Origem / Chocadeira</th>
                     <th className="p-4 font-bold uppercase tracking-wider text-[10px]">Descrição</th>
@@ -424,6 +465,9 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                           }`}>
                             {l.tipo === 'RECEITA' ? 'RECEITA' : 'DESPESA'}
                           </span>
+                        </td>
+                        <td className="p-4 font-bold text-[10px] uppercase text-[#5f6659] flex items-center gap-1.5 mt-1">
+                          {l.formaPagamento === 'DINHEIRO' ? '💵 Espécie' : '🏦 Conta'}
                         </td>
                         <td className="p-4 font-medium">{l.categoria}</td>
                         <td className="p-4 text-[#6f756a]">
@@ -510,32 +554,64 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                 </div>
               )}
 
-              {/* Tipo de Lançamento */}
-              <div>
-                <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1.5">Tipo de Lançamento</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormTipo('RECEITA')}
-                    className={`py-2 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
-                      formTipo === 'RECEITA'
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 shadow-sm'
-                        : 'border-[#465336]/15 hover:bg-[#f1eadf] text-[#5f6659]'
-                    }`}
-                  >
-                    Receita (Crédito)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormTipo('DESPESA')}
-                    className={`py-2 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
-                      formTipo === 'DESPESA'
-                        ? 'bg-[#b85745]/10 border-[#b85745]/25 text-[#b85745] shadow-sm'
-                        : 'border-[#465336]/15 hover:bg-[#f1eadf] text-[#5f6659]'
-                    }`}
-                  >
-                    Despesa (Débito)
-                  </button>
+              {/* Tipo e Forma */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Tipo de Lançamento */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1.5">Tipo</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormTipo('RECEITA')}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
+                        formTipo === 'RECEITA'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 shadow-sm'
+                          : 'border-[#465336]/15 hover:bg-[#f1eadf] text-[#5f6659]'
+                      }`}
+                    >
+                      Receita (Crédito)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormTipo('DESPESA')}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
+                        formTipo === 'DESPESA'
+                          ? 'bg-[#b85745]/10 border-[#b85745]/25 text-[#b85745] shadow-sm'
+                          : 'border-[#465336]/15 hover:bg-[#f1eadf] text-[#5f6659]'
+                      }`}
+                    >
+                      Despesa (Débito)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Forma de Pagamento */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1.5">Forma de Pagto</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormFormaPagamento('BANCO')}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs border text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        formFormaPagamento === 'BANCO'
+                          ? 'bg-sky-500/10 border-sky-500/30 text-sky-700 shadow-sm'
+                          : 'border-[#465336]/15 hover:bg-[#f1eadf] text-[#5f6659]'
+                      }`}
+                    >
+                      <span>🏦</span> Conta Bancária
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormFormaPagamento('DINHEIRO')}
+                      className={`py-2 px-3 rounded-xl font-bold text-xs border text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        formFormaPagamento === 'DINHEIRO'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 shadow-sm'
+                          : 'border-[#465336]/15 hover:bg-[#f1eadf] text-[#5f6659]'
+                      }`}
+                    >
+                      <span>💵</span> Dinheiro
+                    </button>
+                  </div>
                 </div>
               </div>
 
