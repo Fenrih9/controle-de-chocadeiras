@@ -114,6 +114,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   // Summary Metrics calculations
   const chocadasAtivas = chocadas.filter(c => c.status === 'EM_ANDAMENTO' || c.status === 'PROXIMA' || c.status === 'ATRASADA');
   const totalOvos = chocadasAtivas.reduce((sum, c) => sum + c.quantidadeOvosAtivos, 0);
+  const estoquePintinhos = repo.getEstoquePintinhosGeral();
 
   // Next birth logic
   let proximoNascimento = "Sem previsões";
@@ -227,7 +228,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         </section>
 
         {/* Grid Metrics Bento style matching screens precisely */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5">
           <Card glow borderAccent="primary">
             <Egg className="w-5 h-5 text-sky-400 mb-2 fill-sky-400/10" />
             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Chocadas Ativas</span>
@@ -238,6 +239,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             <Inbox className="w-5 h-5 text-purple-400 mb-2 fill-purple-400/10" />
             <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Ovos Ativos</span>
             <h3 className="text-2xl font-black text-slate-100 tracking-tight mt-0.5">{totalOvos}</h3>
+          </Card>
+
+          <Card glow borderAccent="primary">
+            <Sprout className="w-5 h-5 text-emerald-400 mb-2" />
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Pintinhos Disp.</span>
+            <h3 className="text-2xl font-black text-emerald-400 tracking-tight mt-0.5">{estoquePintinhos.disponivel}</h3>
+            <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
+              {estoquePintinhos.nascidos} nascidos - {estoquePintinhos.vendidos} vendidos
+            </p>
           </Card>
 
           <Card glow borderAccent="default">

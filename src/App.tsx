@@ -24,6 +24,7 @@ import {
   UsuarioNovoView
 } from './components/SettingsViews';
 import { ReportView } from './components/ReportView';
+import { FinanceiroView } from './components/FinanceiroViews';
 
 export default function App() {
   const { currentUser, logout, isAuthenticated } = useAuth();
@@ -114,6 +115,8 @@ export default function App() {
         return <UsuariosListaView onNavigate={onNavigate} />;
       case 'usuario_novo':
         return <UsuarioNovoView onNavigate={onNavigate} />;
+      case 'financeiro':
+        return <FinanceiroView onNavigate={onNavigate} />;
       default:
         return <DashboardView onNavigate={onNavigate} />;
     }
@@ -122,6 +125,7 @@ export default function App() {
   // Set the bottom tabs to correspond with the screen name to highlight
   const getSelectedTab = () => {
     if (['dashboard'].includes(currentScreen)) return 'dashboard';
+    if (['financeiro'].includes(currentScreen)) return 'financeiro';
     if (['chocadas_lista', 'chocada_detalhes', 'chocada_nova', 'chocada_editar', 'registro_diario_novo', 'ovoscopia_nova', 'nascimento_novo', 'relatorio_chocada'].includes(currentScreen)) return 'chocadas_lista';
     if (['alertas'].includes(currentScreen)) return 'alertas';
     if (['relatorios_gerais', 'historico_geral'].includes(currentScreen)) return 'relatorios_gerais';
@@ -197,6 +201,19 @@ export default function App() {
               </div>
               <span>Feed de Alertas</span>
             </button>
+
+            {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
+              <button
+                onClick={() => onNavigate('financeiro')}
+                className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'financeiro'
+                    ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
+                    : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                  }`}
+              >
+                <Landmark className="w-4 h-4" />
+                <span>Financeiro</span>
+              </button>
+            )}
 
             <button
               onClick={() => onNavigate('relatorios_gerais')}
@@ -311,7 +328,7 @@ export default function App() {
 
         {/* 3. BARRA DE NAVEGAÇÃO INFERIOR PARA MOBILE (lg:hidden) */}
         {isAuthenticated && currentScreen !== 'login' && (
-          <nav className="lg:hidden h-16 bg-[#fffaf2]/95 border-t border-[#465336]/15 backdrop-blur-md flex justify-around items-center px-2 select-none z-30 shrink-0">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#fffaf2]/95 border-t border-[#465336]/15 backdrop-blur-md flex justify-around items-center px-2 select-none z-50 shadow-[0_-10px_30px_rgba(38,50,37,0.12)]">
             <button
               onClick={() => onNavigate('dashboard')}
               className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
@@ -342,14 +359,27 @@ export default function App() {
               <span className="text-[9px] uppercase tracking-wider">Alertas</span>
             </button>
 
-            <button
-              onClick={() => onNavigate('relatorios_gerais')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
-                }`}
-            >
-              <ChartNoAxesCombined className="w-5 h-5 mb-1" />
-              <span className="text-[9px] uppercase tracking-wider">Relatórios</span>
-            </button>
+            {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
+              <button
+                onClick={() => onNavigate('financeiro')}
+                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'financeiro' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+                  }`}
+              >
+                <Landmark className="w-5 h-5 mb-1" />
+                <span className="text-[9px] uppercase tracking-wider">Financeiro</span>
+              </button>
+            )}
+
+            {currentUser?.role === 'LEITOR' && (
+              <button
+                onClick={() => onNavigate('relatorios_gerais')}
+                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+                  }`}
+              >
+                <ChartNoAxesCombined className="w-5 h-5 mb-1" />
+                <span className="text-[9px] uppercase tracking-wider">Relatórios</span>
+              </button>
+            )}
 
             {currentUser?.role === 'ADMIN' && (
               <button

@@ -22,6 +22,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
   const [activeFilter, setActiveFilter] = useState<'TODOS' | 'ANDAMENTO' | 'ATRASADA' | 'FINALIZADA'>('TODOS');
   const [filteredChocadas, setFilteredChocadas] = useState<Chocada[]>([]);
   const [delTarget, setDelTarget] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const list = repo.getChocadas();
@@ -45,8 +46,13 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
 
   const handleConfirmDelete = () => {
     if (!delTarget) return;
-    repo.deleteChocada(delTarget);
-    setFilteredChocadas(prev => prev.filter(ch => ch.id !== delTarget));
+    const result = repo.deleteChocada(delTarget);
+    if (result.success) {
+      setFilteredChocadas(prev => prev.filter(ch => ch.id !== delTarget));
+      setDeleteError('');
+    } else {
+      setDeleteError(result.message);
+    }
     setDelTarget(null);
   };
 
@@ -70,6 +76,12 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
 
       {/* Main Container */}
       <div className="flex-grow overflow-y-auto px-5 py-5 space-y-5 scrollbar-thin pb-20">
+        {deleteError && (
+          <div className="py-2.5 px-4 bg-red-500/10 border border-red-500/25 text-red-400 text-xs rounded-xl font-bold">
+            {deleteError}
+          </div>
+        )}
+
         {/* Search bar matching photo pattern exactly */}
         <div className="relative group">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -219,6 +231,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   const [chocada, setChocada] = useState<Chocada | undefined>(undefined);
   const [logs, setLogs] = useState<any[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const data = repo.getChocadaById(id);
@@ -243,9 +256,14 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
   const handleDelete = () => {
-    repo.deleteChocada(chocada.id);
-    setDeleteOpen(false);
-    onNavigate('chocadas_lista');
+    const result = repo.deleteChocada(chocada.id);
+    if (result.success) {
+      setDeleteOpen(false);
+      onNavigate('chocadas_lista');
+    } else {
+      setDeleteOpen(false);
+      setDeleteError(result.message);
+    }
   };
 
   return (
@@ -280,6 +298,11 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
 
       {/* Main Viewport */}
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20">
+        {deleteError && (
+          <div className="py-2.5 px-4 bg-red-500/10 border border-red-500/25 text-red-400 text-xs rounded-xl font-bold">
+            {deleteError}
+          </div>
+        )}
         
         {/* Layout em 2 colunas no desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -430,7 +453,13 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
   const [observacoes, setObservacoes] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const chocadeirasList = repo.getChocadeiras().map(ch => ({
+  const existingChocada = idToEdit ? repo.getChocadaById(idToEdit) : undefined;
+  const currentChocadeira = existingChocada ? repo.getChocadeiraById(existingChocada.chocadeiraId) : undefined;
+  const availableChocadeiras = repo.getChocadeirasDisponiveis(idToEdit);
+  const selectableChocadeiras = currentChocadeira && !availableChocadeiras.some(ch => ch.id === currentChocadeira.id)
+    ? [currentChocadeira, ...availableChocadeiras]
+    : availableChocadeiras;
+  const chocadeirasList = selectableChocadeiras.map(ch => ({
     value: ch.id,
     label: `${ch.nome} (Cap. ${ch.capacidadeMaximaOvos})`
   }));
@@ -441,7 +470,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
 
   useEffect(() => {
     // Set default incubator if available
-    const activeChocadeiras = repo.getChocadeiras();
+    const activeChocadeiras = repo.getChocadeirasDisponiveis(idToEdit);
     if (activeChocadeiras.length > 0) {
       setChocadeiraId(activeChocadeiras[0].id);
     }
@@ -578,7 +607,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">Chocadeira</label>
                 <div className="py-3 px-4 bg-red-500/5 text-red-400 border border-red-500/20 text-xs rounded-xl font-medium">
-                  Sem chocadeiras ativas!
+                  Sem chocadeiras disponíveis!
                 </div>
               </div>
             )}

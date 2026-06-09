@@ -203,7 +203,7 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
       <ConfirmDialog
         isOpen={delTarget !== null}
         title="Excluir Chocadeira"
-        message="Deseja realmente remover esta chocadeira do cadastro permanente? Esta operação é irreversível."
+        message="Deseja realmente remover esta chocadeira das listas ativas? A exclusão será bloqueada se houver lotes, nascimentos ou lançamentos vinculados."
         onConfirm={handleConfirmDelete}
         onCancel={() => setDelTarget(null)}
       />

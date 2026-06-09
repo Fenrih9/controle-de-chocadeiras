@@ -109,3 +109,18 @@ export interface Alerta {
   chocadaId?: string;
   data: string;
 }
+
+export interface LancamentoFinanceiro {
+  id: string;
+  tipo: 'RECEITA' | 'DESPESA';
+  valor: number;
+  descricao: string;
+  data: string; // YYYY-MM-DD
+  categoria: string; // 'Venda de Pintinhos' | 'Compra de Ração' | 'Medicamentos' | 'Energia' | 'Outros'
+  quantidadePintinhos?: number; // Opcional, usado se for Venda de Pintinhos
+  chocadeiraId?: string; // Opcional, vincula à chocadeira
+  chocadaId?: string; // Opcional, vincula ao lote
+  criadoEm: string;
+  atualizadoEm: string;
+  excluido: boolean;
+}

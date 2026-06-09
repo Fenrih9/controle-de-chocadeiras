@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Chocadeira, Chocada, RegistroDiario, Ovoscopia, RegistroNascimento, Propriedade, Alerta, ChocadaStatus, Usuario } from './types';
+import { Chocadeira, Chocada, RegistroDiario, Ovoscopia, RegistroNascimento, Propriedade, Alerta, ChocadaStatus, Usuario, LancamentoFinanceiro } from './types';
 import { supabase } from './supabaseClient';
 
 export function addDays(dateStr: string, days: number): string {
@@ -58,6 +58,7 @@ type AppCache = {
   ovoscopias: Ovoscopia[];
   registros_nascimentos: RegistroNascimento[];
   usuarios: Usuario[];
+  financeiro_lancamentos: LancamentoFinanceiro[];
 };
 
 class AppRepository {
@@ -69,6 +70,7 @@ class AppRepository {
     ovoscopias: [],
     registros_nascimentos: [],
     usuarios: [],
+    financeiro_lancamentos: [],
   };
 
   private isLoaded = false;
@@ -82,14 +84,15 @@ class AppRepository {
     if (this.isLoaded) return;
     
     try {
-      const [prop, chocadeiras, chocadas, registros, ovos, nascimentos, users] = await Promise.all([
+      const [prop, chocadeiras, chocadas, registros, ovos, nascimentos, users, lancamentos] = await Promise.all([
         supabase.from('propriedades').select('*'),
         supabase.from('chocadeiras').select('*'),
         supabase.from('chocadas').select('*'),
         supabase.from('registros_diarios').select('*'),
         supabase.from('ovoscopias').select('*'),
         supabase.from('registros_nascimentos').select('*'),
-        supabase.from('usuarios').select('*')
+        supabase.from('usuarios').select('*'),
+        supabase.from('financeiro_lancamentos').select('*')
       ]);
 
       if (prop.data) this.cache.propriedades = prop.data;
@@ -99,6 +102,7 @@ class AppRepository {
       if (ovos.data) this.cache.ovoscopias = ovos.data;
       if (nascimentos.data) this.cache.registros_nascimentos = nascimentos.data;
       if (users.data) this.cache.usuarios = users.data;
+      if (lancamentos.data) this.cache.financeiro_lancamentos = lancamentos.data;
 
       // Seed fallback if absolutely empty
       if (this.cache.propriedades.length === 0) {
@@ -228,6 +232,22 @@ class AppRepository {
     return this.getChocadeiras(true).find(item => item.id === id);
   }
 
+  private isChocadaEmAberto(chocada: Chocada): boolean {
+    return !chocada.excluido && !chocada.finalizada && !chocada.cancelada;
+  }
+
+  public getChocadeiraOcupadaPor(chocadeiraId: string, ignoreChocadaId?: string): Chocada | undefined {
+    return this.getChocadas().find(
+      c => c.chocadeiraId === chocadeiraId && c.id !== ignoreChocadaId && this.isChocadaEmAberto(c)
+    );
+  }
+
+  public getChocadeirasDisponiveis(ignoreChocadaId?: string): Chocadeira[] {
+    return this.getChocadeiras().filter(ch => (
+      ch.status === 'Ativa' && !this.getChocadeiraOcupadaPor(ch.id, ignoreChocadaId)
+    ));
+  }
+
   public saveChocadeira(chocadeira: Chocadeira): void {
     const list = this.cache.chocadeiras;
     const index = list.findIndex(item => item.id === chocadeira.id);
@@ -247,14 +267,20 @@ class AppRepository {
   }
 
   public deleteChocadeira(id: string): { success: boolean; message: string } {
-    const activeChocadas = this.getChocadas().filter(
-      c => c.chocadeiraId === id && (c.status === 'EM_ANDAMENTO' || c.status === 'PROXIMA' || c.status === 'ATRASADA')
-    );
+    const linkedChocadas = this.getChocadas().filter(c => c.chocadeiraId === id);
 
-    if (activeChocadas.length > 0) {
+    if (linkedChocadas.length > 0) {
       return {
         success: false,
-        message: `Não é possível excluir esta chocadeira pois está vinculada ao lote ativo "${activeChocadas[0].nome}".`,
+        message: `Não é possível excluir esta chocadeira pois ela possui lote vinculado ("${linkedChocadas[0].nome}"). Mantenha o cadastro para preservar histórico, nascimentos e vendas.`,
+      };
+    }
+
+    const linkedSales = this.getLancamentos().filter(l => l.chocadeiraId === id);
+    if (linkedSales.length > 0) {
+      return {
+        success: false,
+        message: 'Não é possível excluir esta chocadeira pois existem lançamentos financeiros vinculados a ela.',
       };
     }
 
@@ -323,6 +349,22 @@ class AppRepository {
     if (!chocada.nome.trim()) return { success: false, message: 'O nome da chocada é obrigatório.' };
     if (!chocada.dataInicio) return { success: false, message: 'A data de início é obrigatória.' };
     if (chocada.quantidadeOvosInicial <= 0) return { success: false, message: 'A quantidade de ovos deve ser maior que zero.' };
+    if (!chocada.chocadeiraId) return { success: false, message: 'Selecione uma chocadeira disponível.' };
+
+    const existingChocada = chocada.id ? this.cache.chocadas.find(item => item.id === chocada.id && !item.excluido) : undefined;
+    const isSameChocadeira = existingChocada?.chocadeiraId === chocada.chocadeiraId;
+    const selectedChocadeira = this.getChocadeiraById(chocada.chocadeiraId);
+    if (!selectedChocadeira || selectedChocadeira.excluido || (!isSameChocadeira && selectedChocadeira.status !== 'Ativa')) {
+      return { success: false, message: 'A chocadeira selecionada não está ativa ou não está disponível.' };
+    }
+
+    const occupiedBy = this.getChocadeiraOcupadaPor(chocada.chocadeiraId, chocada.id);
+    if (occupiedBy) {
+      return {
+        success: false,
+        message: `A chocadeira "${selectedChocadeira.nome}" já está ocupada pelo lote "${occupiedBy.nome}". Finalize esse ciclo antes de cadastrar outro.`,
+      };
+    }
 
     const perdasRegistradas = this.getOvoscopias(chocada.id).reduce(
       (total, ov) => total + ov.ovosDescartados + ov.ovosInferteis,
@@ -362,14 +404,31 @@ class AppRepository {
     return { success: true, message: 'Lote registrado com sucesso.', data: saved };
   }
 
-  public deleteChocada(id: string): void {
+  public deleteChocada(id: string): { success: boolean; message: string } {
     const list = this.cache.chocadas;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
+      const nascimentoCount = this.getRegistrosNascimento(id).length;
+      if (nascimentoCount > 0) {
+        return {
+          success: false,
+          message: 'Não é possível excluir esta chocada pois ela possui registro de nascimento. Esse dado alimenta o estoque de pintinhos e o histórico de eclosão.',
+        };
+      }
+
+      const linkedLancamentos = this.getLancamentos().filter(l => l.chocadaId === id);
+      if (linkedLancamentos.length > 0) {
+        return {
+          success: false,
+          message: 'Não é possível excluir esta chocada pois existem lançamentos financeiros vinculados a ela.',
+        };
+      }
+
       list[index].excluido = true;
       list[index].atualizadoEm = CURRENT_DATE_STRING;
       this.upsertToSupabase('chocadas', list[index]);
     }
+    return { success: true, message: 'Chocada excluída com segurança.' };
   }
 
   // --- REGISTRO DIÁRIO ---
@@ -598,6 +657,124 @@ class AppRepository {
     const parts = dateStr.split('-');
     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
     return dateStr;
+  }
+
+  // --- FINANCEIRO ---
+  public getLancamentos(incluiExcluidos = false): LancamentoFinanceiro[] {
+    return this.cache.financeiro_lancamentos
+      .filter(item => incluiExcluidos || !item.excluido)
+      .sort((a, b) => b.data.localeCompare(a.data));
+  }
+
+  public async saveLancamento(lancamento: LancamentoFinanceiro): Promise<{ success: boolean; message: string }> {
+    if (lancamento.valor <= 0) return { success: false, message: 'O valor do lançamento deve ser maior que zero.' };
+    if (!lancamento.data) return { success: false, message: 'A data do lançamento é obrigatória.' };
+    if (!lancamento.categoria) return { success: false, message: 'A categoria do lançamento é obrigatória.' };
+
+    // Validação adicional de estoque de pintinhos se for venda
+    if (lancamento.tipo === 'RECEITA' && lancamento.categoria === 'Venda de Pintinhos' && lancamento.chocadeiraId) {
+      const qtd = lancamento.quantidadePintinhos || 0;
+      if (qtd <= 0) {
+        return { success: false, message: 'A quantidade de pintinhos vendida deve ser maior que zero.' };
+      }
+      const estoque = this.getEstoquePintinhosPorChocadeira(lancamento.chocadeiraId, lancamento.id);
+      if (qtd > estoque.disponivel) {
+        return {
+          success: false,
+          message: `Estoque insuficiente! A chocadeira possui apenas ${estoque.disponivel} pintinhos disponíveis para venda. (Total Nascidos: ${estoque.nascidos}, Total Vendidos: ${estoque.vendidos})`
+        };
+      }
+    }
+
+    const list = this.cache.financeiro_lancamentos;
+    const index = list.findIndex(item => item.id === lancamento.id);
+    const dateStr = CURRENT_DATE_STRING;
+
+    if (index >= 0) {
+      lancamento.atualizadoEm = dateStr;
+      list[index] = { ...list[index], ...lancamento };
+    } else {
+      lancamento.id = lancamento.id || `lanc-${Date.now()}`;
+      lancamento.criadoEm = dateStr;
+      lancamento.atualizadoEm = dateStr;
+      lancamento.excluido = false;
+      list.push(lancamento);
+    }
+
+    const { error } = await supabase.from('financeiro_lancamentos').upsert(lancamento);
+    if (error) {
+      console.error('Erro ao salvar lançamento no Supabase:', error);
+      return { success: false, message: `Erro ao salvar no banco de dados (RLS/Permissões): ${error.message}` };
+    }
+
+    return { success: true, message: 'Lançamento financeiro salvo com sucesso.' };
+  }
+
+  public async deleteLancamento(id: string): Promise<{ success: boolean; message: string }> {
+    const list = this.cache.financeiro_lancamentos;
+    const index = list.findIndex(item => item.id === id);
+    if (index >= 0) {
+      const lanc = { ...list[index] };
+      lanc.excluido = true;
+      lanc.atualizadoEm = CURRENT_DATE_STRING;
+
+      const { error } = await supabase.from('financeiro_lancamentos').upsert(lanc);
+      if (error) {
+        console.error('Erro ao excluir lançamento no Supabase:', error);
+        return { success: false, message: `Erro ao salvar exclusão no banco de dados: ${error.message}` };
+      }
+      list[index] = lanc;
+    }
+    return { success: true, message: 'Lançamento financeiro excluído com sucesso.' };
+  }
+
+  public getEstoquePintinhosPorChocadeira(chocadeiraId: string, ignoreLancamentoId?: string): { nascidos: number; vendidos: number; disponivel: number } {
+    // 1. Achar todas as chocadas finalizadas vinculadas a esta chocadeira
+    const chocadasFinalizadas = this.getChocadas().filter(
+      c => c.chocadeiraId === chocadeiraId && c.finalizada && !c.excluido
+    );
+
+    // 2. Somar o total de nascimentos dessas chocadas
+    let totalNascidos = 0;
+    chocadasFinalizadas.forEach(ch => {
+      const nascimentos = this.getRegistrosNascimento(ch.id);
+      nascimentos.forEach(n => {
+        totalNascidos += n.pintinhosNascidos;
+      });
+    });
+
+    // 3. Somar o total de pintinhos vendidos desta chocadeira
+    let totalVendidos = 0;
+    const vendas = this.cache.financeiro_lancamentos.filter(
+      l => !l.excluido &&
+           l.tipo === 'RECEITA' &&
+           l.categoria === 'Venda de Pintinhos' &&
+           l.chocadeiraId === chocadeiraId &&
+           l.id !== ignoreLancamentoId
+    );
+    vendas.forEach(v => {
+      totalVendidos += v.quantidadePintinhos || 0;
+    });
+
+    return {
+      nascidos: totalNascidos,
+      vendidos: totalVendidos,
+      disponivel: Math.max(0, totalNascidos - totalVendidos)
+    };
+  }
+
+  public getEstoquePintinhosGeral(ignoreLancamentoId?: string): { nascidos: number; vendidos: number; disponivel: number } {
+    return this.getChocadeiras().reduce(
+      (total, chocadeira) => {
+        const estoque = this.getEstoquePintinhosPorChocadeira(chocadeira.id, ignoreLancamentoId);
+        return {
+          nascidos: total.nascidos + estoque.nascidos,
+          vendidos: total.vendidos + estoque.vendidos,
+          disponivel: total.disponivel + estoque.disponivel,
+        };
+      },
+      { nascidos: 0, vendidos: 0, disponivel: 0 }
+    );
   }
 }
 
