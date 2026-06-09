@@ -39,6 +39,8 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
       result = result.filter(c => c.status === 'ATRASADA');
     } else if (activeFilter === 'FINALIZADA') {
       result = result.filter(c => c.status === 'FINALIZADA');
+    } else if (activeFilter === 'CANCELADA') {
+      result = result.filter(c => c.status === 'CANCELADA');
     }
 
     setFilteredChocadas(result);
@@ -101,6 +103,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
             { code: 'ANDAMENTO', label: 'Em Andamento' },
             { code: 'ATRASADA', label: 'Atrasados' },
             { code: 'FINALIZADA', label: 'Finalizados' },
+            { code: 'CANCELADA', label: 'Inativados' },
           ] as const).map((pill) => {
             const isActive = activeFilter === pill.code;
             return (
@@ -232,6 +235,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   const [logs, setLogs] = useState<any[]>([]);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   useEffect(() => {
     const data = repo.getChocadaById(id);
@@ -266,6 +270,17 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
     }
   };
 
+  const handleCancel = () => {
+    const result = repo.cancelarChocada(chocada.id);
+    if (result.success) {
+      setCancelOpen(false);
+      onNavigate('chocadas_lista');
+    } else {
+      setCancelOpen(false);
+      setDeleteError(result.message);
+    }
+  };
+
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Dynamic Navigation Topbar */}
@@ -280,6 +295,14 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
         </div>
         {currentUser?.role !== 'LEITOR' && (
           <div className="flex items-center gap-2">
+            {!chocada.cancelada && (
+              <button
+                onClick={() => setCancelOpen(true)}
+                className="text-xs font-bold text-orange-400 hover:underline uppercase"
+              >
+                Inativar
+              </button>
+            )}
             <button
               onClick={() => onNavigate('chocada_editar', { id: chocada.id })}
               className="text-xs font-bold text-sky-400 hover:underline uppercase"
@@ -388,7 +411,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
 
             {/* Actions Button Grid */}
             <section className="grid grid-cols-2 gap-3 pb-4">
-              {currentUser?.role !== 'LEITOR' && (
+              {currentUser?.role !== 'LEITOR' && !chocada.cancelada && (
                 <>
                   <button
                     onClick={() => onNavigate('registro_diario_novo', { id: chocada.id })}
@@ -432,6 +455,15 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
         confirmLabel="Excluir"
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={cancelOpen}
+        title="Inativar e Estornar Lote"
+        message={`Deseja inativar o lote "${chocada.nome}"? Isso irá estornar todos os registros de nascimento e inspeções, removendo os pintinhos do estoque atual.`}
+        confirmLabel="Inativar"
+        onConfirm={handleCancel}
+        onCancel={() => setCancelOpen(false)}
       />
     </div>
   );

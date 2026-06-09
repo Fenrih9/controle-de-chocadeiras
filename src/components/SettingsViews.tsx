@@ -504,11 +504,17 @@ export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
                 className={`p-4 rounded-xl border backdrop-blur-md cursor-pointer hover:brightness-110 active:scale-95 transition-all outline-none flex gap-3.5 relative overflow-hidden group ${
                   al.tipo === 'error'
                     ? 'bg-red-500/10 border-red-500/25 text-red-100'
-                    : 'bg-amber-500/10 border-amber-500/20 text-amber-100'
+                    : al.tipo === 'warning'
+                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-100'
+                    : 'bg-sky-500/10 border-sky-500/20 text-sky-100' // info
                 }`}
               >
                 <div className="shrink-0 flex items-center justify-center p-2 rounded-lg bg-slate-900/40">
-                  <AlertOctagon className={`w-5 h-5 ${al.tipo === 'error' ? 'text-red-400' : 'text-amber-400'}`} />
+                  <AlertOctagon className={`w-5 h-5 ${
+                    al.tipo === 'error' ? 'text-red-400' : 
+                    al.tipo === 'warning' ? 'text-amber-400' : 
+                    'text-sky-400' // info
+                  }`} />
                 </div>
                 <div>
                   <h4 className="font-extrabold text-sm leading-tight">{al.titulo}</h4>
@@ -1225,9 +1231,9 @@ export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
     setUsuarios(repo.getUsuarios().filter(u => u.ativo));
   }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Deseja realmente remover este usuário?')) {
-      const res = repo.deleteUsuario(id);
+      const res = await repo.deleteUsuario(id);
       if (res.success) {
         setUsuarios(repo.getUsuarios().filter(u => u.ativo));
       } else {

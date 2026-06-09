@@ -91,7 +91,7 @@ class AppRepository {
         supabase.from('registros_diarios').select('*'),
         supabase.from('ovoscopias').select('*'),
         supabase.from('registros_nascimentos').select('*'),
-        supabase.from('usuarios').select('*'),
+        supabase.from('usuarios').select('*').eq('ativo', true),
         supabase.from('financeiro_lancamentos').select('*')
       ]);
 
@@ -151,7 +151,8 @@ class AppRepository {
   }
 
   public getUsuarioByUsername(username: string): Usuario | undefined {
-    return this.cache.usuarios.find(u => u.username === username);
+    // Filtra apenas usuários ativos para evitar conflito com registros inativos/fantasmas
+    return this.cache.usuarios.find(u => u.username === username && u.ativo);
   }
 
   public async saveUsuario(usuario: Usuario): Promise<{ success: boolean; message: string }> {
@@ -189,21 +190,26 @@ class AppRepository {
     return { success: true, message: 'Usuário salvo com sucesso.' };
   }
 
-  public deleteUsuario(id: string): { success: boolean; message: string } {
+  public async deleteUsuario(id: string): Promise<{ success: boolean; message: string }> {
     const list = this.cache.usuarios;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
-      // Bloquear deleção de si mesmo ou admin
+      // Bloquear deleção do admin
       if (list[index].username === 'admin') {
         return { success: false, message: 'Não é possível excluir o super administrador.' };
       }
       
-      const deletedUser = list.splice(index, 1)[0];
-      // Note: No supabase, seria melhor ter ativo = false, mas para simplificar vamos deletar ou fazer inativo.
-      deletedUser.ativo = false;
-      this.upsertToSupabase('usuarios', deletedUser);
+      // Deletar permanentemente do Supabase para liberar o username para recadastro
+      const { error } = await supabase.from('usuarios').delete().eq('id', id);
+      if (error) {
+        console.error('Erro ao deletar usuário do Supabase:', error);
+        return { success: false, message: `Erro ao remover do banco de dados: ${error.message}` };
+      }
+
+      // Remover do cache local somente após sucesso no Supabase
+      list.splice(index, 1);
     }
-    return { success: true, message: 'Usuário inativado/removido.' };
+    return { success: true, message: 'Usuário removido com sucesso.' };
   }
 
   // --- PROPRIEDADE ---
@@ -412,7 +418,7 @@ class AppRepository {
       if (nascimentoCount > 0) {
         return {
           success: false,
-          message: 'Não é possível excluir esta chocada pois ela possui registro de nascimento. Esse dado alimenta o estoque de pintinhos e o histórico de eclosão.',
+          message: 'Não é possível excluir esta chocada pois ela possui registro de nascimento. Utilize a opção "Cancelar/Estornar" caso precise corrigir erros de lançamento que afetam o estoque.',
         };
       }
 
@@ -429,6 +435,61 @@ class AppRepository {
       this.upsertToSupabase('chocadas', list[index]);
     }
     return { success: true, message: 'Chocada excluída com segurança.' };
+  }
+
+  public cancelarChocada(id: string): { success: boolean; message: string } {
+    const list = this.cache.chocadas;
+    const index = list.findIndex(item => item.id === id);
+    if (index === -1) return { success: false, message: 'Chocada não encontrada.' };
+
+    const chocada = list[index];
+
+    // Verificar impacto no estoque
+    const nascimentosDestaChocada = this.getRegistrosNascimento(id);
+    const totalNascidosDestaChocada = nascimentosDestaChocada.reduce((acc, n) => acc + n.pintinhosNascidos, 0);
+
+    const estoqueAtual = this.getEstoquePintinhosPorChocadeira(chocada.chocadeiraId);
+    
+    if (estoqueAtual.disponivel - totalNascidosDestaChocada < 0) {
+      return { 
+        success: false, 
+        message: `Não é possível inativar o lote. Existem vendas financeiras que dependem dos pintinhos nascidos aqui. Exclua a venda no Financeiro antes de cancelar.` 
+      };
+    }
+
+    const dateStr = CURRENT_DATE_STRING;
+
+    // Soft delete em cascata
+    const registros = this.cache.registros_diarios.filter(r => r.chocadaId === id && !r.excluido);
+    registros.forEach(r => {
+      r.excluido = true;
+      r.atualizadoEm = dateStr;
+      this.upsertToSupabase('registros_diarios', r);
+    });
+
+    const ovoscopias = this.cache.ovoscopias.filter(o => o.chocadaId === id && !o.excluido);
+    ovoscopias.forEach(o => {
+      o.excluido = true;
+      o.atualizadoEm = dateStr;
+      this.upsertToSupabase('ovoscopias', o);
+    });
+
+    const nascimentos = this.cache.registros_nascimentos.filter(n => n.chocadaId === id && !n.excluido);
+    nascimentos.forEach(n => {
+      n.excluido = true;
+      n.atualizadoEm = dateStr;
+      this.upsertToSupabase('registros_nascimentos', n);
+    });
+
+    // Inativar lote
+    chocada.cancelada = true;
+    chocada.finalizada = false;
+    chocada.status = 'CANCELADA';
+    chocada.atualizadoEm = dateStr;
+
+    this.upsertToSupabase('chocadas', chocada);
+
+    return { success: true, message: 'Lote cancelado e registros vinculados foram estornados com sucesso.' };
   }
 
   // --- REGISTRO DIÁRIO ---
@@ -610,6 +671,7 @@ class AppRepository {
     const chocadas = this.getChocadas();
     const todayStr = getCurrentDateString();
     
+    // 1. Alertas de status das Chocadas (Atrasadas, Próximas, Sem Registro)
     chocadas.forEach(ch => {
       if (ch.status === 'ATRASADA') {
         const diff = daysBetween(ch.dataPrevistaNascimento, todayStr);
@@ -642,14 +704,60 @@ class AppRepository {
           id: `al-diario-${ch.id}`,
           titulo: `Pendente: Registro diário em "${ch.nome}"`,
           msg: `Inspeção pendente para hoje. Lembrar de virar os ovos e analisar parâmetros.`,
-          tipo: 'info',
+          tipo: 'warning',
           chocadaId: ch.id,
           data: todayStr,
         });
       }
+      
+      // Novo Alerta: Choca cadastrada recentemente (últimos 3 dias)
+      const diasDesdeCriacao = daysBetween(ch.criadoEm || ch.dataInicio, todayStr);
+      if (diasDesdeCriacao >= 0 && diasDesdeCriacao <= 3) {
+        alerts.push({
+          id: `al-nova-${ch.id}`,
+          titulo: `Novo Lote Cadastrado: ${ch.nome}`,
+          msg: `Uma nova choca foi iniciada com ${ch.quantidadeOvosInicial} ovos de ${ch.tipoOvo}.`,
+          tipo: 'info',
+          chocadaId: ch.id,
+          data: ch.criadoEm || ch.dataInicio,
+        });
+      }
     });
 
-    return alerts;
+    // 2. Alertas de Nascimentos Recentes (últimos 3 dias)
+    const nascimentos = this.getRegistrosNascimento();
+    nascimentos.forEach(nasc => {
+      const diasDesdeNascimento = daysBetween(nasc.dataNascimentoReal, todayStr);
+      if (diasDesdeNascimento >= 0 && diasDesdeNascimento <= 3) {
+        const chocadaAssoc = this.getChocadaById(nasc.chocadaId);
+        alerts.push({
+          id: `al-nasc-${nasc.id}`,
+          titulo: `Pintinhos Nascidos! (${chocadaAssoc?.nome || 'Lote'})`,
+          msg: `Sucesso! ${nasc.pintinhosNascidos} pintinhos acabaram de nascer.`,
+          tipo: 'info',
+          chocadaId: nasc.chocadaId,
+          data: nasc.dataNascimentoReal,
+        });
+      }
+    });
+
+    // 3. Alertas de Vendas Recentes (últimos 3 dias)
+    const vendas = this.getLancamentos().filter(l => l.tipo === 'RECEITA' && l.categoria === 'Venda de Pintinhos');
+    vendas.forEach(v => {
+      const diasDesdeVenda = daysBetween(v.data, todayStr);
+      if (diasDesdeVenda >= 0 && diasDesdeVenda <= 3) {
+        alerts.push({
+          id: `al-venda-${v.id}`,
+          titulo: `Venda Realizada!`,
+          msg: `Foram vendidos ${v.quantidadePintinhos || 0} pintinhos no valor de R$ ${v.valor.toFixed(2)}.`,
+          tipo: 'info',
+          data: v.data,
+        });
+      }
+    });
+
+    // Ordenar alertas por data (mais recentes primeiro) e retornar
+    return alerts.sort((a, b) => b.data.localeCompare(a.data));
   }
 
   public formatReadableDate(dateStr: string): string {

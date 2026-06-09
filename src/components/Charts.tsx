@@ -40,6 +40,9 @@ export const CircularProgressRing: React.FC<CircularProgressProps> = ({
   } else if (status === 'FINALIZADA') {
     ringColor = "text-emerald-400";
     filterColor = "rgba(74, 222, 128, 0.3)";
+  } else if (status === 'CANCELADA') {
+    ringColor = "text-slate-500";
+    filterColor = "rgba(100, 116, 139, 0.3)";
   }
 
   return (
@@ -126,6 +129,7 @@ export const MiniProgressRing: React.FC<{ day: number; total: number; status?: s
   if (status === 'PROXIMA') color = "text-purple-400";
   if (status === 'ATRASADA') color = "text-red-400";
   if (status === 'FINALIZADA') color = "text-emerald-400";
+  if (status === 'CANCELADA') color = "text-slate-500";
 
   return (
     <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
