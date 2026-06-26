@@ -61,7 +61,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Top Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3">
           <Egg className="w-5 h-5 text-sky-400 fill-sky-400/10" />
           <h1 className="font-headline font-bold text-slate-100 text-base leading-tight">Lista de Chocadas</h1>
@@ -77,7 +77,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
       </header>
 
       {/* Main Container */}
-      <div className="flex-grow overflow-y-auto px-5 py-5 space-y-5 scrollbar-thin pb-20">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 py-5 space-y-5 scrollbar-thin pb-32 lg:pb-20">
         {deleteError && (
           <div className="py-2.5 px-4 bg-red-500/10 border border-red-500/25 text-red-400 text-xs rounded-xl font-bold">
             {deleteError}
@@ -142,12 +142,12 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                 <div
                   key={ch.id}
                   onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                  className="bg-slate-950/60 hover:bg-slate-900/60 border border-sky-500/10 rounded-2xl p-4 flex gap-4 transition-all duration-300 hover:border-sky-400/30 cursor-pointer relative"
+                  className="bg-slate-950/60 hover:bg-slate-900/60 border border-sky-500/10 rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 hover:border-sky-400/30 cursor-pointer relative"
                 >
                   <MiniProgressRing day={elapsed} total={duration} status={ch.status} />
 
                   <div className="flex-1 space-y-2 text-slate-100 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
+                    <div className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-start gap-3">
                       <div className="truncate">
                         <h3 className="font-bold text-sm tracking-tight truncate">{ch.nome}</h3>
                         <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-semibold uppercase">
@@ -156,7 +156,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                           <span>Início: {repo.formatReadableDate(ch.dataInicio)}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                         <StatusChip status={ch.status} />
                         {currentUser?.role !== 'LEITOR' && (
                           <>
@@ -188,7 +188,7 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                     </div>
 
                     <div className="space-y-1">
-                      <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
+                      <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[9px] font-bold text-slate-400 uppercase">
                         <span>Previsão de Nascimento</span>
                         <span className="text-slate-200">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
                       </div>
@@ -284,34 +284,34 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Dynamic Navigation Topbar */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+        <div className="flex items-center gap-3 w-full min-[520px]:w-auto min-w-0">
           <button onClick={() => onNavigate('chocadas_lista')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 hover:text-white cursor-pointer select-none">
             <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
           </button>
-          <span className="font-headline font-bold text-slate-200 text-xs truncate max-w-[150px]">
+          <span className="font-headline font-bold text-slate-200 text-xs truncate">
             Lote: {chocada.nome}
           </span>
         </div>
         {currentUser?.role !== 'LEITOR' && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap w-full min-[520px]:w-auto">
             {!chocada.cancelada && (
               <button
                 onClick={() => setCancelOpen(true)}
-                className="text-xs font-bold text-orange-400 hover:underline uppercase"
+                className="rounded-lg border border-orange-400/20 bg-orange-400/10 px-2.5 py-1.5 text-[10px] font-bold text-orange-400 uppercase"
               >
                 Inativar
               </button>
             )}
             <button
               onClick={() => onNavigate('chocada_editar', { id: chocada.id })}
-              className="text-xs font-bold text-sky-400 hover:underline uppercase"
+              className="rounded-lg border border-sky-400/20 bg-sky-400/10 px-2.5 py-1.5 text-[10px] font-bold text-sky-400 uppercase"
             >
               Editar
             </button>
             <button
               onClick={() => setDeleteOpen(true)}
-              className="text-xs font-bold text-red-400 hover:underline uppercase"
+              className="rounded-lg border border-red-400/20 bg-red-400/10 px-2.5 py-1.5 text-[10px] font-bold text-red-400 uppercase"
             >
               Excluir
             </button>
@@ -320,7 +320,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
       </header>
 
       {/* Main Viewport */}
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20">
         {deleteError && (
           <div className="py-2.5 px-4 bg-red-500/10 border border-red-500/25 text-red-400 text-xs rounded-xl font-bold">
             {deleteError}
@@ -349,7 +349,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
             </section>
 
             {/* Realtime Thermostats statistics */}
-            <section className="grid grid-cols-2 gap-3.5">
+            <section className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3.5">
               <div className="bg-slate-950/60 border border-sky-500/10 rounded-xl p-4 flex flex-col gap-1.5 relative overflow-hidden group">
                 <Thermometer className="absolute right-3.5 top-3 text-sky-400/20 w-8 h-8" />
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Temperatura Ideal</span>
@@ -375,7 +375,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
                 <Clipboard className="w-4 h-4" /> Informações Gerais
               </h3>
               
-              <div className="grid grid-cols-2 gap-y-4 text-xs font-semibold leading-normal">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-y-4 gap-x-3 text-xs font-semibold leading-normal">
                 <div>
                   <p className="text-slate-500 uppercase text-[9px] font-bold">Data de Início</p>
                   <p className="text-slate-100 font-medium mt-0.5">{repo.formatReadableDate(chocada.dataInicio)}</p>
@@ -410,7 +410,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
             </section>
 
             {/* Actions Button Grid */}
-            <section className="grid grid-cols-2 gap-3 pb-4">
+            <section className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3 pb-4">
               {currentUser?.role !== 'LEITOR' && !chocada.cancelada && (
                 <>
                   <button
@@ -558,19 +558,19 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <div className="flex items-center gap-3">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+        <div className="flex items-center gap-3 min-w-0">
           <button onClick={() => onNavigate('chocadas_lista')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 hover:text-white cursor-pointer select-none">
             Cancelar
           </button>
-          <span className="font-headline font-bold text-slate-200 text-sm">
+          <span className="font-headline font-bold text-slate-200 text-sm truncate">
             {idToEdit ? 'Editar Ciclo' : 'Configurar Ciclo'}
           </span>
         </div>
       </header>
 
       {/* Form content scrolling wrapper */}
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20 max-w-4xl mx-auto w-full">
         
         {idToEdit && (
           <div className="py-2.5 px-4 bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs rounded-xl font-semibold flex items-center gap-2">
@@ -594,7 +594,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
             placeholder="Ex: Lote A - Primavera"
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4">
             <Select
               id="tipo-ovo"
               label="Espécie / Tipo"
@@ -618,7 +618,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4">
             <Input
               id="data-inicio"
               label="Data de Início"
@@ -646,7 +646,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
           </div>
 
           {/* Predict card auto calculating dates dynamically matching photos */}
-          <div className="bg-[#141c2e] border border-sky-500/10 rounded-xl p-4 border-dashed relative overflow-hidden flex items-center justify-between text-xs">
+          <div className="bg-[#141c2e] border border-sky-500/10 rounded-xl p-4 border-dashed relative overflow-hidden flex flex-col min-[460px]:flex-row min-[460px]:items-center min-[460px]:justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-sky-400" />
               <span className="text-slate-400 font-medium font-sans">Previsão Calculada de Nascimento</span>

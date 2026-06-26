@@ -85,15 +85,22 @@ class AppRepository {
     if (this.isLoaded) return;
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      const limitDateStr = sixtyDaysAgo.toISOString().split('T')[0];
+
       const [prop, chocadeiras, chocadas, registros, ovos, nascimentos, users, lancamentos] = await Promise.all([
         supabase.from('propriedades').select('*'),
-        supabase.from('chocadeiras').select('*'),
-        supabase.from('chocadas').select('*'),
-        supabase.from('registros_diarios').select('*'),
-        supabase.from('ovoscopias').select('*'),
-        supabase.from('registros_nascimentos').select('*'),
+        supabase.from('chocadeiras').select('*').eq('excluido', false),
+        supabase.from('chocadas').select('*').eq('excluido', false),
+        supabase.from('registros_diarios').select('*').eq('excluido', false).gte('data', limitDateStr),
+        supabase.from('ovoscopias').select('*').eq('excluido', false),
+        supabase.from('registros_nascimentos').select('*').eq('excluido', false),
         supabase.from('usuarios').select('*').eq('ativo', true),
-        supabase.from('financeiro_lancamentos').select('*')
+        supabase.from('financeiro_lancamentos').select('*').eq('excluido', false)
       ]);
 
       if (prop.data) this.cache.propriedades = prop.data;
@@ -105,41 +112,34 @@ class AppRepository {
       if (users.data) this.cache.usuarios = users.data;
       if (lancamentos.data) this.cache.financeiro_lancamentos = lancamentos.data.map(this.normalizeLancamento);
 
-      // Seed fallback if absolutely empty
-      if (this.cache.propriedades.length === 0) {
-        this.cache.propriedades.push(SEED_PROPRIEDADE);
-        this.upsertToSupabase('propriedades', SEED_PROPRIEDADE);
-      }
-
-      // Seed fallback admin user
-      if (this.cache.usuarios.length === 0) {
-        const seedAdmin: Usuario = {
-          id: 'usr-admin',
-          username: 'admin',
-          senhaMock: 'admin123',
-          role: 'ADMIN',
-          ativo: true,
-          criadoEm: CURRENT_DATE_STRING,
-        };
-        this.cache.usuarios.push(seedAdmin);
-        this.upsertToSupabase('usuarios', seedAdmin);
+      // Seed fallback se absolutamente vazio e usuário estiver autenticado
+      if (userId && this.cache.propriedades.length === 0) {
+        const initialProp = { ...SEED_PROPRIEDADE, user_id: userId };
+        this.cache.propriedades.push(initialProp);
+        await this.upsertToSupabase('propriedades', initialProp);
       }
 
       this.isLoaded = true;
     } catch (e) {
       console.error('Error loading from Supabase, operating offline or corrupted', e);
-      // fallback to whatever is in memory (empty)
     }
   }
 
-  // Generic background sync helper
+  // Generic background sync helper with user_id mapping
   private async upsertToSupabase(table: string, payload: any) {
-    // Fire and forget, no await to not block UI
-    supabase.from(table).upsert(payload).then(({ error }) => {
-      if (error) {
-        console.error(`Error saving to ${table} on Supabase:`, error);
-      }
-    });
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    const record = { ...payload };
+    if (userId && table !== 'usuarios') {
+      record.user_id = userId;
+    }
+
+    const { error } = await supabase.from(table).upsert(record);
+    if (error) {
+      console.error(`Error saving to ${table} on Supabase:`, error);
+      throw error;
+    }
   }
 
   private normalizeLancamento(lancamento: LancamentoFinanceiro): LancamentoFinanceiro {
@@ -150,8 +150,16 @@ class AppRepository {
   }
 
   private async upsertLancamentoToSupabase(lancamento: LancamentoFinanceiro) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    
+    const record = { ...lancamento };
+    if (userId) {
+      record.user_id = userId;
+    }
+
     if (this.financeiroAceitaFormaPagamento) {
-      const result = await supabase.from('financeiro_lancamentos').upsert(lancamento);
+      const result = await supabase.from('financeiro_lancamentos').upsert(record);
       if (!this.isMissingFormaPagamentoColumn(result.error)) {
         return result;
       }
@@ -163,7 +171,7 @@ class AppRepository {
       );
     }
 
-    const fallbackPayload = { ...lancamento };
+    const fallbackPayload = { ...record };
     delete fallbackPayload.formaPagamento;
     return supabase.from('financeiro_lancamentos').upsert(fallbackPayload);
   }
@@ -253,16 +261,19 @@ class AppRepository {
     return this.cache.propriedades[0] || SEED_PROPRIEDADE;
   }
 
-  public savePropriedade(prop: Propriedade): void {
+  public async savePropriedade(prop: Propriedade): Promise<{ success: boolean; message: string }> {
     prop.atualizadoEm = CURRENT_DATE_STRING;
-    // update cache
-    if (this.cache.propriedades.length > 0) {
-      this.cache.propriedades[0] = prop;
-    } else {
-      this.cache.propriedades.push(prop);
+    try {
+      await this.upsertToSupabase('propriedades', prop);
+      if (this.cache.propriedades.length > 0) {
+        this.cache.propriedades[0] = prop;
+      } else {
+        this.cache.propriedades.push(prop);
+      }
+      return { success: true, message: 'Propriedade salva com sucesso.' };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao salvar propriedade: ${e.message || e}` };
     }
-    // sync supabase
-    this.upsertToSupabase('propriedades', prop);
   }
 
   // --- CHOCADEIRAS ---
@@ -290,25 +301,35 @@ class AppRepository {
     ));
   }
 
-  public saveChocadeira(chocadeira: Chocadeira): void {
+  public async saveChocadeira(chocadeira: Chocadeira): Promise<{ success: boolean; message: string }> {
     const list = this.cache.chocadeiras;
     const index = list.findIndex(item => item.id === chocadeira.id);
     const dateStr = CURRENT_DATE_STRING;
     
+    const clone = { ...chocadeira };
     if (index >= 0) {
-      chocadeira.atualizadoEm = dateStr;
-      list[index] = { ...list[index], ...chocadeira };
+      clone.atualizadoEm = dateStr;
     } else {
-      chocadeira.id = chocadeira.id || `choc-${Date.now()}`;
-      chocadeira.criadoEm = dateStr;
-      chocadeira.atualizadoEm = dateStr;
-      chocadeira.excluido = false;
-      list.push(chocadeira);
+      clone.id = clone.id || `choc-${Date.now()}`;
+      clone.criadoEm = dateStr;
+      clone.atualizadoEm = dateStr;
+      clone.excluido = false;
     }
-    this.upsertToSupabase('chocadeiras', chocadeira);
+
+    try {
+      await this.upsertToSupabase('chocadeiras', clone);
+      if (index >= 0) {
+        list[index] = { ...list[index], ...clone };
+      } else {
+        list.push(clone);
+      }
+      return { success: true, message: 'Chocadeira salva com sucesso.' };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao salvar chocadeira: ${e.message || e}` };
+    }
   }
 
-  public deleteChocadeira(id: string): { success: boolean; message: string } {
+  public async deleteChocadeira(id: string): Promise<{ success: boolean; message: string }> {
     const linkedChocadas = this.getChocadas().filter(c => c.chocadeiraId === id);
 
     if (linkedChocadas.length > 0) {
@@ -329,9 +350,13 @@ class AppRepository {
     const list = this.cache.chocadeiras;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
-      list[index].excluido = true;
-      list[index].atualizadoEm = CURRENT_DATE_STRING;
-      this.upsertToSupabase('chocadeiras', list[index]);
+      const clone = { ...list[index], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+      try {
+        await this.upsertToSupabase('chocadeiras', clone);
+        list[index] = clone;
+      } catch (e: any) {
+        return { success: false, message: `Erro ao deletar chocadeira: ${e.message || e}` };
+      }
     }
     return { success: true, message: 'Chocadeira excluída com sucesso.' };
   }
@@ -387,7 +412,7 @@ class AppRepository {
     return chocada;
   }
 
-  public saveChocada(chocada: Chocada): { success: boolean; message: string; data?: Chocada } {
+  public async saveChocada(chocada: Chocada): Promise<{ success: boolean; message: string; data?: Chocada }> {
     if (!chocada.nome.trim()) return { success: false, message: 'O nome da chocada é obrigatório.' };
     if (!chocada.dataInicio) return { success: false, message: 'A data de início é obrigatória.' };
     if (chocada.quantidadeOvosInicial <= 0) return { success: false, message: 'A quantidade de ovos deve ser maior que zero.' };
@@ -420,33 +445,42 @@ class AppRepository {
     }
 
     const duration = DURACAO_INCUBACAO[chocada.tipoOvo] || 21;
-    chocada.dataPrevistaNascimento = addDays(chocada.dataInicio, duration);
+    const clone = { ...chocada };
+    clone.dataPrevistaNascimento = addDays(clone.dataInicio, duration);
 
     const list = this.cache.chocadas;
-    const index = list.findIndex(item => item.id === chocada.id);
+    const index = list.findIndex(item => item.id === clone.id);
     const dateStr = CURRENT_DATE_STRING;
 
     if (index >= 0) {
-      chocada.atualizadoEm = dateStr;
-      list[index] = { ...list[index], ...chocada };
-      chocada = this.recalculateChocadaStatusAndBalance(list[index]);
+      clone.atualizadoEm = dateStr;
     } else {
-      chocada.id = chocada.id || `chocada-${Date.now()}`;
-      chocada.quantidadeOvosAtivos = chocada.quantidadeOvosInicial;
-      chocada.criadoEm = dateStr;
-      chocada.atualizadoEm = dateStr;
-      chocada.excluido = false;
-      chocada.finalizada = false;
-      chocada.cancelada = false;
-      list.push(chocada);
+      clone.id = clone.id || `chocada-${Date.now()}`;
+      clone.quantidadeOvosAtivos = clone.quantidadeOvosInicial;
+      clone.criadoEm = dateStr;
+      clone.atualizadoEm = dateStr;
+      clone.excluido = false;
+      clone.finalizada = false;
+      clone.cancelada = false;
     }
-    chocada = this.recalculateChocadaStatusAndBalance(chocada);
-    this.upsertToSupabase('chocadas', chocada);
-    const saved = this.getChocadaById(chocada.id);
-    return { success: true, message: 'Lote registrado com sucesso.', data: saved };
+
+    const calculatedChocada = this.recalculateChocadaStatusAndBalance(clone);
+
+    try {
+      await this.upsertToSupabase('chocadas', calculatedChocada);
+      if (index >= 0) {
+        list[index] = calculatedChocada;
+      } else {
+        list.push(calculatedChocada);
+      }
+      const saved = this.getChocadaById(calculatedChocada.id);
+      return { success: true, message: 'Lote registrado com sucesso.', data: saved };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao salvar lote no Supabase: ${e.message || e}` };
+    }
   }
 
-  public deleteChocada(id: string): { success: boolean; message: string } {
+  public async deleteChocada(id: string): Promise<{ success: boolean; message: string }> {
     const list = this.cache.chocadas;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
@@ -466,24 +500,26 @@ class AppRepository {
         };
       }
 
-      list[index].excluido = true;
-      list[index].atualizadoEm = CURRENT_DATE_STRING;
-      this.upsertToSupabase('chocadas', list[index]);
+      const clone = { ...list[index], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+      try {
+        await this.upsertToSupabase('chocadas', clone);
+        list[index] = clone;
+      } catch (e: any) {
+        return { success: false, message: `Erro ao excluir lote no Supabase: ${e.message || e}` };
+      }
     }
     return { success: true, message: 'Chocada excluída com segurança.' };
   }
 
-  public cancelarChocada(id: string): { success: boolean; message: string } {
+  public async cancelarChocada(id: string): Promise<{ success: boolean; message: string }> {
     const list = this.cache.chocadas;
     const index = list.findIndex(item => item.id === id);
     if (index === -1) return { success: false, message: 'Chocada não encontrada.' };
 
     const chocada = list[index];
 
-    // Verificar impacto no estoque
     const nascimentosDestaChocada = this.getRegistrosNascimento(id);
     const totalNascidosDestaChocada = nascimentosDestaChocada.reduce((acc, n) => acc + n.pintinhosNascidos, 0);
-
     const estoqueAtual = this.getEstoquePintinhosPorChocadeira(chocada.chocadeiraId);
     
     if (estoqueAtual.disponivel - totalNascidosDestaChocada < 0) {
@@ -495,37 +531,48 @@ class AppRepository {
 
     const dateStr = CURRENT_DATE_STRING;
 
-    // Soft delete em cascata
     const registros = this.cache.registros_diarios.filter(r => r.chocadaId === id && !r.excluido);
-    registros.forEach(r => {
-      r.excluido = true;
-      r.atualizadoEm = dateStr;
-      this.upsertToSupabase('registros_diarios', r);
-    });
-
     const ovoscopias = this.cache.ovoscopias.filter(o => o.chocadaId === id && !o.excluido);
-    ovoscopias.forEach(o => {
-      o.excluido = true;
-      o.atualizadoEm = dateStr;
-      this.upsertToSupabase('ovoscopias', o);
-    });
-
     const nascimentos = this.cache.registros_nascimentos.filter(n => n.chocadaId === id && !n.excluido);
-    nascimentos.forEach(n => {
-      n.excluido = true;
-      n.atualizadoEm = dateStr;
-      this.upsertToSupabase('registros_nascimentos', n);
-    });
 
-    // Inativar lote
-    chocada.cancelada = true;
-    chocada.finalizada = false;
-    chocada.status = 'CANCELADA';
-    chocada.atualizadoEm = dateStr;
+    try {
+      const promises: Promise<any>[] = [];
+      
+      registros.forEach(r => {
+        const c = { ...r, excluido: true, atualizadoEm: dateStr };
+        promises.push(this.upsertToSupabase('registros_diarios', c));
+      });
 
-    this.upsertToSupabase('chocadas', chocada);
+      ovoscopias.forEach(o => {
+        const c = { ...o, excluido: true, atualizadoEm: dateStr };
+        promises.push(this.upsertToSupabase('ovoscopias', c));
+      });
 
-    return { success: true, message: 'Lote cancelado e registros vinculados foram estornados com sucesso.' };
+      nascimentos.forEach(n => {
+        const c = { ...n, excluido: true, updatedEm: dateStr, atualizadoEm: dateStr };
+        promises.push(this.upsertToSupabase('registros_nascimentos', c));
+      });
+
+      const cloneChocada = { 
+        ...chocada, 
+        cancelada: true, 
+        finalizada: false, 
+        status: 'CANCELADA' as ChocadaStatus, 
+        atualizadoEm: dateStr 
+      };
+      promises.push(this.upsertToSupabase('chocadas', cloneChocada));
+
+      await Promise.all(promises);
+
+      registros.forEach(r => { r.excluido = true; r.atualizadoEm = dateStr; });
+      ovoscopias.forEach(o => { o.excluido = true; o.atualizadoEm = dateStr; });
+      nascimentos.forEach(n => { n.excluido = true; n.atualizadoEm = dateStr; });
+      list[index] = cloneChocada;
+
+      return { success: true, message: 'Lote cancelado e registros vinculados foram estornados com sucesso.' };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao cancelar lote no Supabase: ${e.message || e}` };
+    }
   }
 
   // --- REGISTRO DIÁRIO ---
@@ -537,7 +584,7 @@ class AppRepository {
     return filtered.sort((a, b) => b.data.localeCompare(a.data));
   }
 
-  public saveRegistroDiario(reg: RegistroDiario): { success: boolean; message: string } {
+  public async saveRegistroDiario(reg: RegistroDiario): Promise<{ success: boolean; message: string }> {
     if (reg.temperatura < 0) return { success: false, message: 'A temperatura idealmente não pode ser negativa.' };
     if (reg.umidade < 0 || reg.umidade > 100) return { success: false, message: 'A umidade relativa do ar deve estar entre 0% e 100%.' };
 
@@ -545,28 +592,43 @@ class AppRepository {
     const index = list.findIndex(item => item.id === reg.id);
     const dateStr = CURRENT_DATE_STRING;
 
+    const clone = { ...reg };
     if (index >= 0) {
-      reg.atualizadoEm = dateStr;
-      list[index] = { ...list[index], ...reg };
+      clone.atualizadoEm = dateStr;
     } else {
-      reg.id = reg.id || `rd-${Date.now()}`;
-      reg.criadoEm = dateStr;
-      reg.atualizadoEm = dateStr;
-      reg.excluido = false;
-      list.push(reg);
+      clone.id = clone.id || `rd-${Date.now()}`;
+      clone.criadoEm = dateStr;
+      clone.atualizadoEm = dateStr;
+      clone.excluido = false;
     }
-    this.upsertToSupabase('registros_diarios', reg);
-    return { success: true, message: 'Acompanhamento diário salvo.' };
+
+    try {
+      await this.upsertToSupabase('registros_diarios', clone);
+      if (index >= 0) {
+        list[index] = clone;
+      } else {
+        list.push(clone);
+      }
+      return { success: true, message: 'Acompanhamento diário salvo.' };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao salvar registro diário: ${e.message || e}` };
+    }
   }
 
-  public deleteRegistroDiario(id: string): void {
+  public async deleteRegistroDiario(id: string): Promise<{ success: boolean; message: string }> {
     const list = this.cache.registros_diarios;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
-      list[index].excluido = true;
-      list[index].atualizadoEm = CURRENT_DATE_STRING;
-      this.upsertToSupabase('registros_diarios', list[index]);
+      const clone = { ...list[index], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+      try {
+        await this.upsertToSupabase('registros_diarios', clone);
+        list[index] = clone;
+        return { success: true, message: 'Acompanhamento diário excluído.' };
+      } catch (e: any) {
+        return { success: false, message: `Erro ao excluir acompanhamento diário: ${e.message || e}` };
+      }
     }
+    return { success: false, message: 'Registro não encontrado.' };
   }
 
   // --- OVOSCOPIAS ---
@@ -578,7 +640,7 @@ class AppRepository {
     return filtered.sort((a, b) => b.data.localeCompare(a.data));
   }
 
-  public saveOvoscopia(ov: Ovoscopia): { success: boolean; message: string } {
+  public async saveOvoscopia(ov: Ovoscopia): Promise<{ success: boolean; message: string }> {
     const chocada = this.getChocadaById(ov.chocadaId);
     if (!chocada) return { success: false, message: 'Lote de incubação associado não encontrado.' };
 
@@ -602,40 +664,55 @@ class AppRepository {
     const index = list.findIndex(item => item.id === ov.id);
     const dateStr = CURRENT_DATE_STRING;
 
+    const clone = { ...ov };
     if (index >= 0) {
-      ov.atualizadoEm = dateStr;
-      list[index] = { ...list[index], ...ov };
+      clone.atualizadoEm = dateStr;
     } else {
-      ov.id = ov.id || `ov-${Date.now()}`;
-      ov.criadoEm = dateStr;
-      ov.atualizadoEm = dateStr;
-      ov.excluido = false;
-      list.push(ov);
+      clone.id = clone.id || `ov-${Date.now()}`;
+      clone.criadoEm = dateStr;
+      clone.atualizadoEm = dateStr;
+      clone.excluido = false;
     }
-    this.upsertToSupabase('ovoscopias', ov);
-    this.recalcAndSaveChocadaAfterAction(ov.chocadaId);
-    return { success: true, message: 'Ovoscopia registrada com sucesso.' };
+
+    try {
+      await this.upsertToSupabase('ovoscopias', clone);
+      if (index >= 0) {
+        list[index] = clone;
+      } else {
+        list.push(clone);
+      }
+      await this.recalcAndSaveChocadaAfterAction(clone.chocadaId);
+      return { success: true, message: 'Ovoscopia registrada com sucesso.' };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao salvar ovoscopia: ${e.message || e}` };
+    }
   }
 
-  public deleteOvoscopia(id: string): void {
+  public async deleteOvoscopia(id: string): Promise<{ success: boolean; message: string }> {
     const list = this.cache.ovoscopias;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
       const chocadaId = list[index].chocadaId;
-      list[index].excluido = true;
-      list[index].atualizadoEm = CURRENT_DATE_STRING;
-      this.upsertToSupabase('ovoscopias', list[index]);
-      this.recalcAndSaveChocadaAfterAction(chocadaId);
+      const clone = { ...list[index], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+      try {
+        await this.upsertToSupabase('ovoscopias', clone);
+        list[index] = clone;
+        await this.recalcAndSaveChocadaAfterAction(chocadaId);
+        return { success: true, message: 'Ovoscopia excluída.' };
+      } catch (e: any) {
+        return { success: false, message: `Erro ao excluir ovoscopia: ${e.message || e}` };
+      }
     }
+    return { success: false, message: 'Ovoscopia não encontrada.' };
   }
 
-  private recalcAndSaveChocadaAfterAction(chocadaId: string) {
+  private async recalcAndSaveChocadaAfterAction(chocadaId: string) {
     const rawList = this.cache.chocadas;
     const idx = rawList.findIndex(item => item.id === chocadaId);
     if (idx >= 0) {
       const updatedChocada = this.recalculateChocadaStatusAndBalance(rawList[idx]);
+      await this.upsertToSupabase('chocadas', updatedChocada);
       rawList[idx] = updatedChocada;
-      this.upsertToSupabase('chocadas', updatedChocada);
     }
   }
 
@@ -648,7 +725,7 @@ class AppRepository {
     return filtered;
   }
 
-  public saveRegistroNascimento(nasc: RegistroNascimento): { success: boolean; message: string } {
+  public async saveRegistroNascimento(nasc: RegistroNascimento): Promise<{ success: boolean; message: string }> {
     const chocada = this.getChocadaById(nasc.chocadaId);
     if (!chocada) return { success: false, message: 'Incubação não encontrada.' };
     if (!nasc.dataNascimentoReal) return { success: false, message: 'A data do nascimento real é obrigatória.' };
@@ -657,48 +734,73 @@ class AppRepository {
     const index = list.findIndex(item => item.id === nasc.id);
     const dateStr = CURRENT_DATE_STRING;
 
+    const clone = { ...nasc };
     if (index >= 0) {
-      nasc.atualizadoEm = dateStr;
-      list[index] = { ...list[index], ...nasc };
+      clone.atualizadoEm = dateStr;
     } else {
-      nasc.id = nasc.id || `rn-${Date.now()}`;
-      nasc.criadoEm = dateStr;
-      nasc.atualizadoEm = dateStr;
-      nasc.excluido = false;
-      list.push(nasc);
-    }
-    this.upsertToSupabase('registros_nascimentos', nasc);
-
-    // Dynamic Rule: Finalize incubation
-    const rawList = this.cache.chocadas;
-    const idx = rawList.findIndex(item => item.id === nasc.chocadaId);
-    if (idx >= 0) {
-      rawList[idx].finalizada = true;
-      rawList[idx].status = 'FINALIZADA';
-      rawList[idx].atualizadoEm = dateStr;
-      this.upsertToSupabase('chocadas', rawList[idx]);
+      clone.id = clone.id || `rn-${Date.now()}`;
+      clone.criadoEm = dateStr;
+      clone.atualizadoEm = dateStr;
+      clone.excluido = false;
     }
 
-    return { success: true, message: 'Registro de nascimento salvo e lote finalizado!' };
+    try {
+      await this.upsertToSupabase('registros_nascimentos', clone);
+
+      const rawList = this.cache.chocadas;
+      const idx = rawList.findIndex(item => item.id === clone.chocadaId);
+      if (idx >= 0) {
+        const cloneChocada = { 
+          ...rawList[idx], 
+          finalizada: true, 
+          status: 'FINALIZADA' as ChocadaStatus, 
+          atualizadoEm: dateStr 
+        };
+        await this.upsertToSupabase('chocadas', cloneChocada);
+        rawList[idx] = cloneChocada;
+      }
+
+      if (index >= 0) {
+        list[index] = clone;
+      } else {
+        list.push(clone);
+      }
+      return { success: true, message: 'Registro de nascimento salvo e lote finalizado!' };
+    } catch (e: any) {
+      return { success: false, message: `Erro ao salvar registro de nascimento: ${e.message || e}` };
+    }
   }
 
-  public deleteRegistroNascimento(id: string): void {
+  public async deleteRegistroNascimento(id: string): Promise<{ success: boolean; message: string }> {
     const list = this.cache.registros_nascimentos;
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
       const chocadaId = list[index].chocadaId;
-      list[index].excluido = true;
-      list[index].atualizadoEm = CURRENT_DATE_STRING;
-      this.upsertToSupabase('registros_nascimentos', list[index]);
+      const clone = { ...list[index], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+      
+      try {
+        await this.upsertToSupabase('registros_nascimentos', clone);
 
-      const rawList = this.cache.chocadas;
-      const idx = rawList.findIndex(item => item.id === chocadaId);
-      if (idx >= 0) {
-        rawList[idx].finalizada = false;
-        rawList[idx].atualizadoEm = CURRENT_DATE_STRING;
-        this.upsertToSupabase('chocadas', rawList[idx]);
+        const rawList = this.cache.chocadas;
+        const idx = rawList.findIndex(item => item.id === chocadaId);
+        if (idx >= 0) {
+          const cloneChocada = { 
+            ...rawList[idx], 
+            finalizada: false, 
+            atualizadoEm: CURRENT_DATE_STRING 
+          };
+          const recalculated = this.recalculateChocadaStatusAndBalance(cloneChocada);
+          await this.upsertToSupabase('chocadas', recalculated);
+          rawList[idx] = recalculated;
+        }
+
+        list[index] = clone;
+        return { success: true, message: 'Registro de nascimento excluído.' };
+      } catch (e: any) {
+        return { success: false, message: `Erro ao excluir registro de nascimento: ${e.message || e}` };
       }
     }
+    return { success: false, message: 'Registro de nascimento não encontrado.' };
   }
 
   // --- ALERTA GENERATOR ---

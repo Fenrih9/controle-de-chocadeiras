@@ -67,8 +67,8 @@ export const RegistroDiarioNovoView: React.FC<LogsProps> = ({ id, onNavigate }) 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <div className="flex items-center gap-3">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+        <div className="flex items-center gap-3 min-w-0">
           <button onClick={() => onNavigate('chocada_detalhes', { id })} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 hover:text-white cursor-pointer select-none">
             Voltar
           </button>
@@ -77,7 +77,7 @@ export const RegistroDiarioNovoView: React.FC<LogsProps> = ({ id, onNavigate }) 
       </header>
 
       {/* Main Form scrollable view */}
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20 max-w-4xl mx-auto w-full">
         <div className="text-center md:text-left mb-2">
           <h2 className="text-2xl font-bold tracking-tight text-slate-100">Registrar Inspeção</h2>
           <p className="text-xs text-slate-400 mt-1">Crie o relatório de pesagem, umidade e controle do lote "{chocada.nome}"</p>
@@ -96,7 +96,7 @@ export const RegistroDiarioNovoView: React.FC<LogsProps> = ({ id, onNavigate }) 
         )}
 
         <Card className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4">
             <Input
               id="ins-temp"
               label="Temperatura (°C)"
@@ -118,7 +118,7 @@ export const RegistroDiarioNovoView: React.FC<LogsProps> = ({ id, onNavigate }) 
           </div>
 
           {/* Toggle: Ovos Virados switch layout */}
-          <div className="py-3 px-4 bg-[#141c2e] border border-sky-500/10 rounded-xl flex items-center justify-between">
+          <div className="py-3 px-4 bg-[#141c2e] border border-sky-500/10 rounded-xl flex items-center justify-between gap-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Os ovos foram virados hoje?</span>
             <button
               onClick={() => setOvosVirados(!ovosVirados)}
@@ -221,8 +221,8 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <div className="flex items-center gap-3">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+        <div className="flex items-center gap-3 min-w-0">
           <button onClick={() => onNavigate('chocada_detalhes', { id })} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 hover:text-white cursor-pointer select-none">
             Voltar
           </button>
@@ -231,7 +231,7 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
       </header>
 
       {/* Viewport scrolling */}
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20 max-w-4xl mx-auto w-full">
         <div className="text-center md:text-left mb-2">
           <h2 className="text-2xl font-bold tracking-tight text-slate-100 flex items-center justify-center md:justify-start gap-1.5">
             <Sparkles className="w-6 h-6 text-purple-400 fill-purple-400/10" /> Ovoscopia
@@ -292,7 +292,7 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
           </div>
 
           {/* Automatic calculation ring projection exactly like screen prints */}
-          <div className="col-span-full bg-sky-500/5 hover:border-sky-500/25 border border-sky-500/15 rounded-2xl p-6 relative overflow-hidden flex items-center justify-between text-xs">
+          <div className="col-span-full bg-sky-500/5 hover:border-sky-500/25 border border-sky-500/15 rounded-2xl p-6 relative overflow-hidden flex flex-col min-[460px]:flex-row min-[460px]:items-center min-[460px]:justify-between gap-4 text-xs">
             <div className="space-y-1">
               <span className="text-[#7dd3fc] font-semibold block uppercase tracking-wider text-[10px]">Resultado Projetado</span>
               <h4 className="text-slate-100 font-extrabold text-lg">Saldo Real de Ovos Ativos</h4>
@@ -371,8 +371,8 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
       {/* Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <div className="flex items-center gap-3">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+        <div className="flex items-center gap-3 min-w-0">
           <button onClick={() => onNavigate('chocada_detalhes', { id })} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 hover:text-white cursor-pointer select-none">
             Anular
           </button>
@@ -381,7 +381,7 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
       </header>
 
       {/* Scroll area */}
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20 max-w-4xl mx-auto w-full">
         <div className="text-center md:text-left mb-2">
           <h2 className="text-2xl font-bold tracking-tight text-slate-100">Resultado da Chocada</h2>
           <p className="text-xs text-slate-400 mt-1">Concluir ciclo registrando taxa oficial de eclosão do lote.</p>
@@ -452,7 +452,7 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
               <span className="text-[9px] text-slate-400 uppercase font-black tracking-widest mt-0.5">Taxa de Eclosão</span>
             </div>
             
-            <div className="mt-4 flex gap-6 text-xs text-slate-300 font-semibold uppercase">
+            <div className="mt-4 flex flex-wrap justify-center gap-3 min-[460px]:gap-6 text-xs text-slate-300 font-semibold uppercase">
               <div>
                 <span className="text-red-400">{taxaPerdas}%</span> de Perdas
               </div>

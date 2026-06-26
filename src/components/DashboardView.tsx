@@ -19,18 +19,21 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = repo.getUsuarioByUsername(username);
+    setLoading(true);
+    setErrorMsg('');
     
-    if (user && user.senhaMock === password && user.ativo) {
-      setErrorMsg('');
-      login(user);
+    const result = await login(username, password);
+    setLoading(false);
+    
+    if (result.success) {
       onLoginSuccess();
     } else {
-      setErrorMsg('Usuário ou senha incorretos, ou conta inativa.');
+      setErrorMsg(result.message);
     }
   };
 
@@ -66,8 +69,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <input
               type="text"
               value={username}
+              disabled={loading}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-[#1a2438]/40 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium"
+              className="w-full bg-[#1a2438]/40 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium disabled:opacity-50"
               placeholder="Ex: admin"
               required
             />
@@ -78,16 +82,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <input
               type="password"
               value={password}
+              disabled={loading}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1a2438]/40 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium"
+              className="w-full bg-[#1a2438]/40 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium disabled:opacity-50"
               placeholder="••••••••"
               required
             />
           </div>
 
           <div className="pt-2">
-            <Button type="submit">
-              Entrar <LogIn className="w-4 h-4 ml-1" />
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'} <LogIn className="w-4 h-4 ml-1" />
             </Button>
           </div>
         </form>

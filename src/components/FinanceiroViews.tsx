@@ -253,7 +253,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
     <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9] text-[#263225]">
       
       {/* Cabeçalho principal */}
-      <header className="flex justify-between items-center w-full px-5 lg:px-8 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+      <header className="flex flex-col min-[460px]:flex-row min-[460px]:justify-between min-[460px]:items-center gap-3 w-full px-4 sm:px-5 lg:px-8 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div>
           <span className="text-[10px] uppercase tracking-widest text-[#6f756a] font-bold">Painel Geral</span>
           <h1 className="font-headline font-bold text-[#263225] text-lg leading-tight flex items-center gap-2">
@@ -264,7 +264,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
         {currentUser?.role !== 'LEITOR' && (
           <button
             onClick={handleOpenNovo}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#3f5f31] px-4 py-2.5 text-xs font-bold text-[#fffaf2] shadow-sm transition hover:bg-[#314b27] cursor-pointer"
+            className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[#3f5f31] px-4 py-2.5 text-xs font-bold text-[#fffaf2] shadow-sm transition hover:bg-[#314b27] cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Novo Lançamento
           </button>
@@ -272,7 +272,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
       </header>
 
       {/* Grid de Métricas / Cards no topo */}
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 pb-24">
+      <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 pb-32 lg:pb-24">
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card glow borderAccent="primary" className="flex flex-col justify-center gap-1">
@@ -337,7 +337,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#6f756a]">Filtros de Movimentação</h3>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-6 gap-3">
             <div>
               <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1">Tipo</label>
               <select
@@ -420,7 +420,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
 
         {/* Tabela de Lançamentos */}
         <Card className="overflow-hidden p-0">
-          <div className="p-4 border-b border-[#465336]/10 flex justify-between items-center bg-[#fffaf2]">
+          <div className="p-4 border-b border-[#465336]/10 flex flex-col min-[460px]:flex-row min-[460px]:justify-between min-[460px]:items-center gap-2 bg-[#fffaf2]">
             <h3 className="text-xs font-bold uppercase tracking-widest text-[#263225]">Histórico de Transações</h3>
             <span className="text-[10px] font-mono text-[#6f756a] bg-[#f1eadf] px-2.5 py-1 rounded-full font-bold">
               {lancamentosFiltrados.length} lançamentos encontrados
@@ -525,7 +525,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
           
-          <div className="relative w-full max-w-md bg-[#fffaf2] border border-[#465336]/15 rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[#263225]">
+          <div className="relative w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-[#fffaf2] border border-[#465336]/15 rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[#263225]">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 p-1.5 text-[#6f756a] hover:text-[#263225] hover:bg-[#f1eadf] rounded-lg transition-all"
@@ -555,7 +555,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
               )}
 
               {/* Tipo e Forma */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-4">
                 {/* Tipo de Lançamento */}
                 <div>
                   <label className="text-[10px] font-bold text-[#6f756a] uppercase block mb-1.5">Tipo</label>
@@ -616,7 +616,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
               </div>
 
               {/* Data e Valor */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
                 <Input
                   label="Data"
                   type="date"
@@ -722,7 +722,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
               </div>
 
               {/* Botões do Formulário */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col min-[420px]:flex-row gap-3 pt-2">
                 <Button
                   type="button"
                   variant="secondary"

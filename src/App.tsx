@@ -328,67 +328,67 @@ export default function App() {
 
         {/* 3. BARRA DE NAVEGAÇÃO INFERIOR PARA MOBILE (lg:hidden) */}
         {isAuthenticated && currentScreen !== 'login' && (
-          <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#fffaf2]/95 border-t border-[#465336]/15 backdrop-blur-md flex justify-around items-center px-2 select-none z-50 shadow-[0_-10px_30px_rgba(38,50,37,0.12)]">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 min-h-16 bg-[#fffaf2]/95 border-t border-[#465336]/15 backdrop-blur-md grid grid-flow-col auto-cols-fr items-stretch px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] select-none z-50 shadow-[0_-10px_30px_rgba(38,50,37,0.12)]">
             <button
               onClick={() => onNavigate('dashboard')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
               <Home className="w-5 h-5 mb-1" />
-              <span className="text-[9px] uppercase tracking-wider">Início</span>
+              <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Início</span>
             </button>
 
             <button
               onClick={() => onNavigate('chocadas_lista')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
               <Egg className="w-5 h-5 mb-1" />
-              <span className="text-[9px] uppercase tracking-wider">Chocadas</span>
+              <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Chocadas</span>
             </button>
 
             <button
               onClick={() => onNavigate('alertas')}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
                 }`}
             >
               <div className="w-5 h-5 mb-1 flex items-center justify-center relative">
                 <Bell className="w-5 h-5" />
                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#b85745] rounded-full"></div>
               </div>
-              <span className="text-[9px] uppercase tracking-wider">Alertas</span>
+              <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Alertas</span>
             </button>
 
             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
               <button
                 onClick={() => onNavigate('financeiro')}
-                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'financeiro' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'financeiro' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
                   }`}
               >
                 <Landmark className="w-5 h-5 mb-1" />
-                <span className="text-[9px] uppercase tracking-wider">Financeiro</span>
+                <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Financeiro</span>
               </button>
             )}
 
             {currentUser?.role === 'LEITOR' && (
               <button
                 onClick={() => onNavigate('relatorios_gerais')}
-                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
                   }`}
               >
                 <ChartNoAxesCombined className="w-5 h-5 mb-1" />
-                <span className="text-[9px] uppercase tracking-wider">Relatórios</span>
+                <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Relatórios</span>
               </button>
             )}
 
             {currentUser?.role === 'ADMIN' && (
               <button
                 onClick={() => onNavigate('configuracoes')}
-                className={`flex flex-col items-center justify-center flex-1 py-1 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[#3f5f31] font-bold scale-105' : 'text-[#7b8075] hover:text-[#263225]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
                   }`}
               >
                 <Settings className="w-5 h-5 mb-1" />
-                <span className="text-[9px] uppercase tracking-wider">Ajustes</span>
+                <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Ajustes</span>
               </button>
             )}
           </nav>
