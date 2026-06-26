@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (username: string, senhaMock: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const email = `${username.trim().toLowerCase()}@laranjeiras.local`;
+      const email = `${username.trim().toLowerCase()}@laranjeiras.com`;
 
       // 1. Verifica se o usuário existe na tabela local `usuarios` e está com `auth_user_id` nulo.
       const { data: localUser, error: localUserErr } = await supabase
