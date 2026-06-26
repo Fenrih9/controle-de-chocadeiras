@@ -74,6 +74,7 @@ class AppRepository {
   };
 
   private isLoaded = false;
+  private financeiroAceitaFormaPagamento = true;
 
   constructor() {
     // Initialized empty. App.tsx should call loadFromSupabase()
@@ -102,7 +103,7 @@ class AppRepository {
       if (ovos.data) this.cache.ovoscopias = ovos.data;
       if (nascimentos.data) this.cache.registros_nascimentos = nascimentos.data;
       if (users.data) this.cache.usuarios = users.data;
-      if (lancamentos.data) this.cache.financeiro_lancamentos = lancamentos.data;
+      if (lancamentos.data) this.cache.financeiro_lancamentos = lancamentos.data.map(this.normalizeLancamento);
 
       // Seed fallback if absolutely empty
       if (this.cache.propriedades.length === 0) {
@@ -139,6 +140,41 @@ class AppRepository {
         console.error(`Error saving to ${table} on Supabase:`, error);
       }
     });
+  }
+
+  private normalizeLancamento(lancamento: LancamentoFinanceiro): LancamentoFinanceiro {
+    return {
+      ...lancamento,
+      formaPagamento: lancamento.formaPagamento || 'BANCO',
+    };
+  }
+
+  private async upsertLancamentoToSupabase(lancamento: LancamentoFinanceiro) {
+    if (this.financeiroAceitaFormaPagamento) {
+      const result = await supabase.from('financeiro_lancamentos').upsert(lancamento);
+      if (!this.isMissingFormaPagamentoColumn(result.error)) {
+        return result;
+      }
+
+      this.financeiroAceitaFormaPagamento = false;
+      console.warn(
+        'A coluna financeiro_lancamentos.formaPagamento não existe no Supabase. Salvando lançamento sem este campo até o schema ser atualizado.',
+        result.error
+      );
+    }
+
+    const fallbackPayload = { ...lancamento };
+    delete fallbackPayload.formaPagamento;
+    return supabase.from('financeiro_lancamentos').upsert(fallbackPayload);
+  }
+
+  private isMissingFormaPagamentoColumn(error: any): boolean {
+    return Boolean(
+      error &&
+      error.code === 'PGRST204' &&
+      typeof error.message === 'string' &&
+      error.message.includes('formaPagamento')
+    );
   }
 
   public initDatabase() {
@@ -771,6 +807,7 @@ class AppRepository {
   public getLancamentos(incluiExcluidos = false): LancamentoFinanceiro[] {
     return this.cache.financeiro_lancamentos
       .filter(item => incluiExcluidos || !item.excluido)
+      .map(this.normalizeLancamento)
       .sort((a, b) => b.data.localeCompare(a.data));
   }
 
@@ -809,13 +846,18 @@ class AppRepository {
       list.push(lancamento);
     }
 
-    const { error } = await supabase.from('financeiro_lancamentos').upsert(lancamento);
+    const { error } = await this.upsertLancamentoToSupabase(lancamento);
     if (error) {
       console.error('Erro ao salvar lançamento no Supabase:', error);
       return { success: false, message: `Erro ao salvar no banco de dados (RLS/Permissões): ${error.message}` };
     }
 
-    return { success: true, message: 'Lançamento financeiro salvo com sucesso.' };
+    return {
+      success: true,
+      message: this.financeiroAceitaFormaPagamento
+        ? 'Lançamento financeiro salvo com sucesso.'
+        : 'Lançamento salvo. Atualize o schema do Supabase para persistir a forma de pagamento.',
+    };
   }
 
   public async deleteLancamento(id: string): Promise<{ success: boolean; message: string }> {
@@ -826,7 +868,7 @@ class AppRepository {
       lanc.excluido = true;
       lanc.atualizadoEm = CURRENT_DATE_STRING;
 
-      const { error } = await supabase.from('financeiro_lancamentos').upsert(lanc);
+      const { error } = await this.upsertLancamentoToSupabase(lanc);
       if (error) {
         console.error('Erro ao excluir lançamento no Supabase:', error);
         return { success: false, message: `Erro ao salvar exclusão no banco de dados: ${error.message}` };
