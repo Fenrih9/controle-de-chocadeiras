@@ -45,6 +45,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (username: string, senhaMock: string): Promise<{ success: boolean; message: string }> => {
     try {
       const email = `${username.trim().toLowerCase()}@laranjeiras.local`;
+
+      // 1. Verifica se o usuário existe na tabela local `usuarios` e está com `auth_user_id` nulo.
+      const { data: localUser, error: localUserErr } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('username', username.trim().toLowerCase())
+        .single();
+
+      if (!localUserErr && localUser) {
+        // Se a senha fornecida bater com a cadastrada e ele não estiver vinculado ao Auth
+        if (localUser.senhaMock === senhaMock && !localUser.auth_user_id) {
+          console.log(`Auto-registrando usuário ${username} no Supabase Auth...`);
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password: senhaMock,
+          });
+
+          if (!signUpError && signUpData?.user) {
+            // Atualiza o auth_user_id na tabela local
+            const { error: updateErr } = await supabase
+              .from('usuarios')
+              .update({ auth_user_id: signUpData.user.id })
+              .eq('id', localUser.id);
+
+            if (updateErr) {
+              console.error('Erro ao atualizar auth_user_id na tabela local:', updateErr);
+            } else {
+              console.log(`Usuário ${username} auto-registrado e vinculado com sucesso!`);
+            }
+          } else if (signUpError) {
+            console.error('Erro no auto-registro:', signUpError.message);
+          }
+        }
+      }
+
+      // 2. Prossegue com a tentativa de login convencional
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senhaMock,
