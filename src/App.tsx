@@ -50,9 +50,14 @@ export default function App() {
   useEffect(() => {
     if (isAuthenticated) {
       setDbLoading(true);
-      repo.loadFromSupabase().then(() => {
-        setDbLoading(false);
-      });
+      repo.loadFromSupabase()
+        .then(() => {
+          setDbLoading(false);
+        })
+        .catch((err) => {
+          console.error('Erro ao sincronizar nuvem:', err);
+          setDbLoading(false);
+        });
     } else {
       setDbLoading(false);
     }
