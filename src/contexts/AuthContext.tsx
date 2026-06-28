@@ -91,19 +91,55 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Monitorar alterações do estado de autenticação do Supabase
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let active = true;
+
+    const initializeAuth = async () => {
       setIsLoading(true);
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setCurrentUser(profile);
-      } else {
-        repo.clearCache();
-        setCurrentUser(null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (active) {
+          if (session?.user) {
+            const profile = await fetchUserProfile(session.user.id);
+            setCurrentUser(profile);
+          } else {
+            repo.clearCache();
+            setCurrentUser(null);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao inicializar sessão:', err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!active) return;
+      
+      setIsLoading(true);
+      try {
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          setCurrentUser(profile);
+        } else {
+          repo.clearCache();
+          setCurrentUser(null);
+        }
+      } catch (err) {
+        console.error('Erro ao processar alteração de autenticação:', err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
     });
 
     return () => {
+      active = false;
       subscription.unsubscribe();
     };
   }, []);
