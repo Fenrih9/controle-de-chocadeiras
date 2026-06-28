@@ -27,7 +27,7 @@ import { ReportView } from './components/ReportView';
 import { FinanceiroView } from './components/FinanceiroViews';
 
 export default function App() {
-  const { currentUser, logout, isAuthenticated } = useAuth();
+  const { currentUser, logout, isAuthenticated, isLoading } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<string>('dashboard');
   const [screenParams, setScreenParams] = useState<any>(null);
   const [fullWidth, setFullWidth] = useState<boolean>(false);
@@ -46,25 +46,31 @@ export default function App() {
     alert('Cache de dados resetado. Os dados oficiais no Supabase permanecem seguros.');
   };
 
-  // Listen to db reset updates & Initialize Supabase Cache
+  // Sincroniza dados com o Supabase apenas se o usuário estiver logado
   useEffect(() => {
-    setDbLoading(true);
-    repo.loadFromSupabase().then(() => {
+    if (isAuthenticated) {
+      setDbLoading(true);
+      repo.loadFromSupabase().then(() => {
+        setDbLoading(false);
+      });
+    } else {
       setDbLoading(false);
-    });
-  }, [dbResetCounter]);
+    }
+  }, [isAuthenticated, dbResetCounter]);
 
-  if (dbLoading) {
+  if (isLoading || (isAuthenticated && dbLoading)) {
     return (
-      <div className="min-h-screen bg-[#070b13] flex flex-col items-center justify-center space-y-6">
-        <div className="w-20 h-20 bg-sky-500/10 rounded-full flex items-center justify-center border border-sky-400/20 shadow-[0_0_20px_rgba(125,211,252,0.15)] animate-bounce">
-          <Egg className="w-10 h-10 text-sky-400 fill-sky-400/10" />
+      <div className="min-h-screen bg-[#f7f2e9] flex flex-col items-center justify-center space-y-6">
+        <div className="w-20 h-20 bg-[#3f5f31]/10 rounded-full flex items-center justify-center border border-[#3f5f31]/20 shadow-sm animate-pulse">
+          <Egg className="w-10 h-10 text-[#3f5f31] fill-[#3f5f31]/10" />
         </div>
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-bold text-slate-100 font-headline tracking-tight">Sincronizando Nuvem</h2>
-          <p className="text-xs text-sky-400/80 uppercase tracking-widest mt-2 font-semibold flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse"></span>
-            Acessando Supabase
+          <h2 className="text-xl font-bold text-[#263225] font-headline tracking-tight">
+            {isLoading ? "Iniciando Laranjeiras..." : "Sincronizando Nuvem..."}
+          </h2>
+          <p className="text-xs text-[#5f6659] uppercase tracking-widest mt-2 font-semibold flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-[#3f5f31] rounded-full animate-ping"></span>
+            Carregando informações
           </p>
         </div>
       </div>

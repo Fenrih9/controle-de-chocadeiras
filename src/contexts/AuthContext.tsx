@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { Usuario } from '../types';
 import { supabase } from '../supabaseClient';
+import { repo } from '../repository';
 
 interface AuthContextType {
   currentUser: Usuario | null;
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
+    repo.clearCache();
     setCurrentUser(null);
   }, []);
 
@@ -95,6 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const profile = await fetchUserProfile(session.user.id);
         setCurrentUser(profile);
       } else {
+        repo.clearCache();
         setCurrentUser(null);
       }
       setIsLoading(false);

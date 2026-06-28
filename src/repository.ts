@@ -125,6 +125,21 @@ class AppRepository {
     }
   }
 
+  // Limpa o cache local e redefine o estado de carregamento para permitir nova sincronização
+  public clearCache(): void {
+    this.cache = {
+      propriedades: [],
+      chocadeiras: [],
+      chocadas: [],
+      registros_diarios: [],
+      ovoscopias: [],
+      registros_nascimentos: [],
+      usuarios: [],
+      financeiro_lancamentos: [],
+    };
+    this.isLoaded = false;
+  }
+
   // Generic background sync helper with user_id mapping
   private async upsertToSupabase(table: string, payload: any) {
     const { data: { session } } = await supabase.auth.getSession();

@@ -38,68 +38,74 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="absolute inset-0 bg-[#0a0e1a] flex flex-col justify-between p-6 overflow-y-auto">
+    <div className="absolute inset-0 bg-[#f7f2e9] flex flex-col justify-between p-6 overflow-y-auto">
       {/* Decorative Blur Backgrounds */}
-      <div className="absolute top-10 left-[-30%] w-80 h-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-10 right-[-30%] w-80 h-80 rounded-full bg-amber-500/10 blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-10 left-[-30%] w-80 h-80 rounded-full bg-[#3f5f31]/5 blur-[100px] pointer-events-none"></div>
+      <div className="absolute bottom-10 right-[-30%] w-80 h-80 rounded-full bg-[#3f5f31]/5 blur-[100px] pointer-events-none"></div>
 
-      <div className="flex-grow flex flex-col justify-center max-w-sm mx-auto w-full space-y-10 py-10">
+      <div className="flex-grow flex flex-col justify-center max-w-sm mx-auto w-full space-y-8 py-10 relative z-10">
         {/* Animated Icon App Logo */}
         <div className="flex flex-col items-center">
-          <div className="w-20 h-20 bg-sky-500/10 rounded-full flex items-center justify-center border border-sky-400/20 shadow-[0_0_20px_rgba(125,211,252,0.15)] animate-bounce">
-            <Egg className="w-10 h-10 text-sky-400 fill-sky-400/10" />
+          <div className="w-20 h-20 bg-[#3f5f31]/10 rounded-full flex items-center justify-center border border-[#3f5f31]/20 shadow-sm animate-bounce">
+            <Egg className="w-10 h-10 text-[#3f5f31] fill-[#3f5f31]/10" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 font-headline mt-6 tracking-tight">
+          <h1 className="text-2xl font-bold text-[#263225] font-headline mt-6 tracking-tight">
             Gestão de Chocadeiras
           </h1>
-          <p className="text-xs text-sky-400/80 uppercase tracking-widest mt-1.5 font-semibold text-center">
-            Controle profissional para sua produção rural
+          <p className="text-xs text-[#5f6659] uppercase tracking-widest mt-1.5 font-bold text-center">
+            Laranjeiras
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          {errorMsg && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-2 px-3 rounded-lg text-center font-medium animate-pulse">
-              {errorMsg}
+        <div className="bg-[#fffaf2] border border-[#465336]/15 rounded-2xl p-6 shadow-sm space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
+            {errorMsg && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-700 text-xs py-2 px-3 rounded-lg text-center font-medium">
+                {errorMsg}
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-[10px] text-[#5f6659] ml-1 block font-bold uppercase tracking-wider">Usuário</label>
+              <input
+                type="text"
+                value={username}
+                disabled={loading}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-[#fffaf2] border border-[#465336]/20 rounded-xl py-3 px-4 text-[#263225] placeholder-[#5f6659]/40 focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/15 focus:border-[#3f5f31] transition-all font-medium disabled:opacity-50 text-sm"
+                placeholder="Ex: admin"
+                required
+              />
             </div>
-          )}
 
-          <div className="space-y-1">
-            <label className="text-xs text-slate-400 ml-1 block font-semibold uppercase tracking-wider">Usuário</label>
-            <input
-              type="text"
-              value={username}
-              disabled={loading}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-[#1a2438]/40 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium disabled:opacity-50"
-              placeholder="Ex: admin"
-              required
-            />
-          </div>
+            <div className="space-y-1">
+              <label className="text-[10px] text-[#5f6659] ml-1 block font-bold uppercase tracking-wider">Senha</label>
+              <input
+                type="password"
+                value={password}
+                disabled={loading}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#fffaf2] border border-[#465336]/20 rounded-xl py-3 px-4 text-[#263225] placeholder-[#5f6659]/40 focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/15 focus:border-[#3f5f31] transition-all font-medium disabled:opacity-50 text-sm"
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-slate-400 ml-1 font-semibold uppercase tracking-wider">Senha</label>
-            <input
-              type="password"
-              value={password}
-              disabled={loading}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1a2438]/40 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium disabled:opacity-50"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <div className="pt-2">
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'} <LogIn className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
-        </form>
+            <div className="pt-2">
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full py-3 bg-[#3f5f31] hover:bg-[#314b27] text-[#fffaf2] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? 'Entrando...' : 'Entrar'} <LogIn className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <div className="text-center pb-4 shrink-0">
-        <p className="text-[10px] text-slate-500 font-mono">
+      <div className="text-center pb-4 shrink-0 relative z-10">
+        <p className="text-[10px] text-[#6f756a] font-semibold">
           Solicite suas credenciais ao administrador do sistema.
         </p>
       </div>
