@@ -20,22 +20,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUserProfile = async (authUserId: string): Promise<Usuario | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('auth_user_id', authUserId)
-        .single();
-      
-      if (error || !data) {
-        console.error('Erro ao buscar perfil do usuário no Supabase:', error);
+    const queryPromise = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('auth_user_id', authUserId)
+          .single();
+        
+        if (error || !data) {
+          console.error('Erro ao buscar perfil do usuário no Supabase:', error);
+          return null;
+        }
+        return data;
+      } catch (e) {
+        console.error('Falha ao obter perfil:', e);
         return null;
       }
-      return data;
-    } catch (e) {
-      console.error('Falha ao obter perfil:', e);
-      return null;
-    }
+    })();
+
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => {
+        console.warn('Busca de perfil do usuário no Supabase expirou.');
+        resolve(null);
+      }, 4000);
+    });
+
+    return Promise.race([queryPromise, timeoutPromise]);
   };
 
   const logout = useCallback(async () => {
@@ -95,6 +106,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const initializeAuth = async () => {
       setIsLoading(true);
+      const timer = setTimeout(() => {
+        if (active) {
+          console.warn('Inicialização da sessão no Supabase expirou. Forçando liberação da tela.');
+          setIsLoading(false);
+        }
+      }, 5000);
+
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (active) {
@@ -109,6 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (err) {
         console.error('Erro ao inicializar sessão:', err);
       } finally {
+        clearTimeout(timer);
         if (active) {
           setIsLoading(false);
         }
@@ -120,20 +139,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!active) return;
       
-      setIsLoading(true);
-      try {
-        if (session?.user) {
-          const profile = await fetchUserProfile(session.user.id);
-          setCurrentUser(profile);
-        } else {
-          repo.clearCache();
-          setCurrentUser(null);
-        }
-      } catch (err) {
-        console.error('Erro ao processar alteração de autenticação:', err);
-      } finally {
-        if (active) {
-          setIsLoading(false);
+      // Ignora INITIAL_SESSION se já correu para evitar corrida simultânea com getSession inicial
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+        setIsLoading(true);
+        const refreshTimer = setTimeout(() => {
+          if (active) setIsLoading(false);
+        }, 5000);
+
+        try {
+          if (session?.user) {
+            const profile = await fetchUserProfile(session.user.id);
+            setCurrentUser(profile);
+          } else {
+            repo.clearCache();
+            setCurrentUser(null);
+          }
+        } catch (err) {
+          console.error('Erro ao processar alteração de autenticação:', err);
+        } finally {
+          clearTimeout(refreshTimer);
+          if (active) {
+            setIsLoading(false);
+          }
         }
       }
     });

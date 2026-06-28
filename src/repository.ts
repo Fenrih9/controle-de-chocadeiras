@@ -92,7 +92,7 @@ class AppRepository {
       sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
       const limitDateStr = sixtyDaysAgo.toISOString().split('T')[0];
 
-      const [prop, chocadeiras, chocadas, registros, ovos, nascimentos, users, lancamentos] = await Promise.all([
+      const fetchPromise = Promise.all([
         supabase.from('propriedades').select('*'),
         supabase.from('chocadeiras').select('*').eq('excluido', false),
         supabase.from('chocadas').select('*').eq('excluido', false),
@@ -102,6 +102,25 @@ class AppRepository {
         supabase.from('usuarios').select('*').eq('ativo', true),
         supabase.from('financeiro_lancamentos').select('*').eq('excluido', false)
       ]);
+
+      const timeoutPromise = new Promise<any[]>((resolve) => {
+        setTimeout(() => {
+          console.warn('A sincronização inicial do repositório expirou. Continuando offline/cache local.');
+          resolve([
+            { data: [] }, // propriedades
+            { data: [] }, // chocadeiras
+            { data: [] }, // chocadas
+            { data: [] }, // registros_diarios
+            { data: [] }, // ovoscopias
+            { data: [] }, // registros_nascimentos
+            { data: [] }, // usuarios
+            { data: [] }  // financeiro_lancamentos
+          ]);
+        }, 5000);
+      });
+
+      const [prop, chocadeiras, chocadas, registros, ovos, nascimentos, users, lancamentos] = 
+        await Promise.race([fetchPromise, timeoutPromise]);
 
       if (prop.data) this.cache.propriedades = prop.data;
       if (chocadeiras.data) this.cache.chocadeiras = chocadeiras.data;
