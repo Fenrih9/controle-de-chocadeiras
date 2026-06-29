@@ -34,6 +34,8 @@ export default function App() {
   const [dbResetCounter, setDbResetCounter] = useState(0);
   const [dbLoading, setDbLoading] = useState(true);
 
+  const [dataVersion, setDataVersion] = useState(0);
+
   const onNavigate = (screenName: string, params: any = null) => {
     setCurrentScreen(screenName);
     setScreenParams(params);
@@ -49,15 +51,30 @@ export default function App() {
   // Sincroniza dados com o Supabase apenas se o usuário estiver logado
   useEffect(() => {
     if (isAuthenticated) {
-      setDbLoading(true);
-      repo.loadFromSupabase()
-        .then(() => {
-          setDbLoading(false);
-        })
-        .catch((err) => {
-          console.error('Erro ao sincronizar nuvem:', err);
-          setDbLoading(false);
-        });
+      if (repo.hasLocalData()) {
+        // Se já possui dados locais salvos no cache, não bloqueia a tela de carregamento (Stale-While-Revalidate)
+        setDbLoading(false);
+        repo.loadFromSupabase()
+          .then(() => {
+            // Força atualização de re-renderização com dados atualizados do banco
+            setDataVersion(prev => prev + 1);
+          })
+          .catch((err) => {
+            console.error('Erro na revalidação de dados em segundo plano:', err);
+          });
+      } else {
+        // Primeira carga absoluta: exibe tela de carregamento
+        setDbLoading(true);
+        repo.loadFromSupabase()
+          .then(() => {
+            setDbLoading(false);
+            setDataVersion(prev => prev + 1);
+          })
+          .catch((err) => {
+            console.error('Erro ao sincronizar nuvem:', err);
+            setDbLoading(false);
+          });
+      }
     } else {
       setDbLoading(false);
     }

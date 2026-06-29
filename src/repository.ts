@@ -77,7 +77,31 @@ class AppRepository {
   private financeiroAceitaFormaPagamento = true;
 
   constructor() {
-    // Initialized empty. App.tsx should call loadFromSupabase()
+    this.loadLocalCache();
+  }
+
+  // Verifica se há dados locais cacheados para renderização rápida
+  public hasLocalData(): boolean {
+    return this.cache.propriedades.length > 0 || this.cache.chocadeiras.length > 0;
+  }
+
+  private loadLocalCache(): void {
+    try {
+      const cached = window.localStorage.getItem('laranjeiras_repo_cache');
+      if (cached) {
+        this.cache = JSON.parse(cached);
+      }
+    } catch (e) {
+      console.warn('Falha ao recuperar cache local:', e);
+    }
+  }
+
+  private saveLocalCache(): void {
+    try {
+      window.localStorage.setItem('laranjeiras_repo_cache', JSON.stringify(this.cache));
+    } catch (e) {
+      console.warn('Falha ao salvar cache local:', e);
+    }
   }
 
   // Fetch all tables from Supabase and cache them
@@ -138,6 +162,7 @@ class AppRepository {
         await this.upsertToSupabase('propriedades', initialProp);
       }
 
+      this.saveLocalCache();
       this.isLoaded = true;
     } catch (e) {
       console.error('Error loading from Supabase, operating offline or corrupted', e);
@@ -157,6 +182,11 @@ class AppRepository {
       financeiro_lancamentos: [],
     };
     this.isLoaded = false;
+    try {
+      window.localStorage.removeItem('laranjeiras_repo_cache');
+    } catch (e) {
+      // ignore
+    }
   }
 
   // Generic background sync helper with user_id mapping
