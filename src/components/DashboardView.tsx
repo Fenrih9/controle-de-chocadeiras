@@ -390,49 +390,103 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {chocadasAtivas.slice(0, 3).map((ch) => {
+            {chocadasAtivas.map((ch) => {
               const totalDays = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
               const start = new Date(ch.dataInicio + 'T12:00:00');
               const now = new Date(getCurrentDateString() + 'T12:00:00');
               const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
               const progressPercent = Math.min(100, Math.round((elapsed / totalDays) * 100));
+              const daysRemaining = totalDays - elapsed;
+              const isUrgent = daysRemaining <= 2 && daysRemaining > 0;
+              const isIminent = daysRemaining <= 5 && daysRemaining > 2;
+              const isOverdue = daysRemaining <= 0;
+              const chocadeiraNome = repo.getChocadeiraById(ch.chocadeiraId)?.nome || null;
+
+              const countdownColor = isOverdue
+                ? 'text-red-400 bg-red-500/15 border-red-500/30'
+                : isUrgent
+                ? 'text-orange-300 bg-orange-500/15 border-orange-500/30'
+                : isIminent
+                ? 'text-amber-300 bg-amber-500/15 border-amber-500/30'
+                : 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20';
+
+              const countdownLabel = isOverdue
+                ? `+${Math.abs(daysRemaining)}d` 
+                : `-${daysRemaining}d`;
+
+              const countdownTitle = isOverdue
+                ? `${Math.abs(daysRemaining)} dia(s) em atraso`
+                : `${daysRemaining} dia(s) restante(s)`;
 
               return (
                 <div
                   key={ch.id}
                   onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                  className="bg-slate-950/60 hover:bg-slate-900/60 border border-sky-500/10 rounded-2xl p-4 flex gap-4 transition-all duration-300 hover:border-sky-400/30 cursor-pointer text-slate-200"
+                  className="bg-[#fffdfb] border border-[#465336]/10 rounded-2xl p-4 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(70,83,54,0.08)] hover:border-[#3f5f31]/25 cursor-pointer"
                 >
-                  <MiniProgressRing day={elapsed} total={totalDays} status={ch.status} />
-                  
-                  <div className="flex-1 space-y-2 text-slate-100 min-w-0">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="truncate">
-                        <h3 className="font-bold text-sm tracking-tight truncate">{ch.nome}</h3>
-                        <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wider font-semibold">
-                          Iniciou em {repo.formatReadableDate(ch.dataInicio)}
+                  {/* Cabeçalho com nome e status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-sm text-[#263225] tracking-tight truncate leading-tight">{ch.nome}</h3>
+                      <p className="text-[10px] text-[#6f756a] mt-0.5 uppercase tracking-wider font-semibold">
+                        {ch.tipoOvo} · {ch.quantidadeOvosAtivos} ovos
+                      </p>
+                      {chocadeiraNome && (
+                        <p className="text-[10px] text-[#3f5f31] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1">
+                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3f5f31]/60"></span>
+                          {chocadeiraNome}
                         </p>
-                      </div>
-                      <StatusChip status={ch.status} />
+                      )}
                     </div>
+                    <StatusChip status={ch.status} />
+                  </div>
 
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                        <span>Progresso da Incubação</span>
-                        <span>{elapsed} / {totalDays} Dias</span>
+                  {/* Corpo: Anel de progresso + Contagem regressiva */}
+                  <div className="flex items-center gap-3">
+                    <MiniProgressRing day={elapsed} total={totalDays} status={ch.status} />
+
+                    <div className="flex-1 space-y-2">
+                      {/* Barra de progresso */}
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] font-bold text-[#6f756a]">
+                          <span>Progresso da Incubação</span>
+                          <span>{elapsed} / {totalDays} Dias</span>
+                        </div>
+                        <div className="w-full bg-[#f1eadf] rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isOverdue ? 'bg-red-400' :
+                              isUrgent ? 'bg-gradient-to-r from-orange-400 to-red-400' :
+                              isIminent ? 'bg-gradient-to-r from-amber-400 to-orange-400' :
+                              'bg-gradient-to-r from-[#3f5f31] to-emerald-500'
+                            }`}
+                            style={{ width: `${progressPercent}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-white/5">
-                        <div 
-                          className="h-full bg-gradient-to-r from-sky-400 to-purple-400 rounded-full shadow-[0_0_8px_#7dd3fc]"
-                          style={{ width: `${progressPercent}%` }}
-                        />
+
+                      {/* Contagem regressiva em destaque */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#6f756a] uppercase tracking-wider">
+                          {isOverdue ? 'Nascimento esperado' : 'Faltam para nascer'}
+                        </span>
+                        <span
+                          title={countdownTitle}
+                          className={`text-xs font-black px-2 py-0.5 rounded-full border tracking-tight ${countdownColor}`}
+                        >
+                          {countdownLabel}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <button className="self-center p-1.5 bg-slate-900/50 hover:bg-slate-800 rounded-lg shrink-0 text-sky-400">
-                    <ChevronRight className="w-5 h-5 animate-pulse" />
-                  </button>
+                  {/* Rodapé: Data de início e seta */}
+                  <div className="flex items-center justify-between pt-1 border-t border-[#465336]/8">
+                    <p className="text-[10px] text-[#6f756a] font-semibold uppercase tracking-wider">
+                      Iniciou em {repo.formatReadableDate(ch.dataInicio)}
+                    </p>
+                    <ChevronRight className="w-4 h-4 text-[#3f5f31]" />
+                  </div>
                 </div>
               );
             })}
