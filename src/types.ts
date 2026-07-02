@@ -12,6 +12,7 @@ export interface Usuario {
   role: Role;
   ativo: boolean;
   criadoEm: string;
+  auth_user_id?: string;
 }
 
 export interface Chocadeira {

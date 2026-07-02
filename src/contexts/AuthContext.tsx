@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { Usuario } from '../types';
 import { supabase } from '../supabaseClient';
 import { repo } from '../repository';
@@ -13,11 +13,50 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutos
+const AUTH_PROFILE_CACHE_KEY = 'laranjeiras_auth_profile';
+
+const getCachedProfile = (authUserId: string): Usuario | null => {
+  try {
+    const cached = window.localStorage.getItem(AUTH_PROFILE_CACHE_KEY);
+    if (!cached) return null;
+
+    const profile = JSON.parse(cached) as Usuario;
+    return profile.auth_user_id === authUserId ? profile : null;
+  } catch (e) {
+    console.warn('Falha ao recuperar perfil autenticado do cache:', e);
+    return null;
+  }
+};
+
+const saveCachedProfile = (profile: Usuario): void => {
+  try {
+    window.localStorage.setItem(AUTH_PROFILE_CACHE_KEY, JSON.stringify(profile));
+  } catch (e) {
+    console.warn('Falha ao salvar perfil autenticado no cache:', e);
+  }
+};
+
+const clearCachedProfile = (): void => {
+  try {
+    window.localStorage.removeItem(AUTH_PROFILE_CACHE_KEY);
+  } catch (e) {
+    // ignore
+  }
+};
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const currentUserRef = useRef<Usuario | null>(null);
+
+  const updateCurrentUser = useCallback((profile: Usuario | null) => {
+    currentUserRef.current = profile;
+    setCurrentUser(profile);
+
+    if (profile) {
+      saveCachedProfile(profile);
+    }
+  }, []);
 
   const fetchUserProfile = async (authUserId: string): Promise<Usuario | null> => {
     const queryPromise = (async () => {
@@ -52,8 +91,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     repo.clearCache();
-    setCurrentUser(null);
-  }, []);
+    clearCachedProfile();
+    updateCurrentUser(null);
+  }, [updateCurrentUser]);
+
+  const loadAuthenticatedProfile = useCallback(async (authUserId: string): Promise<Usuario | null> => {
+    const cachedProfile = getCachedProfile(authUserId);
+    const activeProfile = currentUserRef.current?.auth_user_id === authUserId ? currentUserRef.current : null;
+    const fallbackProfile = activeProfile || cachedProfile;
+
+    if (fallbackProfile && !currentUserRef.current) {
+      updateCurrentUser(fallbackProfile);
+    }
+
+    const profile = await fetchUserProfile(authUserId);
+    if (profile) {
+      updateCurrentUser(profile);
+      return profile;
+    }
+
+    if (fallbackProfile) {
+      console.warn('Mantendo sessao ativa com perfil em cache apos falha temporaria ao buscar perfil.');
+      updateCurrentUser(fallbackProfile);
+      return fallbackProfile;
+    }
+
+    return null;
+  }, [updateCurrentUser]);
 
   const login = async (username: string, senhaMock: string): Promise<{ success: boolean; message: string }> => {
     try {
@@ -76,7 +140,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             await logout();
             return { success: false, message: 'Esta conta de usuário está inativa.' };
           }
-          setCurrentUser(profile);
+          updateCurrentUser(profile);
           return { success: true, message: 'Login realizado com sucesso.' };
         } else {
           // Fallback: vincula o perfil existente ao ID do Auth se ainda não estiver associado
@@ -89,7 +153,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (!profileErr && userProfile) {
             const updatedProfile = { ...userProfile, auth_user_id: data.user.id };
             await supabase.from('usuarios').upsert(updatedProfile);
-            setCurrentUser(updatedProfile);
+            updateCurrentUser(updatedProfile);
             return { success: true, message: 'Login realizado e conta vinculada com sucesso.' };
           }
         }
@@ -117,11 +181,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { data: { session } } = await supabase.auth.getSession();
         if (active) {
           if (session?.user) {
-            const profile = await fetchUserProfile(session.user.id);
-            setCurrentUser(profile);
+            await loadAuthenticatedProfile(session.user.id);
           } else {
             repo.clearCache();
-            setCurrentUser(null);
+            clearCachedProfile();
+            updateCurrentUser(null);
           }
         }
       } catch (err) {
@@ -148,11 +212,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         try {
           if (session?.user) {
-            const profile = await fetchUserProfile(session.user.id);
-            setCurrentUser(profile);
+            await loadAuthenticatedProfile(session.user.id);
           } else {
             repo.clearCache();
-            setCurrentUser(null);
+            clearCachedProfile();
+            updateCurrentUser(null);
           }
         } catch (err) {
           console.error('Erro ao processar alteração de autenticação:', err);
@@ -169,37 +233,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       active = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-  // Monitor de inatividade
-  useEffect(() => {
-    let inactivityTimer: NodeJS.Timeout;
-
-    const resetTimer = () => {
-      clearTimeout(inactivityTimer);
-      if (currentUser) {
-        inactivityTimer = setTimeout(() => {
-          logout();
-        }, INACTIVITY_TIMEOUT);
-      }
-    };
-
-    if (currentUser) {
-      resetTimer();
-
-      const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
-      const handleActivity = () => {
-        resetTimer();
-      };
-
-      events.forEach(event => document.addEventListener(event, handleActivity));
-
-      return () => {
-        clearTimeout(inactivityTimer);
-        events.forEach(event => document.removeEventListener(event, handleActivity));
-      };
-    }
-  }, [currentUser, logout]);
+  }, [loadAuthenticatedProfile, updateCurrentUser]);
 
   return (
     <AuthContext.Provider value={{ currentUser, login, logout, isAuthenticated: !!currentUser, isLoading }}>
@@ -215,4 +249,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
