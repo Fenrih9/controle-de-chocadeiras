@@ -121,10 +121,10 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
     loadChocadeiras();
   }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (delTarget) {
       setErrorMsg('');
-      const res = repo.deleteChocadeira(delTarget);
+      const res = await repo.deleteChocadeira(delTarget);
       if (res.success) {
         loadChocadeiras();
       } else {

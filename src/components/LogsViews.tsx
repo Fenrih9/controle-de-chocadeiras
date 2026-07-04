@@ -33,7 +33,7 @@ export const RegistroDiarioNovoView: React.FC<LogsProps> = ({ id, onNavigate }) 
     }
   }, [id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setErrorMsg('');
     setSuccessMsg('');
 
@@ -51,7 +51,7 @@ export const RegistroDiarioNovoView: React.FC<LogsProps> = ({ id, onNavigate }) 
       excluido: false
     };
 
-    const res = repo.saveRegistroDiario(log);
+    const res = await repo.saveRegistroDiario(log);
     if (res.success) {
       setSuccessMsg('Acompanhamento diário gravado com sucesso.');
       setTimeout(() => {
@@ -169,6 +169,7 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
   const [observacoes, setObservacoes] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const ch = repo.getChocadaById(id);
@@ -178,9 +179,11 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
     }
   }, [id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSaving) return;
     setErrorMsg('');
     setSuccessMsg('');
+    setIsSaving(true);
 
     const ov: Ovoscopia = {
       id: '',
@@ -195,7 +198,7 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
       excluido: false
     };
 
-    const res = repo.saveOvoscopia(ov);
+    const res = await repo.saveOvoscopia(ov);
     if (res.success) {
       setSuccessMsg('Ovoscopia registrada com sucesso!');
       setTimeout(() => {
@@ -203,6 +206,7 @@ export const OvoscopiaNovaView: React.FC<LogsProps> = ({ id, onNavigate }) => {
       }, 1200);
     } else {
       setErrorMsg(res.message);
+      setIsSaving(false);
     }
   };
 
@@ -324,6 +328,7 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
   const [observacoes, setObservacoes] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const ch = repo.getChocadaById(id);
@@ -333,9 +338,11 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
     }
   }, [id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSaving) return;
     setErrorMsg('');
     setSuccessMsg('');
+    setIsSaving(true);
 
     const rn: RegistroNascimento = {
       id: '',
@@ -350,7 +357,7 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
       excluido: false
     };
 
-    const res = repo.saveRegistroNascimento(rn);
+    const res = await repo.saveRegistroNascimento(rn);
     if (res.success) {
       setSuccessMsg('Resultados de eclosão salvos com sucesso.');
       setTimeout(() => {
@@ -358,6 +365,7 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
       }, 1200);
     } else {
       setErrorMsg(res.message);
+      setIsSaving(false);
     }
   };
 
@@ -414,7 +422,8 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
               label="Pintinhos Nascidos Saudáveis"
               type="number"
               value={pintinhosNascidos}
-              onChange={(e) => setPintinhosNascidos(Number(e.target.value))}
+              min={0}
+              onChange={(e) => setPintinhosNascidos(Math.max(0, Number(e.target.value) || 0))}
             />
 
             <Input
@@ -422,7 +431,8 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
               label="Ovos não Eclodidos (Retidos em casca)"
               type="number"
               value={ovosNaoEclodidos}
-              onChange={(e) => setOvosNaoEclodidos(Number(e.target.value))}
+              min={0}
+              onChange={(e) => setOvosNaoEclodidos(Math.max(0, Number(e.target.value) || 0))}
             />
 
             <Input
@@ -430,7 +440,8 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
               label="Perdas e Abortos Identificados"
               type="number"
               value={perdas}
-              onChange={(e) => setPerdas(Number(e.target.value))}
+              min={0}
+              onChange={(e) => setPerdas(Math.max(0, Number(e.target.value) || 0))}
             />
           </div>
 
@@ -462,7 +473,7 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
             </div>
           </div>
 
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} isLoading={isSaving} disabled={isSaving}>
             <Save className="w-4 h-4 animate-pulse" /> Finalizar e Salvar Resultado
           </Button>
         </Card>

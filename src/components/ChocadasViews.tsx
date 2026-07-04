@@ -46,9 +46,9 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
     setFilteredChocadas(result);
   }, [searchTerm, activeFilter]);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!delTarget) return;
-    const result = repo.deleteChocada(delTarget);
+    const result = await repo.deleteChocada(delTarget);
     if (result.success) {
       setFilteredChocadas(prev => prev.filter(ch => ch.id !== delTarget));
       setDeleteError('');
@@ -259,8 +259,8 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   const now = new Date(getCurrentDateString() + 'T12:00:00');
   const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
 
-  const handleDelete = () => {
-    const result = repo.deleteChocada(chocada.id);
+  const handleDelete = async () => {
+    const result = await repo.deleteChocada(chocada.id);
     if (result.success) {
       setDeleteOpen(false);
       onNavigate('chocadas_lista');
@@ -270,8 +270,8 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
     }
   };
 
-  const handleCancel = () => {
-    const result = repo.cancelarChocada(chocada.id);
+  const handleCancel = async () => {
+    const result = await repo.cancelarChocada(chocada.id);
     if (result.success) {
       setCancelOpen(false);
       onNavigate('chocadas_lista');
@@ -520,7 +520,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
     }
   }, [idToEdit]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setErrorMsg('');
     const existing = idToEdit ? repo.getChocadaById(idToEdit) : undefined;
     if (idToEdit && !existing) {
@@ -547,7 +547,7 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
       excluido: existing?.excluido ?? false
     };
 
-    const result = repo.saveChocada(formPayload);
+    const result = await repo.saveChocada(formPayload);
     if (result.success) {
       onNavigate('chocadas_lista');
     } else {

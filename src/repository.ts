@@ -49,6 +49,19 @@ const SEED_PROPRIEDADE: Propriedade = {
   atualizadoEm: CURRENT_DATE_STRING,
 };
 
+const toSafeInteger = (value: unknown): number => {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? Math.max(0, Math.trunc(numberValue)) : 0;
+};
+
+const compareRegistroNascimentoRecency = (a: RegistroNascimento, b: RegistroNascimento): number => {
+  const aDate = a.atualizadoEm || a.criadoEm || a.dataNascimentoReal || '';
+  const bDate = b.atualizadoEm || b.criadoEm || b.dataNascimentoReal || '';
+  const byDate = aDate.localeCompare(bDate);
+  if (byDate !== 0) return byDate;
+  return a.id.localeCompare(b.id);
+};
+
 // Optimistic Cache Storage
 type AppCache = {
   propriedades: Propriedade[];
@@ -209,6 +222,8 @@ class AppRepository {
   private normalizeLancamento(lancamento: LancamentoFinanceiro): LancamentoFinanceiro {
     return {
       ...lancamento,
+      valor: Number(lancamento.valor) || 0,
+      quantidadePintinhos: lancamento.quantidadePintinhos === undefined ? undefined : toSafeInteger(lancamento.quantidadePintinhos),
       formaPagamento: lancamento.formaPagamento || 'BANCO',
     };
   }
@@ -217,7 +232,7 @@ class AppRepository {
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
     
-    const record = { ...lancamento };
+    const record: LancamentoFinanceiro & { user_id?: string } = { ...lancamento };
     if (userId) {
       record.user_id = userId;
     }
@@ -786,7 +801,22 @@ class AppRepository {
     if (chocadaId) {
       filtered = filtered.filter(item => item.chocadaId === chocadaId);
     }
-    return filtered;
+
+    const latestByChocada = new Map<string, RegistroNascimento>();
+    filtered.forEach(item => {
+      const normalized: RegistroNascimento = {
+        ...item,
+        pintinhosNascidos: toSafeInteger(item.pintinhosNascidos),
+        ovosNaoEclodidos: toSafeInteger(item.ovosNaoEclodidos),
+        perdas: toSafeInteger(item.perdas),
+      };
+      const current = latestByChocada.get(normalized.chocadaId);
+      if (!current || compareRegistroNascimentoRecency(current, normalized) <= 0) {
+        latestByChocada.set(normalized.chocadaId, normalized);
+      }
+    });
+
+    return Array.from(latestByChocada.values());
   }
 
   public async saveRegistroNascimento(nasc: RegistroNascimento): Promise<{ success: boolean; message: string }> {
@@ -794,21 +824,50 @@ class AppRepository {
     if (!chocada) return { success: false, message: 'Incubação não encontrada.' };
     if (!nasc.dataNascimentoReal) return { success: false, message: 'A data do nascimento real é obrigatória.' };
     
+    const pintinhosNascidos = toSafeInteger(nasc.pintinhosNascidos);
+    const ovosNaoEclodidos = toSafeInteger(nasc.ovosNaoEclodidos);
+    const perdas = toSafeInteger(nasc.perdas);
+    const totalInformado = pintinhosNascidos + ovosNaoEclodidos + perdas;
+    if (pintinhosNascidos > chocada.quantidadeOvosInicial) {
+      return { success: false, message: `Pintinhos nascidos (${pintinhosNascidos}) nao pode ser maior que os ovos iniciais (${chocada.quantidadeOvosInicial}).` };
+    }
+    if (totalInformado > chocada.quantidadeOvosInicial) {
+      return { success: false, message: `A soma de nascidos, nao eclodidos e perdas (${totalInformado}) nao pode ultrapassar os ovos iniciais (${chocada.quantidadeOvosInicial}).` };
+    }
+
     const list = this.cache.registros_nascimentos;
-    const index = list.findIndex(item => item.id === nasc.id);
+    const activeForChocada = list
+      .filter(item => item.chocadaId === nasc.chocadaId && !item.excluido)
+      .sort(compareRegistroNascimentoRecency);
+    const existingActive = activeForChocada[activeForChocada.length - 1];
+    const targetId = nasc.id || existingActive?.id || `rn-${nasc.chocadaId}`;
+    const index = list.findIndex(item => item.id === targetId);
     const dateStr = CURRENT_DATE_STRING;
 
-    const clone = { ...nasc };
+    const clone = {
+      ...nasc,
+      id: targetId,
+      pintinhosNascidos,
+      ovosNaoEclodidos,
+      perdas,
+    };
     if (index >= 0) {
       clone.atualizadoEm = dateStr;
     } else {
-      clone.id = clone.id || `rn-${Date.now()}`;
       clone.criadoEm = dateStr;
       clone.atualizadoEm = dateStr;
       clone.excluido = false;
     }
 
     try {
+      const duplicatedActive = activeForChocada.filter(item => item.id !== clone.id);
+      await Promise.all(
+        duplicatedActive.map(item => this.upsertToSupabase('registros_nascimentos', {
+          ...item,
+          excluido: true,
+          atualizadoEm: dateStr,
+        }))
+      );
       await this.upsertToSupabase('registros_nascimentos', clone);
 
       const rawList = this.cache.chocadas;
@@ -829,6 +888,12 @@ class AppRepository {
       } else {
         list.push(clone);
       }
+      duplicatedActive.forEach(item => {
+        const dupIndex = list.findIndex(current => current.id === item.id);
+        if (dupIndex >= 0) {
+          list[dupIndex] = { ...list[dupIndex], excluido: true, atualizadoEm: dateStr };
+        }
+      });
       return { success: true, message: 'Registro de nascimento salvo e lote finalizado!' };
     } catch (e: any) {
       return { success: false, message: `Erro ao salvar registro de nascimento: ${e.message || e}` };
@@ -840,10 +905,16 @@ class AppRepository {
     const index = list.findIndex(item => item.id === id);
     if (index >= 0) {
       const chocadaId = list[index].chocadaId;
-      const clone = { ...list[index], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+      const activeForChocada = list.filter(item => item.chocadaId === chocadaId && !item.excluido);
       
       try {
-        await this.upsertToSupabase('registros_nascimentos', clone);
+        await Promise.all(
+          activeForChocada.map(item => this.upsertToSupabase('registros_nascimentos', {
+            ...item,
+            excluido: true,
+            atualizadoEm: CURRENT_DATE_STRING,
+          }))
+        );
 
         const rawList = this.cache.chocadas;
         const idx = rawList.findIndex(item => item.id === chocadaId);
@@ -858,7 +929,12 @@ class AppRepository {
           rawList[idx] = recalculated;
         }
 
-        list[index] = clone;
+        activeForChocada.forEach(item => {
+          const activeIndex = list.findIndex(current => current.id === item.id);
+          if (activeIndex >= 0) {
+            list[activeIndex] = { ...list[activeIndex], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
+          }
+        });
         return { success: true, message: 'Registro de nascimento excluído.' };
       } catch (e: any) {
         return { success: false, message: `Erro ao excluir registro de nascimento: ${e.message || e}` };
@@ -984,10 +1060,11 @@ class AppRepository {
 
     // Validação adicional de estoque de pintinhos se for venda
     if (lancamento.tipo === 'RECEITA' && lancamento.categoria === 'Venda de Pintinhos' && lancamento.chocadeiraId) {
-      const qtd = lancamento.quantidadePintinhos || 0;
+      const qtd = toSafeInteger(lancamento.quantidadePintinhos);
       if (qtd <= 0) {
         return { success: false, message: 'A quantidade de pintinhos vendida deve ser maior que zero.' };
       }
+      lancamento.quantidadePintinhos = qtd;
       const estoque = this.getEstoquePintinhosPorChocadeira(lancamento.chocadeiraId, lancamento.id);
       if (qtd > estoque.disponivel) {
         return {
@@ -1055,7 +1132,7 @@ class AppRepository {
     chocadasFinalizadas.forEach(ch => {
       const nascimentos = this.getRegistrosNascimento(ch.id);
       nascimentos.forEach(n => {
-        totalNascidos += n.pintinhosNascidos;
+        totalNascidos += toSafeInteger(n.pintinhosNascidos);
       });
     });
 
@@ -1069,7 +1146,7 @@ class AppRepository {
            l.id !== ignoreLancamentoId
     );
     vendas.forEach(v => {
-      totalVendidos += v.quantidadePintinhos || 0;
+      totalVendidos += toSafeInteger(v.quantidadePintinhos);
     });
 
     return {
