@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Settings, Landmark, Users, HardHat, Clock, FileChartLine, Save, MapPin, Phone, User, AlertOctagon, ChevronRight, TrendingUp, Calendar, Filter, CheckCircle, Egg, Activity, FileText, BarChart2, Award, ArrowRight, Pencil } from 'lucide-react';
 import { repo } from '../repository';
-import { Chocadeira, Propriedade, Usuario, Role } from '../types';
+import { Chocadeira, Propriedade, Usuario, Role, RegistroNascimento } from '../types';
 import { Button, Card, Input, Select, ConfirmDialog } from './GlacierUI';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -1415,46 +1415,62 @@ export const AjusteEstoqueView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
     setSuccessMsg('');
     setLoading(true);
 
-    // 1. Pegar a última chocada finalizada desta chocadeira
-    const chocadasFinalizadas = repo.getChocadas().filter(
-      c => c.chocadeiraId === selectedChocadeiraId && c.finalizada && !c.excluido
-    );
+    try {
+      // 1. Pegar a última chocada finalizada desta chocadeira
+      const chocadasFinalizadas = repo.getChocadas().filter(
+        c => c.chocadeiraId === selectedChocadeiraId && c.finalizada && !c.excluido
+      );
 
-    if (chocadasFinalizadas.length === 0) {
-      setErrorMsg('Esta chocadeira não possui nenhuma eclosão finalizada para ajustar o saldo.');
-      setLoading(false);
-      return;
-    }
+      if (chocadasFinalizadas.length === 0) {
+        setErrorMsg('Esta chocadeira não possui nenhuma eclosão finalizada para ajustar o saldo.');
+        setLoading(false);
+        return;
+      }
 
-    // Ordena para pegar a eclosão mais recente
-    chocadasFinalizadas.sort((a, b) => b.dataInicio.localeCompare(a.dataInicio));
-    const chocadaAlvo = chocadasFinalizadas[0];
+      // Ordena para pegar a eclosão mais recente
+      chocadasFinalizadas.sort((a, b) => b.dataInicio.localeCompare(a.dataInicio));
+      const chocadaAlvo = chocadasFinalizadas[0];
 
-    // Busca o registro de nascimento existente ou cria um novo com o saldo ajustado
-    const nascimentosExistentes = repo.getRegistrosNascimento(chocadaAlvo.id);
-    const principal = nascimentosExistentes[0];
+      // Busca o registro de nascimento existente
+      const nascimentosExistentes = repo.getRegistrosNascimento(chocadaAlvo.id);
+      const principal = nascimentosExistentes[0];
 
-    const rn: RegistroNascimento = {
-      id: principal?.id || '',
-      chocadaId: chocadaAlvo.id,
-      dataNascimentoReal: principal?.dataNascimentoReal || new Date().toISOString().split('T')[0],
-      pintinhosNascidos: novoSaldoNascidos,
-      ovosNaoEclodidos: principal?.ovosNaoEclodidos || 0,
-      perdas: principal?.perdas || 0,
-      observacoes: (principal?.observacoes || '') + `\n[Ajuste manual de estoque de eclosão realizado em ${new Date().toISOString().split('T')[0]}]`,
-      criadoEm: principal?.criadoEm || '',
-      atualizadoEm: '',
-      excluido: false
-    };
+      // Recalcular ovosNaoEclodidos com base no novo valor de pintinhos
+      // para que a soma não exceda quantidadeOvosInicial
+      const ovosInicial = chocadaAlvo.quantidadeOvosInicial;
+      const novosNascidos = Math.min(novoSaldoNascidos, ovosInicial);
+      const restante = ovosInicial - novosNascidos;
 
-    const res = await repo.saveRegistroNascimento(rn);
-    if (res.success) {
-      setSuccessMsg('Estoque ajustado com sucesso para esta chocadeira!');
-      setTimeout(() => {
-        onNavigate('configuracoes');
-      }, 1500);
-    } else {
-      setErrorMsg(res.message);
+      const rn: RegistroNascimento = {
+        id: principal?.id || '',
+        chocadaId: chocadaAlvo.id,
+        dataNascimentoReal: principal?.dataNascimentoReal || new Date().toISOString().split('T')[0],
+        pintinhosNascidos: novosNascidos,
+        ovosNaoEclodidos: restante,
+        perdas: 0,
+        observacoes: (principal?.observacoes || '') + `\n[Ajuste manual: ${novosNascidos} pintinhos em ${new Date().toISOString().split('T')[0]}]`,
+        criadoEm: principal?.criadoEm || '',
+        atualizadoEm: '',
+        excluido: false
+      };
+
+      const res = await repo.saveRegistroNascimento(rn);
+      if (res.success) {
+        setSuccessMsg('Estoque ajustado com sucesso!');
+        setLoading(false);
+        // Atualiza os valores exibidos na tela
+        const estAtualizado = repo.getEstoquePintinhosPorChocadeira(selectedChocadeiraId);
+        setNovoSaldoNascidos(estAtualizado.nascidos);
+        setVendidosAtual(estAtualizado.vendidos);
+        setTimeout(() => {
+          onNavigate('dashboard');
+        }, 1500);
+      } else {
+        setErrorMsg(res.message);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      setErrorMsg(`Erro inesperado: ${err.message || err}`);
       setLoading(false);
     }
   };
