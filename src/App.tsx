@@ -21,7 +21,8 @@ import {
   AlertasFeedView,
   RelatoriosGeraisView,
   UsuariosListaView,
-  UsuarioNovoView
+  UsuarioNovoView,
+  AjusteEstoqueView
 } from './components/SettingsViews';
 import { ReportView } from './components/ReportView';
 import { FinanceiroView } from './components/FinanceiroViews';
@@ -137,8 +138,10 @@ export default function App() {
         return <ChocadeirasListaView onNavigate={onNavigate} />;
       case 'chocadeira_nova':
         return <ChocadeiraNovaView onNavigate={onNavigate} idToEdit={screenParams?.id} />;
-      case 'propriedade_editar':
+       case 'propriedade_editar':
         return <PropriedadeEditarView onNavigate={onNavigate} />;
+      case 'ajuste_estoque':
+        return currentUser?.role === 'ADMIN' ? <AjusteEstoqueView onNavigate={onNavigate} /> : <DashboardView onNavigate={onNavigate} />;
       case 'usuarios_lista':
         return <UsuariosListaView onNavigate={onNavigate} />;
       case 'usuario_novo':
@@ -157,7 +160,7 @@ export default function App() {
     if (['chocadas_lista', 'chocada_detalhes', 'chocada_nova', 'chocada_editar', 'registro_diario_novo', 'ovoscopia_nova', 'nascimento_novo', 'relatorio_chocada'].includes(currentScreen)) return 'chocadas_lista';
     if (['alertas'].includes(currentScreen)) return 'alertas';
     if (['relatorios_gerais', 'historico_geral'].includes(currentScreen)) return 'relatorios_gerais';
-    if (['configuracoes', 'chocadeiras_lista', 'chocadeira_nova', 'propriedade_editar'].includes(currentScreen)) return 'configuracoes';
+    if (['configuracoes', 'chocadeiras_lista', 'chocadeira_nova', 'propriedade_editar', 'ajuste_estoque'].includes(currentScreen)) return 'configuracoes';
     return '';
   };
 

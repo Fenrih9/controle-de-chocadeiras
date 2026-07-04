@@ -349,6 +349,7 @@ class AppRepository {
       } else {
         this.cache.propriedades.push(prop);
       }
+      this.saveLocalCache();
       return { success: true, message: 'Propriedade salva com sucesso.' };
     } catch (e: any) {
       return { success: false, message: `Erro ao salvar propriedade: ${e.message || e}` };
@@ -402,6 +403,7 @@ class AppRepository {
       } else {
         list.push(clone);
       }
+      this.saveLocalCache();
       return { success: true, message: 'Chocadeira salva com sucesso.' };
     } catch (e: any) {
       return { success: false, message: `Erro ao salvar chocadeira: ${e.message || e}` };
@@ -553,6 +555,7 @@ class AppRepository {
         list.push(calculatedChocada);
       }
       const saved = this.getChocadaById(calculatedChocada.id);
+      this.saveLocalCache();
       return { success: true, message: 'Lote registrado com sucesso.', data: saved };
     } catch (e: any) {
       return { success: false, message: `Erro ao salvar lote no Supabase: ${e.message || e}` };
@@ -894,6 +897,7 @@ class AppRepository {
           list[dupIndex] = { ...list[dupIndex], excluido: true, atualizadoEm: dateStr };
         }
       });
+      this.saveLocalCache();
       return { success: true, message: 'Registro de nascimento salvo e lote finalizado!' };
     } catch (e: any) {
       return { success: false, message: `Erro ao salvar registro de nascimento: ${e.message || e}` };
@@ -935,6 +939,7 @@ class AppRepository {
             list[activeIndex] = { ...list[activeIndex], excluido: true, atualizadoEm: CURRENT_DATE_STRING };
           }
         });
+        this.saveLocalCache();
         return { success: true, message: 'Registro de nascimento excluído.' };
       } catch (e: any) {
         return { success: false, message: `Erro ao excluir registro de nascimento: ${e.message || e}` };

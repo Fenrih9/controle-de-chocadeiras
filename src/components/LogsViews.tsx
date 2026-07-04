@@ -334,7 +334,17 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
     const ch = repo.getChocadaById(id);
     if (ch) {
       setChocada(ch);
-      setPintinhosNascidos(ch.quantidadeOvosAtivos); // default helper
+      const nascimentosExistentes = repo.getRegistrosNascimento(id);
+      if (nascimentosExistentes.length > 0) {
+        const principal = nascimentosExistentes[0];
+        setDataNascimentoReal(principal.dataNascimentoReal || getCurrentDateString());
+        setPintinhosNascidos(principal.pintinhosNascidos || 0);
+        setOvosNaoEclodidos(principal.ovosNaoEclodidos || 0);
+        setPerdas(principal.perdas || 0);
+        setObservacoes(principal.observacoes || '');
+      } else {
+        setPintinhosNascidos(ch.quantidadeOvosAtivos); // default helper
+      }
     }
   }, [id]);
 
@@ -344,15 +354,18 @@ export const RegistroNascimentoView: React.FC<LogsProps> = ({ id, onNavigate }) 
     setSuccessMsg('');
     setIsSaving(true);
 
+    const nascimentosExistentes = repo.getRegistrosNascimento(id);
+    const existingId = nascimentosExistentes.length > 0 ? nascimentosExistentes[0].id : '';
+
     const rn: RegistroNascimento = {
-      id: '',
+      id: existingId,
       chocadaId: id,
       dataNascimentoReal,
       pintinhosNascidos,
       ovosNaoEclodidos,
       perdas,
       observacoes,
-      criadoEm: '',
+      criadoEm: nascimentosExistentes.length > 0 ? nascimentosExistentes[0].criadoEm : '',
       atualizadoEm: '',
       excluido: false
     };

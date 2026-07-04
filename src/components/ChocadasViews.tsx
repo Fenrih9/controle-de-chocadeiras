@@ -431,8 +431,17 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
                     onClick={() => onNavigate('nascimento_novo', { id: chocada.id })}
                     className="p-4 bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-slate-300"
                   >
-                    <Plus className="w-5 h-5 text-emerald-400" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Registrar Nascimento</span>
+                    {chocada.finalizada ? (
+                      <>
+                        <Pencil className="w-5 h-5 text-amber-400" />
+                        <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Editar Nascimento</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 text-emerald-400" />
+                        <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Registrar Nascimento</span>
+                      </>
+                    )}
                   </button>
                 </>
               )}

@@ -8,6 +8,7 @@ import { Plus, Trash2, Settings, Landmark, Users, HardHat, Clock, FileChartLine,
 import { repo } from '../repository';
 import { Chocadeira, Propriedade, Usuario, Role } from '../types';
 import { Button, Card, Input, Select, ConfirmDialog } from './GlacierUI';
+import { useAuth } from '../contexts/AuthContext';
 
 // --- VIEW: ADJUSTS LISTING ---
 interface SettingsViewsProps {
@@ -15,6 +16,7 @@ interface SettingsViewsProps {
 }
 
 export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
+  const { currentUser } = useAuth();
   const prop = repo.getPropriedade();
 
   return (
@@ -99,6 +101,19 @@ export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
               </div>
               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-300 transition-colors" />
             </div>
+
+            {currentUser?.role === 'ADMIN' && (
+              <div 
+                onClick={() => onNavigate('ajuste_estoque')}
+                className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              >
+                <div className="flex items-center gap-3 text-slate-200">
+                  <TrendingUp className="w-5 h-5 text-red-400" />
+                  <span className="text-xs font-semibold">Ajuste de Estoque (Manual)</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -1371,6 +1386,147 @@ export const UsuarioNovoView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
 
         <div className="pt-4">
           <Button onClick={handleSave}>Salvar Usuário</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const AjusteEstoqueView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
+  const chocadeiras = repo.getChocadeiras();
+  const [selectedChocadeiraId, setSelectedChocadeiraId] = useState(chocadeiras[0]?.id || '');
+  const [novoSaldoNascidos, setNovoSaldoNascidos] = useState(0);
+  const [vendidosAtual, setVendidosAtual] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    if (selectedChocadeiraId) {
+      const est = repo.getEstoquePintinhosPorChocadeira(selectedChocadeiraId);
+      setNovoSaldoNascidos(est.nascidos);
+      setVendidosAtual(est.vendidos);
+    }
+  }, [selectedChocadeiraId]);
+
+  const handleSaveAdjustment = async () => {
+    if (!selectedChocadeiraId) return;
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    // 1. Pegar a última chocada finalizada desta chocadeira
+    const chocadasFinalizadas = repo.getChocadas().filter(
+      c => c.chocadeiraId === selectedChocadeiraId && c.finalizada && !c.excluido
+    );
+
+    if (chocadasFinalizadas.length === 0) {
+      setErrorMsg('Esta chocadeira não possui nenhuma eclosão finalizada para ajustar o saldo.');
+      setLoading(false);
+      return;
+    }
+
+    // Ordena para pegar a eclosão mais recente
+    chocadasFinalizadas.sort((a, b) => b.dataInicio.localeCompare(a.dataInicio));
+    const chocadaAlvo = chocadasFinalizadas[0];
+
+    // Busca o registro de nascimento existente ou cria um novo com o saldo ajustado
+    const nascimentosExistentes = repo.getRegistrosNascimento(chocadaAlvo.id);
+    const principal = nascimentosExistentes[0];
+
+    const rn: RegistroNascimento = {
+      id: principal?.id || '',
+      chocadaId: chocadaAlvo.id,
+      dataNascimentoReal: principal?.dataNascimentoReal || new Date().toISOString().split('T')[0],
+      pintinhosNascidos: novoSaldoNascidos,
+      ovosNaoEclodidos: principal?.ovosNaoEclodidos || 0,
+      perdas: principal?.perdas || 0,
+      observacoes: (principal?.observacoes || '') + `\n[Ajuste manual de estoque de eclosão realizado em ${new Date().toISOString().split('T')[0]}]`,
+      criadoEm: principal?.criadoEm || '',
+      atualizadoEm: '',
+      excluido: false
+    };
+
+    const res = await repo.saveRegistroNascimento(rn);
+    if (res.success) {
+      setSuccessMsg('Estoque ajustado com sucesso para esta chocadeira!');
+      setTimeout(() => {
+        onNavigate('configuracoes');
+      }, 1500);
+    } else {
+      setErrorMsg(res.message);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+          Cancelar
+        </button>
+        <span className="font-headline font-bold text-slate-200 text-sm">Ajustar Estoque Manual</span>
+      </header>
+
+      <div className="flex-grow overflow-y-auto px-5 py-6 space-y-5 max-w-sm mx-auto w-full">
+        <div className="text-center md:text-left mb-2">
+          <h2 className="text-xl font-bold tracking-tight text-slate-100">Ajustar Pintinhos Disponíveis</h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Modifique a contagem de pintinhos nascidos da última eclosão para corrigir o saldo disponível.
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg font-medium text-center">
+            {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg font-medium text-center">
+            {successMsg}
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Selecionar Chocadeira</label>
+          <select
+            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            value={selectedChocadeiraId}
+            onChange={(e) => setSelectedChocadeiraId(e.target.value)}
+          >
+            {chocadeiras.map(c => (
+              <option key={c.id} value={c.id}>{c.nome} ({c.modelo})</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Total Pintinhos Nascidos (Ajustar)</label>
+          <input
+            type="number"
+            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            value={novoSaldoNascidos}
+            min={0}
+            onChange={(e) => setNovoSaldoNascidos(Math.max(0, Number(e.target.value) || 0))}
+          />
+        </div>
+
+        <div className="p-4 bg-slate-900/60 border border-sky-500/10 rounded-xl space-y-2 text-xs">
+          <div className="flex justify-between text-slate-400">
+            <span>Pintinhos Vendidos:</span>
+            <span className="font-bold text-slate-200">{vendidosAtual}</span>
+          </div>
+          <div className="flex justify-between text-slate-400 border-t border-sky-950/40 pt-2 font-semibold">
+            <span>Saldo Disponível Resultante:</span>
+            <span className="font-bold text-emerald-400">{Math.max(0, novoSaldoNascidos - vendidosAtual)} Pintinhos</span>
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <Button onClick={handleSaveAdjustment} isLoading={loading} disabled={loading}>
+            Confirmar Ajuste de Estoque
+          </Button>
         </div>
       </div>
     </div>
