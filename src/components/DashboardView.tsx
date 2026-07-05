@@ -341,12 +341,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         {/* Dynamic Critical Notifications Alerts block */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold tracking-widest text-[#7dd3fc] flex items-center gap-1.5 uppercase">
-              <AlertTriangle className="w-4 h-4 text-red-400 fill-red-400/15" /> Alertas Críticos
+            <h2 className="text-xs font-bold tracking-widest text-[#b85745] flex items-center gap-1.5 uppercase">
+              <AlertTriangle className="w-4 h-4 text-[#b85745]" /> Alertas Críticos
             </h2>
             <button 
               onClick={() => onNavigate('alertas')}
-              className="text-[10px] font-bold text-slate-400 hover:text-sky-300 uppercase tracking-widest"
+              className="text-[10px] font-bold text-[#6f756a] hover:text-[#3f5f31] uppercase tracking-widest cursor-pointer"
             >
               Ver todos
             </button>
@@ -378,11 +378,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
         {/* Recent Active Batches block */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold tracking-widest text-[#7dd3fc] uppercase">Chocadas Recentes</h2>
+            <h2 className="text-xs font-bold tracking-widest text-[#3f5f31] uppercase">Chocadas Recentes</h2>
             {currentUser?.role !== 'LEITOR' && (
               <button 
                 onClick={() => onNavigate('chocada_nova')}
-                className="p-1 px-2.5 rounded-lg bg-sky-500/10 border border-sky-400/20 hover:border-sky-400/40 text-sky-400 text-[10px] uppercase font-bold tracking-wider hover:bg-sky-500/15 transition-all cursor-pointer flex items-center gap-1"
+                className="p-1 px-2.5 rounded-lg bg-[#3f5f31]/10 border border-[#3f5f31]/20 hover:border-[#3f5f31]/40 text-[#3f5f31] text-[10px] uppercase font-bold tracking-wider hover:bg-[#3f5f31]/15 transition-all cursor-pointer flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" /> Adicionar
               </button>
@@ -403,12 +403,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
               const chocadeiraNome = repo.getChocadeiraById(ch.chocadeiraId)?.nome || null;
 
               const countdownColor = isOverdue
-                ? 'text-red-400 bg-red-500/15 border-red-500/30'
+                ? 'text-[#b85745] bg-[#b85745]/10 border-[#b85745]/20'
                 : isUrgent
-                ? 'text-orange-300 bg-orange-500/15 border-orange-500/30'
+                ? 'text-[#c9854a] bg-[#c9854a]/10 border-[#c9854a]/20'
                 : isIminent
-                ? 'text-amber-300 bg-amber-500/15 border-amber-500/30'
-                : 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20';
+                ? 'text-[#c9854a] bg-[#c9854a]/10 border-[#c9854a]/20'
+                : 'text-[#3f5f31] bg-[#3f5f31]/10 border-[#3f5f31]/20';
 
               const countdownLabel = isOverdue
                 ? `+${Math.abs(daysRemaining)}d` 

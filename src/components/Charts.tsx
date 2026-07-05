@@ -29,21 +29,21 @@ export const CircularProgressRing: React.FC<CircularProgressProps> = ({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percent / 100) * circumference;
 
-  // Let's decide colors based on status
-  let ringColor = "text-sky-400";
-  let filterColor = "rgba(125, 211, 252, 0.3)";
+  // Cores baseadas no status — tema claro
+  let ringColor = "text-[#3f5f31]";
+  let filterColor = "rgba(63, 95, 49, 0.25)";
   if (status === 'PROXIMA') {
-    ringColor = "text-purple-400";
-    filterColor = "rgba(200, 160, 240, 0.3)";
+    ringColor = "text-[#c9854a]";
+    filterColor = "rgba(201, 133, 74, 0.25)";
   } else if (status === 'ATRASADA') {
-    ringColor = "text-red-400";
-    filterColor = "rgba(255, 107, 107, 0.3)";
+    ringColor = "text-[#b85745]";
+    filterColor = "rgba(184, 87, 69, 0.25)";
   } else if (status === 'FINALIZADA') {
-    ringColor = "text-emerald-400";
-    filterColor = "rgba(74, 222, 128, 0.3)";
+    ringColor = "text-emerald-600";
+    filterColor = "rgba(5, 150, 105, 0.25)";
   } else if (status === 'CANCELADA') {
-    ringColor = "text-slate-500";
-    filterColor = "rgba(100, 116, 139, 0.3)";
+    ringColor = "text-[#6f756a]";
+    filterColor = "rgba(111, 117, 106, 0.2)";
   }
 
   return (
@@ -51,7 +51,7 @@ export const CircularProgressRing: React.FC<CircularProgressProps> = ({
       <svg className="w-full h-full transform -rotate-90">
         {/* Background Circle */}
         <circle
-          className="text-slate-800"
+          className="text-[#f1eadf]"
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -80,13 +80,13 @@ export const CircularProgressRing: React.FC<CircularProgressProps> = ({
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         {status === 'ATRASADA' ? (
           <>
-            <span className="text-3xl font-extrabold text-red-400">D+{normDay - normTotal}</span>
-            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Atraso</span>
+            <span className="text-3xl font-extrabold text-[#b85745]">D+{normDay - normTotal}</span>
+            <span className="text-[10px] font-bold text-[#6f756a] tracking-widest uppercase">Atraso</span>
           </>
         ) : (
           <>
-            <span className="text-4xl font-extrabold text-slate-100">Dia {normDay}</span>
-            <span className="text-xs font-semibold text-slate-400">de {normTotal} Dias</span>
+            <span className="text-4xl font-extrabold text-[#263225]">Dia {normDay}</span>
+            <span className="text-xs font-semibold text-[#6f756a]">de {normTotal} Dias</span>
           </>
         )}
       </div>
@@ -105,7 +105,7 @@ export const TempBarChart: React.FC = () => {
         <div key={i} className="flex-1 flex flex-col justify-end h-full">
           <div 
             style={{ height: `${h}%` }}
-            className="w-full bg-gradient-to-t from-sky-400/20 to-sky-400/60 rounded-t shadow-[0_0_8px_rgba(125,211,252,0.15)] hover:to-sky-300 hover:from-sky-500/30 transition-all duration-300 cursor-pointer"
+            className="w-full bg-gradient-to-t from-[#3f5f31]/15 to-[#3f5f31]/45 rounded-t shadow-sm hover:to-[#3f5f31]/60 hover:from-[#3f5f31]/25 transition-all duration-300 cursor-pointer"
           />
         </div>
       ))}
@@ -126,11 +126,11 @@ export const MiniProgressRing: React.FC<{ day: number; total: number; status?: s
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percent / 100) * circumference;
 
-  let color = "text-sky-400";
-  if (status === 'PROXIMA') color = "text-purple-400";
-  if (status === 'ATRASADA') color = "text-red-400";
+  let color = "text-[#3f5f31]";
+  if (status === 'PROXIMA') color = "text-[#c9854a]";
+  if (status === 'ATRASADA') color = "text-[#b85745]";
   if (status === 'FINALIZADA') color = "text-emerald-600";
-  if (status === 'CANCELADA') color = "text-slate-500";
+  if (status === 'CANCELADA') color = "text-[#6f756a]";
 
   return (
     <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
@@ -165,7 +165,7 @@ export const MiniProgressRing: React.FC<{ day: number; total: number; status?: s
             <span className={`text-[9px] font-extrabold ${color}`}>
               {status === 'ATRASADA' ? 'D+' : `D${day}`}
             </span>
-            <span className="text-[7px] text-slate-500 font-medium leading-none">
+            <span className="text-[7px] text-[#6f756a] font-medium leading-none">
               {status === 'ATRASADA' ? 'Atr' : `f.${total}`}
             </span>
           </>

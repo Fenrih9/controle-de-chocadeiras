@@ -494,14 +494,14 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                             <div className="inline-flex gap-1.5 justify-center">
                               <button
                                 onClick={() => handleOpenEdicao(l)}
-                                className="p-1.5 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 text-[#3f5f31] hover:bg-[#3f5f31]/10 rounded-lg transition-colors cursor-pointer"
                                 title="Editar Lançamento"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDelete(l.id)}
-                                className="p-1.5 text-[#b85745] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 text-[#b85745] hover:bg-[#b85745]/10 rounded-lg transition-colors cursor-pointer"
                                 title="Excluir Lançamento"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

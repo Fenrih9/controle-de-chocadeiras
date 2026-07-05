@@ -20,98 +20,98 @@ export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
   const prop = repo.getPropriedade();
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
       {/* Top Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3">
-          <Settings className="w-5 h-5 text-sky-400" />
-          <h1 className="font-headline font-bold text-slate-100 text-sm leading-tight">Configurações & Ajustes</h1>
+          <Settings className="w-5 h-5 text-[#3f5f31]" />
+          <h1 className="font-headline font-bold text-[#263225] text-sm leading-tight">Configurações & Ajustes</h1>
         </div>
       </header>
 
       {/* Settings list scrolling */}
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
-        <div className="p-4 bg-[#141c2e] border border-sky-500/10 rounded-2xl flex items-center gap-3.5 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 to-transparent"></div>
-          <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
-            <Landmark className="w-6 h-6 text-sky-400" />
+        <div className="p-4 bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl flex items-center gap-3.5 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3f5f31]/5 to-transparent"></div>
+          <div className="w-12 h-12 rounded-xl bg-[#3f5f31]/10 border border-[#3f5f31]/20 flex items-center justify-center shrink-0">
+            <Landmark className="w-6 h-6 text-[#3f5f31]" />
           </div>
           <div className="min-w-0">
-            <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest block">Propriedade Conectada</span>
-            <h4 className="font-bold text-slate-100 truncate text-sm">{prop.nome}</h4>
-            <p className="text-[10px] text-slate-400 mt-0.5 truncate leading-none">Resp: {prop.responsavel}</p>
+            <span className="text-[9px] font-bold text-[#3f5f31] uppercase tracking-widest block">Propriedade Conectada</span>
+            <h4 className="font-bold text-[#263225] truncate text-sm">{prop.nome}</h4>
+            <p className="text-[10px] text-[#6f756a] mt-0.5 truncate leading-none">Resp: {prop.responsavel}</p>
           </div>
         </div>
 
         <section className="space-y-2">
-          <h3 className="text-[10px] font-bold tracking-widest text-[#7dd3fc] uppercase ml-1">Divisões de Administração</h3>
+          <h3 className="text-[10px] font-bold tracking-widest text-[#3f5f31] uppercase ml-1">Divisões de Administração</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div 
               onClick={() => onNavigate('propriedade_editar')}
-              className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
             >
-              <div className="flex items-center gap-3 text-slate-200">
-                <Landmark className="w-5 h-5 text-sky-400" />
+              <div className="flex items-center gap-3 text-[#263225]">
+                <Landmark className="w-5 h-5 text-[#3f5f31]" />
                 <span className="text-xs font-semibold">Editar Dados da Propriedade</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-300 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#3f5f31] transition-colors" />
             </div>
 
             <div 
               onClick={() => onNavigate('chocadeiras_lista')}
-              className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
             >
-              <div className="flex items-center gap-3 text-slate-200">
-                <HardHat className="w-5 h-5 text-purple-400" />
+              <div className="flex items-center gap-3 text-[#263225]">
+                <HardHat className="w-5 h-5 text-[#c9854a]" />
                 <span className="text-xs font-semibold">Cadastros de Chocadeiras</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-purple-300 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#c9854a] transition-colors" />
             </div>
 
             <div 
               onClick={() => onNavigate('usuarios_lista')}
-              className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
             >
-              <div className="flex items-center gap-3 text-slate-200">
-                <Users className="w-5 h-5 text-amber-400" />
+              <div className="flex items-center gap-3 text-[#263225]">
+                <Users className="w-5 h-5 text-[#c9854a]" />
                 <span className="text-xs font-semibold">Contas e Usuários</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-amber-300 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#c9854a] transition-colors" />
             </div>
 
             <div 
               onClick={() => onNavigate('historico_geral')}
-              className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
             >
-              <div className="flex items-center gap-3 text-slate-200">
-                <Clock className="w-5 h-5 text-emerald-400" />
+              <div className="flex items-center gap-3 text-[#263225]">
+                <Clock className="w-5 h-5 text-emerald-600" />
                 <span className="text-xs font-semibold">Histórico Geral de Lotes (Concluídos)</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-300 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-emerald-600 transition-colors" />
             </div>
             
             <div 
               onClick={() => onNavigate('relatorios_gerais')}
-              className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
             >
-              <div className="flex items-center gap-3 text-slate-200">
-                <FileChartLine className="w-5 h-5 text-sky-300" />
+              <div className="flex items-center gap-3 text-[#263225]">
+                <FileChartLine className="w-5 h-5 text-[#3f5f31]" />
                 <span className="text-xs font-semibold">Relatório Geral Consolidated</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-300 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#3f5f31] transition-colors" />
             </div>
 
             {currentUser?.role === 'ADMIN' && (
               <div 
                 onClick={() => onNavigate('ajuste_estoque')}
-                className="bg-slate-950/60 hover:bg-slate-900 border border-sky-500/10 rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+                className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
               >
-                <div className="flex items-center gap-3 text-slate-200">
-                  <TrendingUp className="w-5 h-5 text-red-400" />
+                <div className="flex items-center gap-3 text-[#263225]">
+                  <TrendingUp className="w-5 h-5 text-[#b85745]" />
                   <span className="text-xs font-semibold">Ajuste de Estoque (Manual)</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-red-400 transition-colors" />
+                <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#b85745] transition-colors" />
               </div>
             )}
           </div>
@@ -120,7 +120,6 @@ export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
     </div>
   );
 };
-
 
 // --- VIEW: CHOCADEIRAS LISTA ---
 export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
@@ -150,15 +149,15 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-[#fffaf2] border border-[#465336]/15 text-[#6f756a] hover:text-[#263225] hover:border-[#3f5f31]/30 cursor-pointer select-none transition-all shadow-sm">
           Voltar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Chocadeiras</span>
+        <span className="font-headline font-bold text-[#263225] text-sm">Chocadeiras</span>
         <button 
           onClick={() => onNavigate('chocadeira_nova')}
-          className="p-1.5 bg-slate-900 border border-sky-400/20 rounded-xl text-sky-400"
+          className="p-1.5 bg-[#fffaf2] border border-[#465336]/15 rounded-xl text-[#3f5f31] cursor-pointer hover:border-[#3f5f31]/30 shadow-sm"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -166,7 +165,7 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-4 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
         {errorMsg && (
-          <div className="p-3 bg-red-400/10 border border-red-500/20 rounded-xl text-xs text-red-400 font-bold leading-normal">
+          <div className="p-3 bg-[#fef2f2] border border-[#fee2e2] rounded-xl text-xs text-[#7f1d1d] font-bold leading-normal">
             ⚠️ {errorMsg}
           </div>
         )}
@@ -175,21 +174,21 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
           {chocadeiras.map((ch) => (
             <div 
               key={ch.id} 
-              className="bg-slate-950/60 border border-sky-500/10 rounded-2xl p-4 flex gap-4 transition-all duration-300 relative items-center"
+              className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl p-4 flex gap-4 transition-all duration-300 relative items-center"
             >
-              <div className="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[#c9854a]/10 border border-[#c9854a]/20 flex items-center justify-center text-[#c9854a] shrink-0">
                 <HardHat className="w-6 h-6" />
               </div>
               
               <div className="flex-grow min-w-0">
-                <h4 className="font-bold text-slate-100 text-sm truncate">{ch.nome}</h4>
-                <p className="text-[10px] text-slate-400 uppercase mt-0.5 tracking-wider font-semibold truncate">
+                <h4 className="font-bold text-[#263225] text-sm truncate">{ch.nome}</h4>
+                <p className="text-[10px] text-[#6f756a] uppercase mt-0.5 tracking-wider font-semibold truncate">
                   Mod: {ch.modelo} • Cap: {ch.capacidadeMaximaOvos} ovos
                 </p>
-                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-semibold text-slate-500 uppercase leading-none">
+                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-semibold text-[#6f756a] uppercase leading-none">
                   <span>Loc: {ch.localizacao}</span>
                   <span>•</span>
-                  <span className={ch.status === 'Ativa' ? 'text-emerald-400' : 'text-red-400'}>
+                  <span className={ch.status === 'Ativa' ? 'text-emerald-600' : 'text-[#b85745]'}>
                     {ch.status}
                   </span>
                 </div>
@@ -197,7 +196,7 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
               <button 
                 onClick={() => onNavigate('chocadeira_nova', { id: ch.id })}
-                className="p-2.5 bg-slate-900/50 hover:bg-sky-500/10 text-slate-500 hover:text-sky-300 rounded-lg transition-colors cursor-pointer"
+                className="p-2.5 bg-[#f1eadf]/50 hover:bg-[#3f5f31]/10 text-[#6f756a] hover:text-[#3f5f31] rounded-lg transition-colors cursor-pointer"
                 title="Editar chocadeira"
               >
                 <Pencil className="w-4 h-4" />
@@ -205,7 +204,7 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
               <button 
                 onClick={() => setDelTarget(ch.id)}
-                className="p-2.5 bg-slate-900/50 hover:bg-red-500/10 text-slate-500 hover:text-red-400 rounded-lg transition-colors cursor-pointer"
+                className="p-2.5 bg-[#f1eadf]/50 hover:bg-[#b85745]/10 text-[#6f756a] hover:text-[#b85745] rounded-lg transition-colors cursor-pointer"
                 title="Excluir chocadeira"
               >
                 <Trash2 className="w-4 h-4" />
@@ -245,7 +244,7 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
     if (!idToEdit) return;
     const existing = repo.getChocadeiraById(idToEdit);
     if (!existing) {
-      setError('Chocadeira nÃ£o encontrada.');
+      setError('Chocadeira não encontrada.');
       return;
     }
     setNome(existing.nome);
@@ -264,7 +263,7 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
 
     const existing = idToEdit ? repo.getChocadeiraById(idToEdit) : undefined;
     if (idToEdit && !existing) {
-      setError('Chocadeira nÃ£o encontrada para ediÃ§Ã£o.');
+      setError('Chocadeira não encontrada para edição.');
       return;
     }
     const payload: Chocadeira = {
@@ -285,19 +284,19 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('chocadeiras_lista')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('chocadeiras_lista')} className="p-1 px-2.5 rounded-lg bg-[#fffaf2] border border-[#465336]/15 text-[#6f756a] hover:text-[#263225] hover:border-[#3f5f31]/30 cursor-pointer select-none transition-all shadow-sm">
           Cancelar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">
+        <span className="font-headline font-bold text-[#263225] text-sm">
           {idToEdit ? 'Editar Chocadeira' : 'Nova Chocadeira'}
         </span>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
         <Card className="space-y-5">
-          {error && <div className="text-red-400 text-xs font-bold font-mono">⚠️ {error}</div>}
+          {error && <div className="text-[#b85745] text-xs font-bold">⚠️ {error}</div>}
 
           <Input
             id="choc-nome"
@@ -339,7 +338,7 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
               id="choc-status"
               label="Status Atual"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => setStatus(e.target.value)}ange={(e) => setStatus(e.target.value)}
               options={[
                 { value: 'Ativa', label: 'Ativa / Em Uso' },
                 { value: 'Inativa', label: 'Inativa' },

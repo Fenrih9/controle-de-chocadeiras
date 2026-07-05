@@ -35,92 +35,6 @@ body {
   color: var(--ink);
 }
 
-/* Warm, light theme overrides for the existing Tailwind utility strings. */
-.bg-\[\#070b13\],
-.bg-\[\#0a0e1a\],
-.bg-slate-950,
-.bg-slate-950\/20,
-.bg-slate-950\/60,
-.bg-slate-950\/90,
-.bg-slate-900,
-.bg-slate-900\/30,
-.bg-slate-900\/50,
-.bg-slate-900\/60,
-.bg-slate-900\/70,
-.bg-\[\#0f1524\]\/60,
-.bg-\[\#0f1524\]\/75,
-.bg-\[\#141c2e\],
-.bg-\[\#1a2438\]\/30,
-.bg-\[\#1a2438\]\/40,
-.bg-\[\#1a2438\]\/50 {
-  background-color: var(--surface) !important;
-}
-
-.text-slate-100,
-.text-slate-200,
-.text-slate-250,
-.text-slate-300,
-.text-slate-350 {
-  color: var(--ink) !important;
-}
-
-.text-slate-400,
-.text-slate-500,
-.text-slate-600 {
-  color: var(--muted) !important;
-}
-
-.text-sky-300,
-.text-sky-400,
-.text-\[\#7dd3fc\],
-.text-purple-300,
-.text-purple-400 {
-  color: var(--brand) !important;
-}
-
-.bg-sky-500,
-.bg-sky-400,
-.bg-\[\#7dd3fc\] {
-  background-color: var(--brand) !important;
-}
-
-.bg-sky-500\/5,
-.bg-sky-500\/10,
-.bg-sky-500\/15,
-.bg-sky-500\/20,
-.bg-sky-500\/25,
-.bg-purple-500\/10,
-.bg-purple-500\/15,
-.bg-\[\#7dd3fc\]\/5,
-.bg-\[\#7dd3fc\]\/10 {
-  background-color: var(--brand-soft) !important;
-}
-
-.border-sky-950\/20,
-.border-sky-950\/30,
-.border-sky-950\/40,
-.border-sky-950\/50,
-.border-sky-500\/10,
-.border-sky-500\/15,
-.border-sky-500\/20,
-.border-sky-400\/20,
-.border-sky-400\/25,
-.border-sky-400\/30,
-.border-sky-400\/40,
-.border-purple-500\/20,
-.border-white\/5,
-.border-white\/10 {
-  border-color: var(--line) !important;
-}
-
-.shadow-\[0_0_10px_rgba\(125\,211\,252\,0\.05\)\],
-.shadow-\[0_0_15px_rgba\(125\,211\,252\,0\.1\)\],
-.shadow-\[0_0_20px_rgba\(125\,211\,252\,0\.15\)\],
-.shadow-\[0_0_20px_rgba\(125\,211\,252\,0\.4\)\],
-.shadow-\[0_0_30px_rgba\(125\,211\,252\,0\.03\)\] {
-  box-shadow: 0 14px 35px rgba(66, 55, 39, 0.08) !important;
-}
-
 input,
 select,
 textarea {
@@ -143,7 +57,7 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom scrollbars matching Glacier */
+/* Custom scrollbars */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
   height: 6px;
