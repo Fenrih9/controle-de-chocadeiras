@@ -205,7 +205,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Ignora INITIAL_SESSION se já correu para evitar corrida simultânea com getSession inicial
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
-        setIsLoading(true);
+        // Evita exibir tela de carregamento se o usuário já estiver logado (evita flash ao trocar de abas ou refresh de token)
+        const shouldShowLoading = !currentUserRef.current && event !== 'SIGNED_OUT' && event !== 'TOKEN_REFRESHED';
+        
+        if (shouldShowLoading) {
+          setIsLoading(true);
+        }
+        
         const refreshTimer = setTimeout(() => {
           if (active) setIsLoading(false);
         }, 5000);
