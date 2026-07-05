@@ -142,7 +142,11 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                 <div
                   key={ch.id}
                   onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                  className="bg-slate-950/60 hover:bg-slate-900/60 border border-sky-500/10 rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 hover:border-sky-400/30 cursor-pointer relative"
+                  className={`border rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 cursor-pointer relative ${
+                    ch.status === 'FINALIZADA'
+                      ? 'bg-slate-900/5 hover:bg-slate-900/10 border-slate-300/40 opacity-75 hover:opacity-100 hover:border-slate-350'
+                      : 'bg-slate-950/60 hover:bg-slate-900/60 border border-sky-500/10 hover:border-sky-400/30'
+                  }`}
                 >
                   <MiniProgressRing day={elapsed} total={duration} status={ch.status} />
 
@@ -192,11 +196,17 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                         <span>Previsão de Nascimento</span>
                         <span className="text-slate-200">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
                       </div>
-                      <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-white/5">
+                      <div className={`w-full rounded-full h-1.5 overflow-hidden border border-white/5 ${
+                        ch.status === 'FINALIZADA' ? 'bg-slate-200' : 'bg-slate-900'
+                      }`}>
                         <div
-                          className={`h-full rounded-full shadow-[0_0_8px_rgba(125,211,252,0.3)] ${
-                            ch.status === 'ATRASADA' ? 'bg-red-400' :
-                            ch.status === 'PROXIMA' ? 'bg-purple-400' : 'bg-sky-400'
+                          className={`h-full rounded-full ${
+                            ch.status === 'FINALIZADA'
+                              ? 'bg-emerald-600'
+                              : `shadow-[0_0_8px_rgba(125,211,252,0.3)] ${
+                                  ch.status === 'ATRASADA' ? 'bg-red-400' :
+                                  ch.status === 'PROXIMA' ? 'bg-purple-400' : 'bg-sky-400'
+                                }`
                           }`}
                           style={{ width: `${progressPercent}%` }}
                         />

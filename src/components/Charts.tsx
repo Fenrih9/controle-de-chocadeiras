@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { Check } from 'lucide-react';
 
 // circular progress ring
 interface CircularProgressProps {
@@ -128,14 +129,14 @@ export const MiniProgressRing: React.FC<{ day: number; total: number; status?: s
   let color = "text-sky-400";
   if (status === 'PROXIMA') color = "text-purple-400";
   if (status === 'ATRASADA') color = "text-red-400";
-  if (status === 'FINALIZADA') color = "text-emerald-400";
+  if (status === 'FINALIZADA') color = "text-emerald-600";
   if (status === 'CANCELADA') color = "text-slate-500";
 
   return (
     <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
         <circle
-          className="text-slate-800"
+          className="text-slate-200"
           cx="18"
           cy="18"
           r={radius}
@@ -157,12 +158,18 @@ export const MiniProgressRing: React.FC<{ day: number; total: number; status?: s
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-[9px] font-extrabold ${color}`}>
-          {status === 'ATRASADA' ? 'D+' : `D${day}`}
-        </span>
-        <span className="text-[7px] text-slate-500 font-medium leading-none">
-          {status === 'ATRASADA' ? 'Atr' : `f.${total}`}
-        </span>
+        {status === 'FINALIZADA' ? (
+          <Check className="w-5 h-5 text-emerald-600" />
+        ) : (
+          <>
+            <span className={`text-[9px] font-extrabold ${color}`}>
+              {status === 'ATRASADA' ? 'D+' : `D${day}`}
+            </span>
+            <span className="text-[7px] text-slate-500 font-medium leading-none">
+              {status === 'ATRASADA' ? 'Atr' : `f.${total}`}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

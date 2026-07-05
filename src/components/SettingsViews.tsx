@@ -516,24 +516,28 @@ export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
               <div 
                 key={al.id}
                 onClick={() => al.chocadaId && onNavigate('chocada_detalhes', { id: al.chocadaId })}
-                className={`p-4 rounded-xl border backdrop-blur-md cursor-pointer hover:brightness-110 active:scale-95 transition-all outline-none flex gap-3.5 relative overflow-hidden group ${
+                className={`p-4 rounded-xl border cursor-pointer hover:brightness-95 active:scale-95 transition-all outline-none flex gap-3.5 relative overflow-hidden group ${
                   al.tipo === 'error'
-                    ? 'bg-red-500/10 border-red-500/25 text-red-100'
+                    ? 'bg-[#fef2f2] border-[#fee2e2] text-[#7f1d1d]'
                     : al.tipo === 'warning'
-                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-100'
-                    : 'bg-sky-500/10 border-sky-500/20 text-sky-100' // info
+                    ? 'bg-[#fffbeb] border-[#fef3c7] text-[#78350f]'
+                    : 'bg-[#f0f9ff] border-[#e0f2fe] text-[#075985]' // info
                 }`}
               >
-                <div className="shrink-0 flex items-center justify-center p-2 rounded-lg bg-slate-900/40">
+                <div className={`shrink-0 flex items-center justify-center p-2 rounded-lg ${
+                  al.tipo === 'error' ? 'bg-[#fee2e2]' : 
+                  al.tipo === 'warning' ? 'bg-[#fef3c7]' : 
+                  'bg-[#e0f2fe]'
+                }`}>
                   <AlertOctagon className={`w-5 h-5 ${
-                    al.tipo === 'error' ? 'text-red-400' : 
-                    al.tipo === 'warning' ? 'text-amber-400' : 
-                    'text-sky-400' // info
+                    al.tipo === 'error' ? 'text-[#ef4444]' : 
+                    al.tipo === 'warning' ? 'text-[#f59e0b]' : 
+                    'text-[#0284c7]'
                   }`} />
                 </div>
                 <div>
                   <h4 className="font-extrabold text-sm leading-tight">{al.titulo}</h4>
-                  <p className="text-xs text-slate-400 mt-1 leading-snug">{al.msg}</p>
+                  <p className="text-xs text-[#6f756a] mt-1 leading-snug">{al.msg}</p>
                 </div>
               </div>
             ))}

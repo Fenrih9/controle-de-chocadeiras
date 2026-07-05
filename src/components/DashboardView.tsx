@@ -357,18 +357,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
               <div 
                 key={al.id} 
                 onClick={() => al.chocadaId && onNavigate('chocada_detalhes', { id: al.chocadaId })}
-                className={`p-4 rounded-xl backdrop-blur-md border cursor-pointer hover:brightness-110 active:scale-95 transition-all text-xs flex gap-3.5 ${
+                className={`p-4 rounded-xl border cursor-pointer hover:brightness-95 active:scale-95 transition-all text-xs flex gap-3.5 ${
                   al.tipo === 'error' 
-                    ? 'bg-red-500/10 border-red-500/25 text-red-200' 
-                    : 'bg-amber-500/10 border-amber-500/20 text-amber-200'
+                    ? 'bg-[#fef2f2] border-[#fee2e2] text-[#7f1d1d]' 
+                    : 'bg-[#fffbeb] border-[#fef3c7] text-[#78350f]'
                 }`}
               >
-                <div className={`p-2 rounded-lg shrink-0 flex items-center justify-center ${al.tipo === 'error' ? 'bg-red-500/20' : 'bg-amber-500/20'}`}>
-                  {al.tipo === 'error' ? <Thermometer className="w-5 h-5 text-red-400" /> : <Droplets className="w-5 h-5 text-amber-400" />}
+                <div className={`p-2 rounded-lg shrink-0 flex items-center justify-center ${al.tipo === 'error' ? 'bg-[#fee2e2]' : 'bg-[#fef3c7]'}`}>
+                  {al.tipo === 'error' ? <Thermometer className="w-5 h-5 text-[#ef4444]" /> : <Droplets className="w-5 h-5 text-[#f59e0b]" />}
                 </div>
                 <div>
                   <h4 className="font-bold text-sm leading-tight">{al.titulo}</h4>
-                  <p className="text-slate-400 text-xs mt-1 leading-snug">{al.msg}</p>
+                  <p className="text-[#6f756a] text-xs mt-1 leading-snug">{al.msg}</p>
                 </div>
               </div>
             ))}
