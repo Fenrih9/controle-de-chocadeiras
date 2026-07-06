@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Settings, Landmark, Users, HardHat, Clock, FileChartLine, Save, MapPin, Phone, User, AlertOctagon, ChevronRight, TrendingUp, Calendar, Filter, CheckCircle, Egg, Activity, FileText, BarChart2, Award, ArrowRight, Pencil } from 'lucide-react';
 import { repo } from '../repository';
 import { Chocadeira, Propriedade, Usuario, Role, RegistroNascimento } from '../types';
-import { Button, Card, Input, Select, ConfirmDialog } from './GlacierUI';
+import { Button, Card, Input, Select, ConfirmDialog, StatusChip } from './GlacierUI';
 import { useAuth } from '../contexts/AuthContext';
 
 // --- VIEW: ADJUSTS LISTING ---
@@ -20,98 +20,98 @@ export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
   const prop = repo.getPropriedade();
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
       {/* Top Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3">
-          <Settings className="w-5 h-5 text-[#3f5f31]" />
-          <h1 className="font-headline font-bold text-[#263225] text-sm leading-tight">Configurações & Ajustes</h1>
+          <Settings className="w-5 h-5 text-[var(--color-brand)]" />
+          <h1 className="font-headline font-bold text-[var(--color-ink)] text-sm leading-tight">Configurações & Ajustes</h1>
         </div>
       </header>
 
       {/* Settings list scrolling */}
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
-        <div className="p-4 bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl flex items-center gap-3.5 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#3f5f31]/5 to-transparent"></div>
-          <div className="w-12 h-12 rounded-xl bg-[#3f5f31]/10 border border-[#3f5f31]/20 flex items-center justify-center shrink-0">
-            <Landmark className="w-6 h-6 text-[#3f5f31]" />
+        <div className="card-base p-4 flex items-center gap-3.5 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-brand-soft)] to-transparent"></div>
+          <div className="w-12 h-12 rounded-xl bg-[var(--color-brand-soft)] border border-[var(--color-brand)]/20 flex items-center justify-center shrink-0">
+            <Landmark className="w-6 h-6 text-[var(--color-brand)]" />
           </div>
           <div className="min-w-0">
-            <span className="text-[9px] font-bold text-[#3f5f31] uppercase tracking-widest block">Propriedade Conectada</span>
-            <h4 className="font-bold text-[#263225] truncate text-sm">{prop.nome}</h4>
-            <p className="text-[10px] text-[#6f756a] mt-0.5 truncate leading-none">Resp: {prop.responsavel}</p>
+            <span className="text-[9px] font-bold text-[var(--color-brand)] uppercase tracking-widest block">Propriedade Conectada</span>
+            <h4 className="font-bold text-[var(--color-ink)] truncate text-sm">{prop.nome}</h4>
+            <p className="text-[10px] text-[var(--color-muted)] mt-0.5 truncate leading-none">Resp: {prop.responsavel}</p>
           </div>
         </div>
 
         <section className="space-y-2">
-          <h3 className="text-[10px] font-bold tracking-widest text-[#3f5f31] uppercase ml-1">Divisões de Administração</h3>
+          <h3 className="text-[10px] font-bold tracking-widest text-[var(--color-brand)] uppercase ml-1">Divisões de Administração</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div 
               onClick={() => onNavigate('propriedade_editar')}
-              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="card-base hover:bg-[var(--color-surface-hover)] p-4 flex items-center justify-between cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-3 text-[#263225]">
-                <Landmark className="w-5 h-5 text-[#3f5f31]" />
+              <div className="flex items-center gap-3 text-[var(--color-ink)]">
+                <Landmark className="w-5 h-5 text-[var(--color-brand)]" />
                 <span className="text-xs font-semibold">Editar Dados da Propriedade</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#3f5f31] transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-brand)] transition-colors" />
             </div>
 
             <div 
               onClick={() => onNavigate('chocadeiras_lista')}
-              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="card-base hover:bg-[var(--color-surface-hover)] p-4 flex items-center justify-between cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-3 text-[#263225]">
-                <HardHat className="w-5 h-5 text-[#c9854a]" />
+              <div className="flex items-center gap-3 text-[var(--color-ink)]">
+                <HardHat className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-xs font-semibold">Cadastros de Chocadeiras</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#c9854a] transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-accent)] transition-colors" />
             </div>
 
             <div 
               onClick={() => onNavigate('usuarios_lista')}
-              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="card-base hover:bg-[var(--color-surface-hover)] p-4 flex items-center justify-between cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-3 text-[#263225]">
-                <Users className="w-5 h-5 text-[#c9854a]" />
+              <div className="flex items-center gap-3 text-[var(--color-ink)]">
+                <Users className="w-5 h-5 text-[var(--color-accent)]" />
                 <span className="text-xs font-semibold">Contas e Usuários</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#c9854a] transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-accent)] transition-colors" />
             </div>
 
             <div 
               onClick={() => onNavigate('historico_geral')}
-              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="card-base hover:bg-[var(--color-surface-hover)] p-4 flex items-center justify-between cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-3 text-[#263225]">
-                <Clock className="w-5 h-5 text-emerald-600" />
+              <div className="flex items-center gap-3 text-[var(--color-ink)]">
+                <Clock className="w-5 h-5 text-[var(--color-success)]" />
                 <span className="text-xs font-semibold">Histórico Geral de Lotes (Concluídos)</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-emerald-600 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-success)] transition-colors" />
             </div>
             
             <div 
               onClick={() => onNavigate('relatorios_gerais')}
-              className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+              className="card-base hover:bg-[var(--color-surface-hover)] p-4 flex items-center justify-between cursor-pointer transition-colors"
             >
-              <div className="flex items-center gap-3 text-[#263225]">
-                <FileChartLine className="w-5 h-5 text-[#3f5f31]" />
-                <span className="text-xs font-semibold">Relatório Geral Consolidated</span>
+              <div className="flex items-center gap-3 text-[var(--color-ink)]">
+                <FileChartLine className="w-5 h-5 text-[var(--color-brand)]" />
+                <span className="text-xs font-semibold">Relatório Geral Consolidado</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#3f5f31] transition-colors" />
+              <ChevronRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-brand)] transition-colors" />
             </div>
 
             {currentUser?.role === 'ADMIN' && (
               <div 
                 onClick={() => onNavigate('ajuste_estoque')}
-                className="bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl p-4 flex items-center justify-between cursor-pointer group transition-colors"
+                className="card-base hover:bg-[var(--color-surface-hover)] p-4 flex items-center justify-between cursor-pointer transition-colors"
               >
-                <div className="flex items-center gap-3 text-[#263225]">
-                  <TrendingUp className="w-5 h-5 text-[#b85745]" />
+                <div className="flex items-center gap-3 text-[var(--color-ink)]">
+                  <TrendingUp className="w-5 h-5 text-[var(--color-danger)]" />
                   <span className="text-xs font-semibold">Ajuste de Estoque (Manual)</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[#6f756a] group-hover:text-[#b85745] transition-colors" />
+                <ChevronRight className="w-4 h-4 text-[var(--color-muted)] group-hover:text-[var(--color-danger)] transition-colors" />
               </div>
             )}
           </div>
@@ -149,46 +149,46 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-[#fffaf2] border border-[#465336]/15 text-[#6f756a] hover:text-[#263225] hover:border-[#3f5f31]/30 cursor-pointer select-none transition-all shadow-sm">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm">
           Voltar
         </button>
-        <span className="font-headline font-bold text-[#263225] text-sm">Chocadeiras</span>
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">Chocadeiras</span>
         <button 
           onClick={() => onNavigate('chocadeira_nova')}
-          className="p-1.5 bg-[#fffaf2] border border-[#465336]/15 rounded-xl text-[#3f5f31] cursor-pointer hover:border-[#3f5f31]/30 shadow-sm"
+          className="p-1.5 bg-[var(--color-surface)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-xl text-[var(--color-brand)] hover:shadow-sm transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
         </button>
       </header>
 
-      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-4 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
+      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-3 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
         {errorMsg && (
-          <div className="p-3 bg-[#fef2f2] border border-[#fee2e2] rounded-xl text-xs text-[#7f1d1d] font-bold leading-normal">
+          <div className="p-3 bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 rounded-xl text-xs text-[var(--color-danger)] font-bold leading-normal">
             ⚠️ {errorMsg}
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
           {chocadeiras.map((ch) => (
             <div 
               key={ch.id} 
-              className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl p-4 flex gap-4 transition-all duration-300 relative items-center"
+              className="card-base p-4 flex gap-4 transition-all duration-300 relative items-center hover:shadow-[var(--shadow-card-hover)]"
             >
-              <div className="w-12 h-12 rounded-xl bg-[#c9854a]/10 border border-[#c9854a]/20 flex items-center justify-center text-[#c9854a] shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-soft)] border border-[var(--color-accent)]/20 flex items-center justify-center text-[var(--color-accent)] shrink-0">
                 <HardHat className="w-6 h-6" />
               </div>
               
               <div className="flex-grow min-w-0">
-                <h4 className="font-bold text-[#263225] text-sm truncate">{ch.nome}</h4>
-                <p className="text-[10px] text-[#6f756a] uppercase mt-0.5 tracking-wider font-semibold truncate">
+                <h4 className="font-bold text-[var(--color-ink)] text-sm truncate">{ch.nome}</h4>
+                <p className="text-[10px] text-[var(--color-muted)] uppercase mt-0.5 tracking-wider font-semibold truncate">
                   Mod: {ch.modelo} • Cap: {ch.capacidadeMaximaOvos} ovos
                 </p>
-                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-semibold text-[#6f756a] uppercase leading-none">
+                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-semibold text-[var(--color-muted)] uppercase leading-none">
                   <span>Loc: {ch.localizacao}</span>
                   <span>•</span>
-                  <span className={ch.status === 'Ativa' ? 'text-emerald-600' : 'text-[#b85745]'}>
+                  <span className={ch.status === 'Ativa' ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}>
                     {ch.status}
                   </span>
                 </div>
@@ -196,7 +196,7 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
               <button 
                 onClick={() => onNavigate('chocadeira_nova', { id: ch.id })}
-                className="p-2.5 bg-[#f1eadf]/50 hover:bg-[#3f5f31]/10 text-[#6f756a] hover:text-[#3f5f31] rounded-lg transition-colors cursor-pointer"
+                className="p-2.5 bg-[var(--color-surface-hover)] hover:bg-[var(--color-brand-soft)] text-[var(--color-muted)] hover:text-[var(--color-brand)] rounded-lg transition-colors cursor-pointer"
                 title="Editar chocadeira"
               >
                 <Pencil className="w-4 h-4" />
@@ -204,7 +204,7 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
               <button 
                 onClick={() => setDelTarget(ch.id)}
-                className="p-2.5 bg-[#f1eadf]/50 hover:bg-[#b85745]/10 text-[#6f756a] hover:text-[#b85745] rounded-lg transition-colors cursor-pointer"
+                className="p-2.5 bg-[var(--color-surface-hover)] hover:bg-[var(--color-danger-soft)] text-[var(--color-muted)] hover:text-[var(--color-danger)] rounded-lg transition-colors cursor-pointer"
                 title="Excluir chocadeira"
               >
                 <Trash2 className="w-4 h-4" />
@@ -284,19 +284,19 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('chocadeiras_lista')} className="p-1 px-2.5 rounded-lg bg-[#fffaf2] border border-[#465336]/15 text-[#6f756a] hover:text-[#263225] hover:border-[#3f5f31]/30 cursor-pointer select-none transition-all shadow-sm">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('chocadeiras_lista')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm">
           Cancelar
         </button>
-        <span className="font-headline font-bold text-[#263225] text-sm">
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">
           {idToEdit ? 'Editar Chocadeira' : 'Nova Chocadeira'}
         </span>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
         <Card className="space-y-5">
-          {error && <div className="text-[#b85745] text-xs font-bold">⚠️ {error}</div>}
+          {error && <div className="text-[var(--color-danger)] text-xs font-bold">⚠️ {error}</div>}
 
           <Input
             id="choc-nome"
@@ -348,9 +348,9 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
           </div>
 
           <div className="space-y-1 block">
-            <label className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">Anotações técnicas</label>
+            <label className="text-xs font-semibold text-[var(--color-muted)] block uppercase tracking-wider">Anotações técnicas</label>
             <textarea
-              className="w-full bg-[#1a2438]/30 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium resize-none text-xs"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium resize-none text-xs"
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Anotações sobre resistências térmicas, calibragem etc."
@@ -359,7 +359,7 @@ export const ChocadeiraNovaView: React.FC<ChocadeiraFormProps> = ({ onNavigate, 
           </div>
 
           <Button onClick={handleSave}>
-            <Save className="w-4 h-4" /> {idToEdit ? 'Salvar AlteraÃ§Ãµes' : 'Registrar Chocadeira'}
+            <Save className="w-4 h-4" /> {idToEdit ? 'Salvar Alterações' : 'Registrar Chocadeira'}
           </Button>
         </Card>
       </div>
@@ -409,17 +409,17 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm text-xs font-semibold">
           Voltar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Dados da Propriedade</span>
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">Dados da Propriedade</span>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-20 max-w-4xl mx-auto w-full">
         {success && (
-          <div className="p-3 bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-xs rounded-xl font-bold font-mono">
+          <div className="p-3 bg-[var(--color-success-soft)] border border-[var(--color-success)]/25 text-[var(--color-success)] text-xs rounded-xl font-bold">
             ✅ Dados salvos com sucesso!
           </div>
         )}
@@ -431,7 +431,7 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="Ex: Granja Recanto Verde"
-            icon={<Landmark className="w-5 h-5 text-sky-400" />}
+            icon={<Landmark className="w-5 h-5 text-[var(--color-brand)]" />}
           />
 
           <Input
@@ -440,7 +440,7 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
             value={responsavel}
             onChange={(e) => setResponsavel(e.target.value)}
             placeholder="Ex: João Silva"
-            icon={<User className="w-5 h-5 text-sky-400" />}
+            icon={<User className="w-5 h-5 text-[var(--color-brand)]" />}
           />
 
           <Input
@@ -449,7 +449,7 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
             placeholder="Ex: (11) 99999-9999"
-            icon={<Phone className="w-5 h-5 text-sky-400" />}
+            icon={<Phone className="w-5 h-5 text-[var(--color-brand)]" />}
           />
 
           <div className="grid grid-cols-2 gap-4">
@@ -459,7 +459,7 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
               value={cidade}
               onChange={(e) => setCidade(e.target.value)}
               placeholder="Ex: Amparo"
-              icon={<MapPin className="w-5 h-5 text-sky-450" />}
+              icon={<MapPin className="w-5 h-5 text-[var(--color-brand)]" />}
             />
 
             <Input
@@ -472,9 +472,9 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
           </div>
 
           <div className="space-y-1 block">
-            <label className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">Breve descrição</label>
+            <label className="text-xs font-semibold text-[var(--color-muted)] block uppercase tracking-wider">Breve descrição</label>
             <textarea
-              className="w-full bg-[#1a2438]/30 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all font-medium resize-none text-xs"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium resize-none text-xs"
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Histórico da propriedade rural..."
@@ -497,17 +497,19 @@ export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
   const alertas = repo.getAlertas();
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[#ff6b6b]/25 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <h1 className="font-headline font-black text-slate-100 text-sm tracking-widest flex items-center gap-1.5 uppercase">
-          <AlertOctagon className="w-5 h-5 text-red-500" /> Histórico Alertas Críticos
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <h1 className="font-headline font-bold text-[var(--color-ink)] text-sm tracking-widest flex items-center gap-1.5 uppercase">
+          <AlertOctagon className="w-5 h-5 text-[var(--color-danger)]" /> Histórico Alertas Críticos
         </h1>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-4 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
         {alertas.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
-            Nenhum alerta ativo no momento. Clima e sensores operando 100%.
+          <div className="text-center py-16 text-[var(--color-muted)]">
+            <AlertOctagon className="w-12 h-12 mx-auto mb-3 text-[var(--color-muted-light)]/40" />
+            <p className="text-sm font-medium">Nenhum alerta ativo no momento.</p>
+            <p className="text-xs text-[var(--color-muted-light)] mt-1">Sensores operando normalmente.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -515,28 +517,28 @@ export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
               <div 
                 key={al.id}
                 onClick={() => al.chocadaId && onNavigate('chocada_detalhes', { id: al.chocadaId })}
-                className={`p-4 rounded-xl border cursor-pointer hover:brightness-95 active:scale-95 transition-all outline-none flex gap-3.5 relative overflow-hidden group ${
+                className={`p-4 rounded-xl border cursor-pointer hover:shadow-[var(--shadow-card-hover)] active:scale-[0.98] transition-all flex gap-3.5 ${
                   al.tipo === 'error'
-                    ? 'bg-[#fef2f2] border-[#fee2e2] text-[#7f1d1d]'
+                    ? 'bg-[var(--color-danger-soft)] border-[var(--color-danger)]/20 text-[var(--color-danger)]'
                     : al.tipo === 'warning'
-                    ? 'bg-[#fffbeb] border-[#fef3c7] text-[#78350f]'
-                    : 'bg-[#f0f9ff] border-[#e0f2fe] text-[#075985]' // info
+                    ? 'bg-[var(--color-warning-soft)] border-[var(--color-warning)]/20 text-[var(--color-warning)]'
+                    : 'bg-[var(--color-info-soft)] border-[var(--color-info)]/20 text-[var(--color-info)]'
                 }`}
               >
                 <div className={`shrink-0 flex items-center justify-center p-2 rounded-lg ${
-                  al.tipo === 'error' ? 'bg-[#fee2e2]' : 
-                  al.tipo === 'warning' ? 'bg-[#fef3c7]' : 
-                  'bg-[#e0f2fe]'
+                  al.tipo === 'error' ? 'bg-[var(--color-danger-soft)]' : 
+                  al.tipo === 'warning' ? 'bg-[var(--color-warning-soft)]' : 
+                  'bg-[var(--color-info-soft)]'
                 }`}>
                   <AlertOctagon className={`w-5 h-5 ${
-                    al.tipo === 'error' ? 'text-[#ef4444]' : 
-                    al.tipo === 'warning' ? 'text-[#f59e0b]' : 
-                    'text-[#0284c7]'
+                    al.tipo === 'error' ? 'text-[var(--color-danger)]' : 
+                    al.tipo === 'warning' ? 'text-[var(--color-warning)]' : 
+                    'text-[var(--color-info)]'
                   }`} />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-sm leading-tight">{al.titulo}</h4>
-                  <p className="text-xs text-[#6f756a] mt-1 leading-snug">{al.msg}</p>
+                  <h4 className="font-extrabold text-sm leading-tight text-[var(--color-ink)]">{al.titulo}</h4>
+                  <p className="text-xs text-[var(--color-ink-secondary)] mt-1 leading-snug">{al.msg}</p>
                 </div>
               </div>
             ))}
@@ -559,6 +561,7 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
   const [mesSelecionado, setMesSelecionado] = useState<number>(4); // Maio
   const [chocadeiraSelecionada, setChocadeiraSelecionada] = useState<string>('todas');
   const [tipoOvoSelecionado, setTipoOvoSelecionado] = useState<string>('todos');
+  const [graficoMetrica, setGraficoMetrica] = useState<'nascidos' | 'perdidos'>('nascidos');
 
   useEffect(() => {
     setChocadas(repo.getChocadas());
@@ -742,7 +745,7 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
       <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
         <svg className="w-full h-full transform -rotate-90 select-none" viewBox="0 0 36 36">
           <circle
-            className="text-slate-800"
+            className="text-[var(--color-line-strong)]"
             cx="18"
             cy="18"
             r={radius}
@@ -763,7 +766,7 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
             strokeLinecap="round"
           />
         </svg>
-        <span className="absolute text-[9px] font-black text-slate-200">
+        <span className="absolute text-[9px] font-black text-[var(--color-ink)]">
           {percent}%
         </span>
       </div>
@@ -771,47 +774,47 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
       {/* Top Header */}
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('dashboard')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none text-xs font-semibold hover:text-white transition-colors">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('dashboard')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm text-xs font-semibold">
           Voltar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Relatório Geral Consolidado</span>
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">Relatório Geral Consolidado</span>
       </header>
 
       {/* Main Container */}
       <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-24 max-w-6xl mx-auto w-full">
         
         {/* Title */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-sky-950/20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-[var(--color-line)]">
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-100 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-sky-400" />
+            <h2 className="text-xl font-bold tracking-tight text-[var(--color-ink)] flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-[var(--color-brand)]" />
               Eficiência Geral de Eclosão
             </h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">Mapeamento de produtividade e análise comparativa de manejo</p>
+            <p className="text-[11px] text-[var(--color-muted)] mt-0.5">Mapeamento de produtividade e análise comparativa de manejo</p>
           </div>
           
-          <div className="text-[10px] text-slate-500 font-mono bg-slate-950/40 px-3 py-1.5 rounded-lg border border-sky-950/20 max-w-xs self-start md:self-auto">
+          <div className="text-[10px] text-[var(--color-muted-light)] font-mono bg-[var(--color-surface)] px-3 py-1.5 rounded-lg border border-[var(--color-line)] max-w-xs self-start md:self-auto">
             <span>Sincronizado: {new Date().toLocaleDateString('pt-BR')}</span>
           </div>
         </div>
 
         {/* --- FILTROS DE RELATÓRIO --- */}
-        <div className="p-4 bg-slate-950/80 border border-sky-500/10 rounded-2xl space-y-3">
-          <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-1.5">
+        <div className="card-base p-4 space-y-3">
+          <span className="text-[10px] font-bold text-[var(--color-brand)] uppercase tracking-widest flex items-center gap-1.5">
             <Filter className="w-3.5 h-3.5" /> Filtros de Relatório
           </span>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Seletor de Período */}
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Período</label>
+              <label className="text-[9px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Período</label>
               <select 
                 value={filtroPeriodo}
                 onChange={(e) => setFiltroPeriodo(e.target.value as any)}
-                className="w-full bg-[#101626] border border-sky-950/50 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500/30 cursor-pointer font-medium"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-2 px-3 text-xs text-[var(--color-ink)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-soft)] cursor-pointer font-medium"
               >
                 <option value="tudo">Todos os Períodos (Histórico)</option>
                 <option value="ano">Consolidado Anual</option>
@@ -822,14 +825,14 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
             {/* Seletores Ano / Mês */}
             {filtroPeriodo !== 'tudo' && (
               <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                <label className="text-[9px] font-bold text-[var(--color-muted)] uppercase tracking-wider">
                   {filtroPeriodo === 'ano' ? 'Selecione o Ano' : 'Selecione Ano e Mês'}
                 </label>
                 <div className="flex gap-2">
                   <select
                     value={anoSelecionado}
                     onChange={(e) => setAnoSelecionado(e.target.value)}
-                    className="flex-1 bg-[#101626] border border-sky-950/50 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none cursor-pointer font-medium"
+                    className="flex-1 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-2 px-3 text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer font-medium"
                   >
                     {anosExibicao.map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -840,7 +843,7 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
                     <select
                       value={mesSelecionado}
                       onChange={(e) => setMesSelecionado(parseInt(e.target.value, 10))}
-                      className="flex-1 bg-[#101626] border border-sky-950/50 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none cursor-pointer font-medium"
+                      className="flex-1 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-2 px-3 text-xs text-[var(--color-ink)] focus:outline-none cursor-pointer font-medium"
                     >
                       {nomesMeses.map((m, idx) => (
                         <option key={idx} value={idx}>{m}</option>
@@ -853,11 +856,11 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
             {/* Seletor de Chocadeira */}
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Chocadeira</label>
+              <label className="text-[9px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Chocadeira</label>
               <select
                 value={chocadeiraSelecionada}
                 onChange={(e) => setChocadeiraSelecionada(e.target.value)}
-                className="w-full bg-[#101626] border border-sky-950/50 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500/30 cursor-pointer font-medium"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-2 px-3 text-xs text-[var(--color-ink)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-soft)] cursor-pointer font-medium"
               >
                 <option value="todas">Todas as Chocadeiras</option>
                 {chocadeiras.map(ch => (
@@ -868,11 +871,11 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
             {/* Seletor de Espécie */}
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Espécie / Tipo de Ovo</label>
+              <label className="text-[9px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Espécie / Tipo de Ovo</label>
               <select
                 value={tipoOvoSelecionado}
                 onChange={(e) => setTipoOvoSelecionado(e.target.value)}
-                className="w-full bg-[#101626] border border-sky-950/50 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500/30 cursor-pointer font-medium"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-2 px-3 text-xs text-[var(--color-ink)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-soft)] cursor-pointer font-medium"
               >
                 <option value="todos">Todos os Ovos</option>
                 {tiposOvosDisponiveis.map(t => (
@@ -886,93 +889,114 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
         {/* --- CARDS DE MÉTRICAS (KPIs) --- */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Ovos Incubados */}
-          <div className="bg-[#0f1524]/60 border border-sky-500/10 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-2.5 opacity-10 text-sky-400">
+          <Card className="flex flex-col justify-between min-h-[90px] relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2.5 opacity-5 text-[var(--color-brand)]">
               <Egg className="w-10 h-10" />
             </div>
-            <span className="text-slate-400 text-[9px] uppercase font-bold tracking-widest block">Ovos Incubados</span>
+            <span className="text-[var(--color-muted)] text-[9px] uppercase font-bold tracking-widest block">Ovos Incubados</span>
             <div className="mt-2.5">
-              <h3 className="text-2xl font-black text-[#7dd3fc] tracking-tight">{totalIncubados}</h3>
-              <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">Total no Período</p>
+              <h3 className="text-2xl font-black text-[var(--color-brand)] tracking-tight">{totalIncubados}</h3>
+              <p className="text-[9px] text-[var(--color-muted-light)] font-bold uppercase mt-0.5">Total no Período</p>
             </div>
-          </div>
+          </Card>
 
           {/* Fertilidade */}
-          <div className="bg-[#0f1524]/60 border border-sky-500/10 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-2.5 opacity-10 text-purple-400">
+          <Card className="flex flex-col justify-between min-h-[90px] relative overflow-hidden" borderAccent="tertiary">
+            <div className="absolute top-0 right-0 p-2.5 opacity-5 text-purple-600">
               <Activity className="w-10 h-10" />
             </div>
-            <span className="text-slate-400 text-[9px] uppercase font-bold tracking-widest block">Taxa Fertilidade</span>
+            <span className="text-[var(--color-muted)] text-[9px] uppercase font-bold tracking-widest block">Taxa Fertilidade</span>
             <div className="mt-2.5">
-              <h3 className="text-2xl font-black text-purple-400 tracking-tight">{taxaFertilidade}%</h3>
-              <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">{totalOvosFerteis} ovos férteis</p>
+              <h3 className="text-2xl font-black text-purple-700 tracking-tight">{taxaFertilidade}%</h3>
+              <p className="text-[9px] text-[var(--color-muted-light)] font-bold uppercase mt-0.5">{totalOvosFerteis} ovos férteis</p>
             </div>
-          </div>
+          </Card>
 
           {/* Eclosão Geral (Absoluta) */}
-          <div className="bg-[#0f1524]/60 border border-sky-500/10 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-2.5 opacity-10 text-emerald-400">
+          <Card className="flex flex-col justify-between min-h-[90px] relative overflow-hidden" borderAccent="primary">
+            <div className="absolute top-0 right-0 p-2.5 opacity-5 text-emerald-600">
               <CheckCircle className="w-10 h-10" />
             </div>
-            <span className="text-slate-400 text-[9px] uppercase font-bold tracking-widest block">Eclosão Absoluta</span>
+            <span className="text-[var(--color-muted)] text-[9px] uppercase font-bold tracking-widest block">Eclosão Absoluta</span>
             <div className="mt-2.5">
-              <h3 className="text-2xl font-black text-emerald-400 tracking-tight">{taxaEclosaoGeral}%</h3>
-              <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">{totalNascidos} pintinhos nascidos</p>
+              <h3 className="text-2xl font-black text-emerald-700 tracking-tight">{taxaEclosaoGeral}%</h3>
+              <p className="text-[9px] text-[var(--color-muted-light)] font-bold uppercase mt-0.5">{totalNascidos} pintinhos nascidos</p>
             </div>
-          </div>
+          </Card>
 
           {/* Eclodibilidade Real (Eficiência) */}
-          <div className="bg-[#0f1524]/60 border border-sky-500/10 rounded-2xl p-4 flex flex-col justify-between min-h-[90px] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-2.5 opacity-10 text-amber-500">
+          <Card className="flex flex-col justify-between min-h-[90px] relative overflow-hidden" borderAccent="warning">
+            <div className="absolute top-0 right-0 p-2.5 opacity-5 text-amber-600">
               <Award className="w-10 h-10" />
             </div>
-            <span className="text-slate-400 text-[9px] uppercase font-bold tracking-widest block">Eclodibilidade Real</span>
+            <span className="text-[var(--color-muted)] text-[9px] uppercase font-bold tracking-widest block">Eclodibilidade Real</span>
             <div className="mt-2.5">
-              <h3 className="text-2xl font-black text-amber-400 tracking-tight">{eclodibilidadeReal}%</h3>
-              <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5">Eficiência de Incubação</p>
+              <h3 className="text-2xl font-black text-amber-700 tracking-tight">{eclodibilidadeReal}%</h3>
+              <p className="text-[9px] text-[var(--color-muted-light)] font-bold uppercase mt-0.5">Eficiência de Incubação</p>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* --- GRÁFICOS E ANÁLISES --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           
           {/* Gráfico Temporal (SVG) */}
-          <div className="lg:col-span-2 bg-[#0f1524]/60 border border-sky-500/10 rounded-2xl p-5 space-y-4">
+          <Card className="lg:col-span-2 p-5 space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-[11px] font-bold tracking-widest text-[#7dd3fc] uppercase flex items-center gap-1.5">
-                <BarChart2 className="w-4 h-4 text-sky-400" />
+              <h3 className="text-[11px] font-bold tracking-widest text-[var(--color-brand)] uppercase flex items-center gap-1.5">
+                <BarChart2 className="w-4 h-4 text-[var(--color-brand)]" />
                 Evolução Temporal no Período
               </h3>
-              <div className="flex gap-3 text-[9px] font-bold uppercase">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-sky-400"></span> Incubados</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500"></span> Nascidos</span>
+              <div className="flex gap-3 text-[9px] font-bold uppercase items-center">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[var(--color-brand)]"></span> Incubados</span>
+                <div className="flex bg-[var(--color-surface-soft)] rounded-lg border border-[var(--color-line)] p-0.5 gap-0.5">
+                  <button
+                    onClick={() => setGraficoMetrica('nascidos')}
+                    className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      graficoMetrica === 'nascidos'
+                        ? 'bg-emerald-500 text-white shadow-sm'
+                        : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                    }`}
+                  >
+                    Nascidos
+                  </button>
+                  <button
+                    onClick={() => setGraficoMetrica('perdidos')}
+                    className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      graficoMetrica === 'perdidos'
+                        ? 'bg-rose-500 text-white shadow-sm'
+                        : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                    }`}
+                  >
+                    Perdidos
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* SVG Plot */}
-            <div className="w-full bg-slate-950/40 p-4 rounded-xl border border-sky-950/20">
+            <div className="w-full bg-[var(--color-bg-warm)] p-4 rounded-xl border border-[var(--color-line)]">
               {dadosGrafico.length === 0 || maiorValorGrafico === 0 ? (
-                <div className="h-44 flex items-center justify-center text-slate-500 text-xs italic">
+                <div className="h-44 flex items-center justify-center text-[var(--color-muted-light)] text-xs italic">
                   Sem dados para plotar o gráfico no período.
                 </div>
               ) : (
                 <div className="w-full">
                   <svg className="w-full h-auto" viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet">
                     {/* Linhas de Grade de Fundo */}
-                    <line x1="40" y1="20" x2="580" y2="20" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="3,3" />
-                    <line x1="40" y1="90" x2="580" y2="90" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="3,3" />
-                    <line x1="40" y1="160" x2="580" y2="160" stroke="#334155" strokeWidth="1" />
+                    <line x1="40" y1="20" x2="580" y2="20" stroke="var(--color-line)" strokeWidth="0.5" strokeDasharray="3,3" />
+                    <line x1="40" y1="90" x2="580" y2="90" stroke="var(--color-line)" strokeWidth="0.5" strokeDasharray="3,3" />
+                    <line x1="40" y1="160" x2="580" y2="160" stroke="var(--color-line-strong)" strokeWidth="1" />
 
                     {/* Rótulos do Eixo Y */}
-                    <text x="32" y="24" className="text-[8px] fill-slate-500 font-semibold font-mono" textAnchor="end">{maxValEscalado}</text>
-                    <text x="32" y="94" className="text-[8px] fill-slate-500 font-semibold font-mono" textAnchor="end">{Math.round(maxValEscalado / 2)}</text>
-                    <text x="32" y="164" className="text-[8px] fill-slate-500 font-semibold font-mono" textAnchor="end">0</text>
+                    <text x="32" y="24" className="text-[8px] fill-[var(--color-muted)] font-semibold font-mono" textAnchor="end">{maxValEscalado}</text>
+                    <text x="32" y="94" className="text-[8px] fill-[var(--color-muted)] font-semibold font-mono" textAnchor="end">{Math.round(maxValEscalado / 2)}</text>
+                    <text x="32" y="164" className="text-[8px] fill-[var(--color-muted)] font-semibold font-mono" textAnchor="end">0</text>
 
                     {/* Barras e Rótulos do Eixo X */}
                     {dadosGrafico.map((d, i) => {
                       // Cálculo de posicionamento X
-                      const espacoDisponivel = 540; // 580 - 40
+                      const espacoDisponivel = 540;
                       const larguraPeriodo = espacoDisponivel / dadosGrafico.length;
                       const centroPeriodo = 40 + (larguraPeriodo * i) + (larguraPeriodo / 2);
                       
@@ -992,49 +1016,60 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
                             y={160 - alturaIncubados}
                             width={larguraBarra}
                             height={alturaIncubados}
-                            fill="#0ea5e9"
+                            fill="var(--color-brand)"
                             rx="2"
-                            className="transition-all duration-500 hover:fill-sky-300"
+                            className="transition-all duration-500 hover:opacity-80"
                           />
                           {/* Rótulo de Valor de Incubados acima da barra */}
                           {d.incubados > 0 && (
                             <text
                               x={centroPeriodo - offsetBarra + (larguraBarra / 2)}
                               y={160 - alturaIncubados - 4}
-                              className="text-[7px] fill-sky-400 font-bold font-mono"
+                              className="text-[7px] fill-[var(--color-brand)] font-bold font-mono"
                               textAnchor="middle"
                             >
                               {d.incubados}
                             </text>
                           )}
 
-                          {/* Barra de Pintinhos Nascidos */}
-                          <rect
-                            x={centroPeriodo + 1}
-                            y={160 - alturaNascidos}
-                            width={larguraBarra}
-                            height={alturaNascidos}
-                            fill="#10b981"
-                            rx="2"
-                            className="transition-all duration-500 hover:fill-emerald-300"
-                          />
-                          {/* Rótulo de Valor de Nascidos acima da barra */}
-                          {d.nascidos > 0 && (
-                            <text
-                              x={centroPeriodo + 1 + (larguraBarra / 2)}
-                              y={160 - alturaNascidos - 4}
-                              className="text-[7px] fill-emerald-400 font-bold font-mono"
-                              textAnchor="middle"
-                            >
-                              {d.nascidos}
-                            </text>
-                          )}
+                          {/* Barra de Pintinhos Nascidos ou Perdidos */}
+                          {(() => {
+                            const valorMetrica = graficoMetrica === 'perdidos'
+                              ? Math.max(0, d.incubados - d.nascidos)
+                              : d.nascidos;
+                            const alturaMetrica = (valorMetrica / maxValEscalado) * 140;
+                            const fillColor = graficoMetrica === 'perdidos' ? '#f43f5e' : '#10b981';
+                            const textColor = graficoMetrica === 'perdidos' ? 'fill-rose-600' : 'fill-emerald-600';
+                            return (
+                              <>
+                                <rect
+                                  x={centroPeriodo + 1}
+                                  y={160 - alturaMetrica}
+                                  width={larguraBarra}
+                                  height={alturaMetrica}
+                                  fill={fillColor}
+                                  rx="2"
+                                  className="transition-all duration-500 hover:opacity-80"
+                                />
+                                {valorMetrica > 0 && (
+                                  <text
+                                    x={centroPeriodo + 1 + (larguraBarra / 2)}
+                                    y={160 - alturaMetrica - 4}
+                                    className={`text-[7px] ${textColor} font-bold font-mono`}
+                                    textAnchor="middle"
+                                  >
+                                    {valorMetrica}
+                                  </text>
+                                )}
+                              </>
+                            );
+                          })()}
 
                           {/* Rótulo do Eixo X */}
                           <text
                             x={centroPeriodo}
                             y="178"
-                            className="text-[8px] fill-slate-400 font-semibold text-center font-mono"
+                            className="text-[8px] fill-[var(--color-muted)] font-semibold text-center font-mono"
                             textAnchor="middle"
                           >
                             {d.label}
@@ -1046,49 +1081,49 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* Gráfico de Distribuição por Espécie */}
-          <div className="bg-[#0f1524]/60 border border-sky-500/10 rounded-2xl p-5 flex flex-col justify-between">
-            <h3 className="text-[11px] font-bold tracking-widest text-[#7dd3fc] uppercase flex items-center gap-1.5 mb-3.5">
-              <Award className="w-4 h-4 text-sky-400" />
+          <Card className="p-5 flex flex-col justify-between">
+            <h3 className="text-[11px] font-bold tracking-widest text-[var(--color-brand)] uppercase flex items-center gap-1.5 mb-3.5">
+              <Award className="w-4 h-4 text-[var(--color-brand)]" />
               Rendimento por Espécie
             </h3>
 
             <div className="space-y-3 flex-1 flex flex-col justify-around">
               {dadosEspecie.map(e => {
-                let strokeColor = 'text-sky-500';
-                if (e.taxa > 80) strokeColor = 'text-emerald-400';
-                else if (e.taxa > 60) strokeColor = 'text-amber-400';
-                else if (e.taxa > 0) strokeColor = 'text-red-400';
+                let strokeColor = 'text-sky-600';
+                if (e.taxa > 80) strokeColor = 'text-emerald-600';
+                else if (e.taxa > 60) strokeColor = 'text-amber-600';
+                else if (e.taxa > 0) strokeColor = 'text-red-500';
 
                 return (
-                  <div key={e.especie} className="flex items-center justify-between p-2.5 bg-slate-950/40 rounded-xl border border-sky-950/20">
+                  <div key={e.especie} className="flex items-center justify-between p-2.5 bg-[var(--color-bg-warm)] rounded-xl border border-[var(--color-line)]">
                     <div className="min-w-0">
-                      <span className="font-bold text-xs text-slate-200 block">{e.especie}</span>
-                      <span className="text-[9px] text-slate-500 font-bold uppercase">
+                      <span className="font-bold text-xs text-[var(--color-ink)] block">{e.especie}</span>
+                      <span className="text-[9px] text-[var(--color-muted-light)] font-bold uppercase">
                         {e.incubados > 0 ? `${e.nascidos} nascidos de ${e.incubados} ovos` : 'Sem incubação'}
                       </span>
                     </div>
                     {e.incubados > 0 ? (
                       renderMiniCircularProgress(e.taxa, strokeColor)
                     ) : (
-                      <span className="text-[9px] font-mono text-slate-600 font-bold uppercase">Sem Lotes</span>
+                      <span className="text-[9px] font-mono text-[var(--color-muted-light)] font-bold uppercase">Sem Lotes</span>
                     )}
                   </div>
                 );
               })}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* --- PERFORMANCE DETALHADA POR CHOCADEIRA --- */}
-        <section className="bg-slate-950/60 border border-sky-500/10 rounded-2xl p-5 space-y-4">
-          <h3 className="text-[11px] font-bold tracking-widest text-[#7dd3fc] uppercase">Eficiência das Chocadeiras / Estufas</h3>
+        <Card className="p-5 space-y-4">
+          <h3 className="text-[11px] font-bold tracking-widest text-[var(--color-brand)] uppercase">Eficiência das Chocadeiras / Estufas</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {chocadeiras.length === 0 ? (
-              <span className="text-slate-500 text-xs italic">Nenhuma chocadeira cadastrada no sistema.</span>
+              <span className="text-[var(--color-muted-light)] text-xs italic">Nenhuma chocadeira cadastrada no sistema.</span>
             ) : (
               chocadeiras.map(ch => {
                 // Filtrar lotes finalizados vinculados a esta chocadeira no período selecionado
@@ -1105,37 +1140,37 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
                 const ef = ovosCh > 0 ? Math.round((nascidosCh / ovosCh) * 100) : 0;
                 
                 // Cor do gradiente baseada na eclosão
-                let colorClass = "from-red-500 to-rose-400";
-                let textClass = "text-red-400";
+                let colorClass = "from-[var(--color-danger)] to-rose-400";
+                let textClass = "text-[var(--color-danger)]";
                 if (ef >= 80) {
                   colorClass = "from-emerald-500 to-teal-400";
-                  textClass = "text-emerald-400";
+                  textClass = "text-emerald-600";
                 } else if (ef >= 60) {
                   colorClass = "from-amber-500 to-orange-400";
-                  textClass = "text-amber-400";
+                  textClass = "text-amber-600";
                 }
 
                 return (
-                  <div key={ch.id} className="p-3.5 bg-[#0f1524]/60 border border-sky-950/40 rounded-xl space-y-2">
+                  <div key={ch.id} className="p-3.5 bg-[var(--color-bg-warm)] border border-[var(--color-line)] rounded-xl space-y-2">
                     <div className="flex justify-between items-center text-xs">
                       <div>
-                        <span className="text-slate-200 font-bold block">{ch.nome}</span>
-                        <span className="text-[9px] text-slate-500 font-bold uppercase">{ch.modelo || 'Modelo não cadastrado'}</span>
+                        <span className="text-[var(--color-ink)] font-bold block">{ch.nome}</span>
+                        <span className="text-[9px] text-[var(--color-muted)] font-bold uppercase">{ch.modelo || 'Modelo não cadastrado'}</span>
                       </div>
                       <div className="text-right">
                         {ovosCh > 0 ? (
                           <>
                             <span className={`font-extrabold ${textClass}`}>{ef}% eclosão</span>
-                            <span className="text-[9px] text-slate-400 block font-semibold">{nascidosCh}/{ovosCh} ovos</span>
+                            <span className="text-[9px] text-[var(--color-muted)] block font-semibold">{nascidosCh}/{ovosCh} ovos</span>
                           </>
                         ) : (
-                          <span className="text-slate-500 text-[10px] uppercase font-bold">Sem dados no período</span>
+                          <span className="text-[var(--color-muted-light)] text-[10px] uppercase font-bold">Sem dados no período</span>
                         )}
                       </div>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-sky-950/20">
+                    <div className="w-full bg-[var(--color-surface-soft)] rounded-full h-2 overflow-hidden border border-[var(--color-line)]">
                       <div 
                         className={`bg-gradient-to-r ${colorClass} h-full rounded-full transition-all duration-700`}
                         style={{ width: `${ovosCh > 0 ? ef : 0}%` }}
@@ -1146,26 +1181,26 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
               })
             )}
           </div>
-        </section>
+        </Card>
 
         {/* --- LISTAGEM DE LOTES DO PERÍODO --- */}
-        <section className="bg-slate-950/60 border border-sky-500/10 rounded-2xl p-5 space-y-4">
+        <Card className="p-5 space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-[11px] font-bold tracking-widest text-[#7dd3fc] uppercase flex items-center gap-1.5">
+            <h3 className="text-[11px] font-bold tracking-widest text-[var(--color-brand)] uppercase flex items-center gap-1.5">
               <FileText className="w-4 h-4" />
               Lotes Integrados no Filtro
             </h3>
-            <span className="text-[10px] text-slate-400 font-bold uppercase">
+            <span className="text-[10px] text-[var(--color-muted)] font-bold uppercase">
               {chocadasFiltradas.length} {chocadasFiltradas.length === 1 ? 'Lote' : 'Lotes'}
             </span>
           </div>
 
           {chocadasFiltradas.length === 0 ? (
-            <p className="text-slate-500 text-xs italic py-6 text-center">Nenhum lote atende aos filtros atuais.</p>
+            <p className="text-[var(--color-muted-light)] text-xs italic py-6 text-center">Nenhum lote atende aos filtros atuais.</p>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-sky-950/40">
-              <table className="w-full text-xs text-left text-slate-350">
-                <thead className="text-[10px] text-slate-400 bg-[#0f1524] uppercase tracking-wider font-bold">
+            <div className="overflow-x-auto rounded-xl border border-[var(--color-line)]">
+              <table className="w-full text-xs text-left text-[var(--color-ink-secondary)]">
+                <thead className="text-[10px] text-[var(--color-muted)] bg-[var(--color-surface-hover)] uppercase tracking-wider font-bold">
                   <tr>
                     <th className="px-4 py-3">Lote</th>
                     <th className="px-4 py-3">Chocadeira</th>
@@ -1178,7 +1213,7 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
                     <th className="px-4 py-3 text-center">Ações</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-900 bg-slate-950/20 font-medium">
+                <tbody className="divide-y divide-[var(--color-line)] bg-[var(--color-surface)]/50 font-medium">
                   {chocadasFiltradas.map(c => {
                     const chocadeira = chocadeiras.find(ch => ch.id === c.chocadeiraId);
                     const nascimentos = repo.getRegistrosNascimento(c.id);
@@ -1193,34 +1228,26 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
                     const ef = c.quantidadeOvosInicial > 0 ? Math.round((nascidos / c.quantidadeOvosInicial) * 100) : 0;
 
                     return (
-                      <tr key={c.id} className="hover:bg-slate-900/30 transition-colors">
+                      <tr key={c.id} className="hover:bg-[var(--color-surface-hover)]/50 transition-colors">
                         <td className="px-4 py-3.5">
-                          <span className="text-slate-100 font-bold block">{c.nome}</span>
-                          <span className="text-[10px] text-slate-500">{repo.formatReadableDate(c.dataInicio)}</span>
+                          <span className="text-[var(--color-ink)] font-bold block">{c.nome}</span>
+                          <span className="text-[10px] text-[var(--color-muted-light)]">{repo.formatReadableDate(c.dataInicio)}</span>
                         </td>
-                        <td className="px-4 py-3.5 text-slate-350">{chocadeira?.nome || 'Sem vinculação'}</td>
-                        <td className="px-4 py-3.5 text-slate-350">{c.tipoOvo}</td>
-                        <td className="px-4 py-3.5 text-center text-slate-200">{c.quantidadeOvosInicial}</td>
-                        <td className="px-4 py-3.5 text-center text-sky-400 font-bold">{ferteis}</td>
-                        <td className="px-4 py-3.5 text-center text-emerald-400 font-bold">{c.finalizada ? nascidos : '---'}</td>
-                        <td className="px-4 py-3.5 text-center font-extrabold text-slate-100">
-                          {c.finalizada ? `${ef}%` : <span className="text-slate-600 text-[10px] uppercase font-bold">Incubando</span>}
+                        <td className="px-4 py-3.5 text-[var(--color-ink-secondary)]">{chocadeira?.nome || 'Sem vinculação'}</td>
+                        <td className="px-4 py-3.5 text-[var(--color-ink-secondary)]">{c.tipoOvo}</td>
+                        <td className="px-4 py-3.5 text-center text-[var(--color-ink)]">{c.quantidadeOvosInicial}</td>
+                        <td className="px-4 py-3.5 text-center text-[var(--color-brand)] font-bold">{ferteis}</td>
+                        <td className="px-4 py-3.5 text-center text-emerald-600 font-bold">{c.finalizada ? nascidos : '---'}</td>
+                        <td className="px-4 py-3.5 text-center font-extrabold text-[var(--color-ink)]">
+                          {c.finalizada ? `${ef}%` : <span className="text-[var(--color-muted-light)] text-[10px] uppercase font-bold">Incubando</span>}
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border ${
-                            c.status === 'FINALIZADA' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                            c.status === 'EM_ANDAMENTO' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' :
-                            c.status === 'PROXIMA' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                            c.status === 'ATRASADA' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                            'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                          }`}>
-                            {c.status}
-                          </span>
+                          <StatusChip status={c.status} />
                         </td>
                         <td className="px-4 py-3.5 text-center">
                           <button
                             onClick={() => onNavigate('relatorio_chocada', { id: c.id })}
-                            className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/20 text-sky-400 hover:text-white cursor-pointer select-none text-[10px] font-bold flex items-center gap-1 mx-auto transition-colors"
+                            className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-brand)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none text-[10px] font-bold flex items-center gap-1 mx-auto transition-all"
                           >
                             <FileText className="w-3.5 h-3.5" /> Analisar
                           </button>
@@ -1232,7 +1259,7 @@ export const RelatoriosGeraisView: React.FC<SettingsViewsProps> = ({ onNavigate 
               </table>
             </div>
           )}
-        </section>
+        </Card>
 
       </div>
     </div>
@@ -1261,37 +1288,40 @@ export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm text-xs font-semibold">
           Voltar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Usuários</span>
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">Usuários</span>
         <button 
           onClick={() => onNavigate('usuario_novo')}
-          className="p-1.5 bg-slate-900 border border-sky-400/20 rounded-xl text-sky-400"
+          className="p-1.5 bg-[var(--color-surface)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-xl text-[var(--color-brand)] hover:shadow-sm transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
         </button>
       </header>
 
-      <div className="flex-grow overflow-y-auto p-5 lg:p-8 space-y-4">
+      <div className="flex-grow overflow-y-auto px-5 lg:px-8 py-6 space-y-3 scrollbar-thin pb-20 max-w-5xl mx-auto w-full">
         {usuarios.length === 0 && (
-          <p className="text-slate-500 text-center text-sm py-10">Nenhum usuário ativo.</p>
+          <div className="text-center py-16 text-[var(--color-muted)]">
+            <Users className="w-12 h-12 mx-auto mb-3 text-[var(--color-muted-light)]/40" />
+            <p className="text-sm font-medium">Nenhum usuário ativo.</p>
+          </div>
         )}
         {usuarios.map(u => (
-          <div key={u.id} className="bg-slate-900 border border-sky-950/40 p-4 rounded-xl flex items-center justify-between">
-            <div>
-              <p className="font-bold text-slate-200 text-sm">{u.username}</p>
-              <div className="flex gap-2 mt-1">
+          <div key={u.id} className="card-base p-4 flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="font-bold text-[var(--color-ink)] text-sm truncate">{u.username}</p>
+              <div className="flex gap-2 mt-1.5 flex-wrap">
                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                  u.role === 'ADMIN' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                  u.role === 'OPERADOR' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' :
-                  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  u.role === 'ADMIN' ? 'bg-[var(--color-warning-soft)] text-[var(--color-warning)] border-[var(--color-warning)]/20' :
+                  u.role === 'OPERADOR' ? 'bg-[var(--color-info-soft)] text-[var(--color-info)] border-[var(--color-info)]/20' :
+                  'bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/20'
                 }`}>
                   {u.role}
                 </span>
-                <span className="text-[10px] text-slate-500">
+                <span className="text-[10px] text-[var(--color-muted)]">
                   Criado em: {repo.formatReadableDate(u.criadoEm)}
                 </span>
               </div>
@@ -1300,7 +1330,7 @@ export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
             {u.username !== 'admin' && (
               <button 
                 onClick={() => handleDelete(u.id)}
-                className="w-8 h-8 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[var(--color-danger-soft)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white transition-colors border border-[var(--color-danger)]/20 cursor-pointer shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -1337,59 +1367,59 @@ export const UsuarioNovoView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('usuarios_lista')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('usuarios_lista')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm text-xs font-semibold">
           Cancelar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Criar Usuário</span>
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">Criar Usuário</span>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 py-6 space-y-5 max-w-sm mx-auto w-full">
         {errorMsg && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg font-medium text-center">
+          <div className="p-3 bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs rounded-xl font-medium text-center">
             {errorMsg}
           </div>
         )}
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Nome de Usuário</label>
-          <input
-            type="text"
-            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
-            placeholder="Ex: maria"
-          />
-        </div>
+        <Card className="space-y-5">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider ml-1">Nome de Usuário</label>
+            <input
+              type="text"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
+              placeholder="Ex: maria"
+            />
+          </div>
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Senha Provisória</label>
-          <input
-            type="text"
-            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            value={senhaMock}
-            onChange={(e) => setSenhaMock(e.target.value)}
-            placeholder="Ex: maria123"
-          />
-        </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider ml-1">Senha Provisória</label>
+            <input
+              type="text"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium"
+              value={senhaMock}
+              onChange={(e) => setSenhaMock(e.target.value)}
+              placeholder="Ex: maria123"
+            />
+          </div>
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Perfil (Papel)</label>
-          <select
-            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-          >
-            <option value="ADMIN">Administrador (Acesso Total)</option>
-            <option value="OPERADOR">Operador (Cadastros Básicos)</option>
-            <option value="LEITOR">Leitor (Apenas Visualização)</option>
-          </select>
-        </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider ml-1">Perfil (Papel)</label>
+            <select
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium cursor-pointer"
+              value={role}
+              onChange={(e) => setRole(e.target.value as Role)}
+            >
+              <option value="ADMIN">Administrador (Acesso Total)</option>
+              <option value="OPERADOR">Operador (Cadastros Básicos)</option>
+              <option value="LEITOR">Leitor (Apenas Visualização)</option>
+            </select>
+          </div>
 
-        <div className="pt-4">
           <Button onClick={handleSave}>Salvar Usuário</Button>
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -1479,74 +1509,74 @@ export const AjusteEstoqueView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#0a0e1a]">
-      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-sky-950/40 bg-slate-950/20 sticky top-0 shrink-0 z-10">
-        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-slate-900 border border-sky-400/25 text-sky-400 cursor-pointer select-none">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
+      <header className="flex justify-between items-center w-full px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+        <button onClick={() => onNavigate('configuracoes')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm text-xs font-semibold">
           Cancelar
         </button>
-        <span className="font-headline font-bold text-slate-200 text-sm">Ajustar Estoque Manual</span>
+        <span className="font-headline font-bold text-[var(--color-ink)] text-sm">Ajustar Estoque Manual</span>
       </header>
 
       <div className="flex-grow overflow-y-auto px-5 py-6 space-y-5 max-w-sm mx-auto w-full">
-        <div className="text-center md:text-left mb-2">
-          <h2 className="text-xl font-bold tracking-tight text-slate-100">Ajustar Pintinhos Disponíveis</h2>
-          <p className="text-xs text-slate-400 mt-1">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold tracking-tight text-[var(--color-ink)]">Ajustar Pintinhos Disponíveis</h2>
+          <p className="text-xs text-[var(--color-ink-secondary)] mt-1">
             Modifique a contagem de pintinhos nascidos da última eclosão para corrigir o saldo disponível.
           </p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg font-medium text-center">
+          <div className="p-3 bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs rounded-xl font-medium text-center">
             {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg font-medium text-center">
+          <div className="p-3 bg-[var(--color-success-soft)] border border-[var(--color-success)]/20 text-[var(--color-success)] text-xs rounded-xl font-medium text-center">
             {successMsg}
           </div>
         )}
 
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Selecionar Chocadeira</label>
-          <select
-            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            value={selectedChocadeiraId}
-            onChange={(e) => setSelectedChocadeiraId(e.target.value)}
-          >
-            {chocadeiras.map(c => (
-              <option key={c.id} value={c.id}>{c.nome} ({c.modelo})</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider ml-1">Total Pintinhos Nascidos (Ajustar)</label>
-          <input
-            type="number"
-            className="w-full bg-[#1a2438]/50 border border-sky-500/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
-            value={novoSaldoNascidos}
-            min={0}
-            onChange={(e) => setNovoSaldoNascidos(Math.max(0, Number(e.target.value) || 0))}
-          />
-        </div>
-
-        <div className="p-4 bg-slate-900/60 border border-sky-500/10 rounded-xl space-y-2 text-xs">
-          <div className="flex justify-between text-slate-400">
-            <span>Pintinhos Vendidos:</span>
-            <span className="font-bold text-slate-200">{vendidosAtual}</span>
+        <Card className="space-y-5">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider ml-1">Selecionar Chocadeira</label>
+            <select
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium cursor-pointer"
+              value={selectedChocadeiraId}
+              onChange={(e) => setSelectedChocadeiraId(e.target.value)}
+            >
+              {chocadeiras.map(c => (
+                <option key={c.id} value={c.id}>{c.nome} ({c.modelo})</option>
+              ))}
+            </select>
           </div>
-          <div className="flex justify-between text-slate-400 border-t border-sky-950/40 pt-2 font-semibold">
-            <span>Saldo Disponível Resultante:</span>
-            <span className="font-bold text-emerald-400">{Math.max(0, novoSaldoNascidos - vendidosAtual)} Pintinhos</span>
-          </div>
-        </div>
 
-        <div className="pt-4">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wider ml-1">Total Pintinhos Nascidos (Ajustar)</label>
+            <input
+              type="number"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium"
+              value={novoSaldoNascidos}
+              min={0}
+              onChange={(e) => setNovoSaldoNascidos(Math.max(0, Number(e.target.value) || 0))}
+            />
+          </div>
+
+          <div className="p-4 bg-[var(--color-bg-warm)] rounded-xl space-y-2 text-xs">
+            <div className="flex justify-between text-[var(--color-muted)]">
+              <span>Pintinhos Vendidos:</span>
+              <span className="font-bold text-[var(--color-ink)]">{vendidosAtual}</span>
+            </div>
+            <div className="flex justify-between border-t border-[var(--color-line)] pt-2 font-semibold">
+              <span>Saldo Disponível Resultante:</span>
+              <span className="font-bold text-[var(--color-success)]">{Math.max(0, novoSaldoNascidos - vendidosAtual)} Pintinhos</span>
+            </div>
+          </div>
+
           <Button onClick={handleSaveAdjustment} isLoading={loading} disabled={loading}>
             Confirmar Ajuste de Estoque
           </Button>
-        </div>
+        </Card>
       </div>
     </div>
   );

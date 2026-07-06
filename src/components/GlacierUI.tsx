@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Check, AlertTriangle, X } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,13 +19,13 @@ export const Button: React.FC<ButtonProps> = ({
   isLoading = false,
   ...props
 }) => {
-  const baseStyle = "w-full py-3.5 px-4 font-semibold rounded-xl text-sm transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 cursor-pointer";
+  const baseStyle = "w-full py-3.5 px-4 font-semibold rounded-xl text-sm transition-all duration-200 active:scale-[0.97] flex items-center justify-center gap-2 cursor-pointer select-none";
   
   const variants = {
-    primary: "bg-[#3f5f31] hover:bg-[#314b27] border border-[#3f5f31] text-[#fffaf2] shadow-sm",
-    secondary: "bg-[#fffaf2] hover:bg-[#f1eadf] border border-[#465336]/15 text-[#263225]",
-    danger: "bg-[#b85745]/10 hover:bg-[#b85745]/15 border border-[#b85745]/25 text-[#b85745]",
-    glass: "bg-[#fffaf2]/85 backdrop-blur-md border border-[#465336]/12 text-[#263225] hover:bg-[#f1eadf]",
+    primary: "bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-surface)] shadow-sm",
+    secondary: "bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink)]",
+    danger: "bg-[var(--color-danger-soft)] hover:bg-[var(--color-danger)]/20 border border-[var(--color-danger)]/25 text-[var(--color-danger)]",
+    glass: "bg-[var(--color-surface)]/85 backdrop-blur-md border border-[var(--color-line)] text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)]",
   };
 
   return (
@@ -33,7 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
     >
       {isLoading ? (
-        <span className="w-5 h-5 border-2 border-sky-300 border-t-transparent rounded-full animate-spin"></span>
+        <span className="w-5 h-5 border-2 border-[var(--color-brand)]/30 border-t-[var(--color-brand)] rounded-full animate-spin"></span>
       ) : (
         children
       )}
@@ -54,16 +55,16 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const accents = {
-    default: "border-[#465336]/12",
-    error: "border-[#b85745]/25",
-    warning: "border-[#c9854a]/25",
-    primary: "border-[#3f5f31]/20",
+    default: "border-[var(--color-line)]",
+    error: "border-[var(--color-danger)]/25",
+    warning: "border-[var(--color-accent)]/25",
+    primary: "border-[var(--color-brand)]/25",
     tertiary: "border-[#8a744f]/20",
   };
 
   return (
     <div
-      className={`bg-[#fffaf2] backdrop-blur-md border ${accents[borderAccent]} rounded-2xl p-5 transition-all duration-300 ${glow ? 'shadow-[0_14px_35px_rgba(66,55,39,0.08)]' : ''} ${className}`}
+      className={`card-base p-5 ${accents[borderAccent]} ${glow ? 'shadow-[var(--shadow-elevated)]' : ''} ${className}`}
       {...props}
     >
       {children}
@@ -79,11 +80,11 @@ export const StatusChip: React.FC<ChipProps> = ({ status }) => {
   const normalized = status.toUpperCase();
   
   const styles: Record<string, string> = {
-    EM_ANDAMENTO: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-    PROXIMA: "bg-[#c9854a]/12 text-[#8f5a2c] border-[#c9854a]/25",
-    ATRASADA: "bg-[#b85745]/10 text-[#b85745] border-[#b85745]/25 animate-pulse",
-    FINALIZADA: "bg-[#3f5f31]/10 text-[#3f5f31] border-[#3f5f31]/20",
-    CANCELADA: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+    EM_ANDAMENTO: "bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/20",
+    PROXIMA: "bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent)]/25",
+    ATRASADA: "bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger)]/25",
+    FINALIZADA: "bg-[var(--color-brand-soft)] text-[var(--color-brand)] border-[var(--color-brand)]/20",
+    CANCELADA: "bg-[var(--color-muted)]/10 text-[var(--color-muted)] border-[var(--color-muted)]/20",
   };
 
   const labels: Record<string, string> = {
@@ -94,16 +95,16 @@ export const StatusChip: React.FC<ChipProps> = ({ status }) => {
     CANCELADA: "CANCELADA",
   };
 
-  const style = styles[normalized] || "bg-sky-500/10 text-sky-400 border-sky-500/20";
+  const style = styles[normalized] || "bg-[var(--color-info-soft)] text-[var(--color-info)] border-[var(--color-info)]/20";
   const label = labels[normalized] || normalized;
 
   return (
     <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider border flex items-center gap-1.5 ${style}`}>
       <div className={`w-1.5 h-1.5 rounded-full ${
-        normalized === 'EM_ANDAMENTO' ? 'bg-emerald-400' :
-        normalized === 'PROXIMA' ? 'bg-purple-400' :
-        normalized === 'ATRASADA' ? 'bg-red-400' :
-        normalized === 'FINALIZADA' ? 'bg-sky-400' : 'bg-slate-400'
+        normalized === 'EM_ANDAMENTO' ? 'bg-[var(--color-success)]' :
+        normalized === 'PROXIMA' ? 'bg-[var(--color-accent)]' :
+        normalized === 'ATRASADA' ? 'bg-[var(--color-danger)]' :
+        normalized === 'FINALIZADA' ? 'bg-[var(--color-brand)]' : 'bg-[var(--color-muted)]'
       }`}></div>
       {label}
     </div>
@@ -124,20 +125,20 @@ export const Input: React.FC<InputProps> = ({
 }) => {
   return (
     <div className="space-y-1.5 w-full">
-      <label htmlFor={id} className="text-xs font-semibold text-[#6f756a] px-1 block uppercase tracking-wider">
+      <label htmlFor={id} className="text-xs font-semibold text-[var(--color-muted)] px-1 block uppercase tracking-wider">
         {label}
       </label>
       <div className="relative group">
         {icon && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7b8075] transition-colors group-focus-within:text-[#3f5f31]">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-muted-light)] transition-colors group-focus-within:text-[var(--color-brand)]">
             {icon}
           </div>
         )}
         <input
           id={id}
-          className={`w-full bg-[#fffdf8] border border-[#465336]/15 rounded-xl py-3.5 ${
+          className={`w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3.5 ${
             icon ? 'pl-11' : 'px-4'
-          } pr-4 text-[#263225] placeholder:text-[#9a9488] focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/20 focus:border-[#3f5f31] transition-all font-medium ${className}`}
+          } pr-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium ${className}`}
           {...props}
         />
       </div>
@@ -161,31 +162,72 @@ export const Select: React.FC<SelectProps> = ({
 }) => {
   return (
     <div className="space-y-1.5 w-full">
-      <label htmlFor={id} className="text-xs font-semibold text-[#6f756a] px-1 block uppercase tracking-wider">
+      <label htmlFor={id} className="text-xs font-semibold text-[var(--color-muted)] px-1 block uppercase tracking-wider">
         {label}
       </label>
       <div className="relative group">
         {icon && (
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7b8075] transition-colors group-focus-within:text-[#3f5f31]">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-muted-light)] transition-colors group-focus-within:text-[var(--color-brand)]">
             {icon}
           </div>
         )}
         <select
           id={id}
-          className={`w-full bg-[#fffdf8] border border-[#465336]/15 rounded-xl py-3.5 ${
+          className={`w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3.5 ${
             icon ? 'pl-11' : 'px-4'
-          } pr-10 text-[#263225] appearance-none focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/20 focus:border-[#3f5f31] transition-all font-medium cursor-pointer ${className}`}
+          } pr-10 text-[var(--color-ink)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium cursor-pointer ${className}`}
           {...props}
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-[#fffaf2] text-[#263225]">
+            <option key={opt.value} value={opt.value} className="bg-[var(--color-surface)] text-[var(--color-ink)]">
               {opt.label}
             </option>
           ))}
         </select>
-        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-sky-400/60 font-medium">▼</span>
+        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-muted-light)] font-medium">▼</span>
       </div>
     </div>
+  );
+};
+
+// ============================================
+// 🎞 AnimatedPage — Transições entre telas
+// ============================================
+
+const pageVariants = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
+const pageTransition = {
+  duration: 0.2,
+  ease: [0.25, 0.1, 0.25, 1], // ease-in-out suave
+};
+
+interface AnimatedPageProps {
+  children: React.ReactNode;
+  screenKey: string;
+  className?: string;
+}
+
+export const AnimatedPage: React.FC<AnimatedPageProps> = ({
+  children,
+  screenKey,
+  className = '',
+}) => {
+  return (
+    <motion.div
+      key={screenKey}
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      transition={pageTransition}
+      className={`flex-grow flex flex-col min-h-0 ${className}`}
+    >
+      {children}
+    </motion.div>
   );
 };
 
@@ -216,13 +258,13 @@ export const ConfirmDialog: React.FC<DialogProps> = ({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel}></div>
       
       {/* Card */}
-      <div className="relative w-full max-w-sm bg-slate-950 border border-red-500/20 rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center gap-3 mb-4 text-red-400">
+      <div className="relative w-full max-w-sm bg-[var(--color-surface)] border border-[var(--color-danger)]/25 rounded-2xl p-6 shadow-[var(--shadow-elevated)]">
+        <div className="flex items-center gap-3 mb-4 text-[var(--color-danger)]">
           <AlertTriangle className="w-6 h-6 shrink-0" />
-          <h3 className="text-lg font-bold text-slate-100">{title}</h3>
+          <h3 className="text-lg font-bold text-[var(--color-ink)]">{title}</h3>
         </div>
         
-        <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+        <p className="text-sm text-[var(--color-ink-secondary)] mb-6 leading-relaxed">
           {message}
         </p>
         

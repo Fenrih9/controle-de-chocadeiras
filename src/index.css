@@ -6,73 +6,220 @@
   --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* ============================================
+   🎨 Design System — Chocadeiras App
+   Paleta profissional e acolhedora para
+   gestão rural / avicultura.
+   ============================================ */
+
+/* 🌗 Transição suave entre temas */
+html {
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+html *,
+html *::before,
+html *::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+html.no-transition *,
+html.no-transition *::before,
+html.no-transition *::after {
+  transition: none !important;
+}
+
 body {
-  background-color: #f7f2e9;
-  color: #263225;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 :root {
   color-scheme: light;
-  --surface: #fffaf2;
-  --surface-soft: #f1eadf;
-  --ink: #263225;
-  --muted: #6f756a;
-  --line: rgba(70, 83, 54, 0.14);
-  --brand: #3f5f31;
-  --brand-soft: rgba(63, 95, 49, 0.12);
-  --accent: #c9854a;
-  --danger: #b85745;
+
+  /* 🟤 Backgrounds */
+  --color-bg: #f2ede3;
+  --color-bg-warm: #ede7db;
+  --color-surface: #fefcf7;
+  --color-surface-hover: #f8f3eb;
+  --color-surface-soft: #ede5d8;
+  --color-surface-warm: #e8dfcf;
+
+  /* 📝 Text */
+  --color-ink: #1f2920;
+  --color-ink-secondary: #4a5147;
+  --color-muted: #7a8176;
+  --color-muted-light: #9da397;
+
+  /* 🌿 Brand / Primary */
+  --color-brand: #3a5e2e;
+  --color-brand-hover: #2e4d23;
+  --color-brand-soft: rgba(58, 94, 46, 0.10);
+  --color-brand-soft-hover: rgba(58, 94, 46, 0.18);
+
+  /* 🔶 Accent */
+  --color-accent: #c47a3e;
+  --color-accent-soft: rgba(196, 122, 62, 0.10);
+
+  /* 🔴 Danger */
+  --color-danger: #b14a3c;
+  --color-danger-soft: rgba(177, 74, 60, 0.10);
+
+  /* 🟢 Success */
+  --color-success: #3d7a4a;
+  --color-success-soft: rgba(61, 122, 74, 0.10);
+
+  /* 🟣 Info */
+  --color-info: #3b6d9e;
+  --color-info-soft: rgba(59, 109, 158, 0.10);
+
+  /* 🟡 Warning */
+  --color-warning: #b8863a;
+  --color-warning-soft: rgba(184, 134, 58, 0.10);
+
+  /* Borders */
+  --color-line: rgba(56, 74, 48, 0.12);
+  --color-line-strong: rgba(56, 74, 48, 0.20);
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(31, 41, 32, 0.06), 0 1px 2px rgba(31, 41, 32, 0.04);
+  --shadow-card-hover: 0 8px 25px rgba(31, 41, 32, 0.08), 0 2px 6px rgba(31, 41, 32, 0.04);
+  --shadow-elevated: 0 12px 40px rgba(31, 41, 32, 0.10), 0 3px 8px rgba(31, 41, 32, 0.05);
 }
 
+/* ============================================
+   🌙 Dark Mode — Tema escuro noturno
+   Ativado via data-theme="dark" no <html>
+   ============================================ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #0e1310;
+  --color-bg-warm: #151b17;
+  --color-surface: #1a231e;
+  --color-surface-hover: #212b25;
+  --color-surface-soft: #151b17;
+  --color-surface-warm: #111813;
+
+  --color-ink: #e3e8e1;
+  --color-ink-secondary: #b7c0b4;
+  --color-muted: #828d82;
+  --color-muted-light: #657065;
+
+  --color-brand: #5fa649;
+  --color-brand-hover: #6fba58;
+  --color-brand-soft: rgba(95, 166, 73, 0.15);
+  --color-brand-soft-hover: rgba(95, 166, 73, 0.25);
+
+  --color-accent: #da9a5a;
+  --color-accent-soft: rgba(218, 154, 90, 0.15);
+
+  --color-danger: #d15a48;
+  --color-danger-soft: rgba(209, 90, 72, 0.15);
+
+  --color-success: #4da85e;
+  --color-success-soft: rgba(77, 168, 94, 0.15);
+
+  --color-info: #5a94cc;
+  --color-info-soft: rgba(90, 148, 204, 0.15);
+
+  --color-warning: #daa65a;
+  --color-warning-soft: rgba(218, 166, 90, 0.15);
+
+  --color-line: rgba(190, 210, 185, 0.08);
+  --color-line-strong: rgba(190, 210, 185, 0.15);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-card-hover: 0 8px 25px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.30);
+}
+
+/* 📐 Base reset */
 * {
   letter-spacing: 0;
 }
 
 ::selection {
-  background: rgba(63, 95, 49, 0.2);
-  color: var(--ink);
+  background: var(--color-brand-soft);
+  color: var(--color-ink);
 }
 
+/* 📋 Form elements */
 input,
 select,
 textarea {
-  color: var(--ink) !important;
-  background-color: #fffdf8 !important;
-  border-color: var(--line) !important;
+  color: var(--color-ink) !important;
+  background-color: var(--color-surface) !important;
+  border-color: var(--color-line) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-brand) !important;
+  box-shadow: 0 0 0 3px var(--color-brand-soft) !important;
+  outline: none !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #9a9488 !important;
+  color: var(--color-muted-light) !important;
 }
 
 option {
-  background: #fffaf2 !important;
-  color: var(--ink) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-ink) !important;
 }
 
 button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Custom scrollbars */
+/* 📜 Custom scrollbars */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(63, 95, 49, 0.18);
+  background: var(--color-brand-soft);
   border-radius: 4px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(63, 95, 49, 0.35);
+  background: var(--color-brand-soft-hover);
 }
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* 🧩 Utility classes */
+.card-base {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+  transition: all 0.25s ease;
+}
+
+.card-base:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.text-label {
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.text-ink-secondary {
+  color: var(--color-ink-secondary);
 }

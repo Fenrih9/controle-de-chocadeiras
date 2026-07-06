@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Egg, Search, Plus, Calendar, Thermometer, Droplets, ChevronLeft, Save, Sparkles, FileText, Check, Clipboard, Activity, Pencil, Trash2 } from 'lucide-react';
+import { Egg, Search, Plus, Calendar, Thermometer, Droplets, ChevronLeft, ChevronRight, Save, Sparkles, FileText, Check, Clipboard, Activity, Pencil, Trash2 } from 'lucide-react';
 import { repo, DURACAO_INCUBACAO, addDays, getCurrentDateString } from '../repository';
 import { Chocada } from '../types';
 import { Button, Card, StatusChip, Input, Select, ConfirmDialog } from './GlacierUI';
@@ -23,6 +23,9 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
   const [filteredChocadas, setFilteredChocadas] = useState<Chocada[]>([]);
   const [delTarget, setDelTarget] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
+
+  const isEmAndamento = (c: Chocada) => c.status === 'EM_ANDAMENTO' || c.status === 'PROXIMA' || c.status === 'ATRASADA';
+  const isFinalizada = (c: Chocada) => c.status === 'FINALIZADA' || c.status === 'CANCELADA';
 
   useEffect(() => {
     const list = repo.getChocadas();
@@ -122,101 +125,209 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
           })}
         </div>
 
-        {/* Dynamic Card Feed - Grid responsivo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredChocadas.length === 0 ? (
-            <div className="col-span-full text-center py-12 space-y-3 Card">
-              <Egg className="w-12 h-12 text-slate-600 mx-auto" />
-              <p className="text-slate-400 font-medium">Nenhum lote correspondente.</p>
-            </div>
-          ) : (
-            filteredChocadas.map((ch) => {
-              const duration = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
-              const start = new Date(ch.dataInicio + 'T12:00:00');
-              const now = new Date(getCurrentDateString() + 'T12:00:00');
-              const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-              const remaining = Math.max(0, duration - elapsed);
-              const progressPercent = Math.min(100, Math.round((elapsed / duration) * 100));
+        {filteredChocadas.length === 0 ? (
+          <div className="text-center py-16 space-y-3">
+            <Egg className="w-12 h-12 text-[#9a9488] mx-auto opacity-40" />
+            <p className="text-[#6f756a] font-medium text-sm">Nenhum lote correspondente.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Seção: Em Andamento */}
+            {filteredChocadas.filter(isEmAndamento).length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-[#3f5f31] animate-pulse" />
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#3f5f31]">
+                    Em Andamento
+                  </h2>
+                  <span className="text-[10px] font-bold text-[#9a9488] ml-1">
+                    ({filteredChocadas.filter(isEmAndamento).length})
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredChocadas.filter(isEmAndamento).map((ch) => {
+                    const duration = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
+                    const start = new Date(ch.dataInicio + 'T12:00:00');
+                    const now = new Date(getCurrentDateString() + 'T12:00:00');
+                    const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+                    const progressPercent = Math.min(100, Math.round((elapsed / duration) * 100));
 
-              return (
-                <div
-                  key={ch.id}
-                  onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                  className={`border rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 cursor-pointer relative ${
-                    ch.status === 'FINALIZADA'
-                      ? 'bg-[#fffdfb]/50 hover:bg-[#fffdfb] border-[#465336]/10 opacity-75 hover:opacity-100 hover:border-[#3f5f31]/25 hover:shadow-sm'
-                      : 'bg-[#fffdfb] border-[#465336]/10 hover:border-[#3f5f31]/30 hover:shadow-md'
-                  }`}
-                >
-                  <MiniProgressRing day={elapsed} total={duration} status={ch.status} />
+                    return (
+                      <div
+                        key={ch.id}
+                        onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
+                        className="bg-[#fffdfb] border border-[#465336]/10 hover:border-[#3f5f31]/25 rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(70,83,54,0.08)]"
+                      >
+                        <MiniProgressRing day={elapsed} total={duration} status={ch.status} />
 
-                  <div className="flex-1 space-y-2 text-[#263225] min-w-0">
-                    <div className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-start gap-3">
-                      <div className="truncate">
-                        <h3 className="font-bold text-sm tracking-tight truncate">{ch.nome}</h3>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#6f756a] font-semibold uppercase">
-                          <span className="flex items-center gap-0.5"><Egg className="w-3 h-3 text-[#3f5f31]" /> {ch.quantidadeOvosAtivos} ovos</span>
-                          <span>•</span>
-                          <span>Início: {repo.formatReadableDate(ch.dataInicio)}</span>
+                        <div className="flex-1 space-y-2 text-[#263225] min-w-0">
+                          <div className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-start gap-2">
+                            <div className="truncate">
+                              <h3 className="font-bold text-sm tracking-tight truncate">{ch.nome}</h3>
+                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#6f756a] font-semibold uppercase">
+                                <span className="flex items-center gap-0.5"><Egg className="w-3 h-3 text-[#3f5f31]" /> {ch.quantidadeOvosAtivos} ovos</span>
+                                <span>•</span>
+                                <span>Início: {repo.formatReadableDate(ch.dataInicio)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                              <StatusChip status={ch.status} />
+                              {currentUser?.role !== 'LEITOR' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    title="Editar chocada"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      onNavigate('chocada_editar', { id: ch.id });
+                                    }}
+                                    className="p-1.5 bg-[#f1eadf]/50 hover:bg-[#3f5f31]/10 text-[#6f756a] hover:text-[#3f5f31] rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Excluir chocada"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setDelTarget(ch.id);
+                                    }}
+                                    className="p-1.5 bg-[#f1eadf]/50 hover:bg-[#b85745]/10 text-[#6f756a] hover:text-[#b85745] rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[9px] font-bold text-[#6f756a] uppercase">
+                              <span>Previsão de Nascimento</span>
+                              <span className="text-[#263225]">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
+                            </div>
+                            <div className="w-full bg-[#f1eadf] rounded-full h-1.5 overflow-hidden border border-[#465336]/5">
+                              <div
+                                className={`h-full rounded-full ${
+                                  ch.status === 'ATRASADA'
+                                    ? 'bg-[#b85745]'
+                                    : ch.status === 'PROXIMA'
+                                    ? 'bg-[#c9854a]'
+                                    : 'bg-[#3f5f31]'
+                                }`}
+                                style={{ width: `${progressPercent}%` }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-                        <StatusChip status={ch.status} />
-                        {currentUser?.role !== 'LEITOR' && (
-                          <>
-                            <button
-                              type="button"
-                              title="Editar chocada"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                onNavigate('chocada_editar', { id: ch.id });
-                              }}
-                              className="p-2 bg-[#f1eadf]/50 hover:bg-[#3f5f31]/10 text-[#6f756a] hover:text-[#3f5f31] rounded-lg transition-colors cursor-pointer"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              title="Excluir chocada"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setDelTarget(ch.id);
-                              }}
-                              className="p-2 bg-[#f1eadf]/50 hover:bg-[#b85745]/10 text-[#6f756a] hover:text-[#b85745] rounded-lg transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[9px] font-bold text-[#6f756a] uppercase">
-                        <span>Previsão de Nascimento</span>
-                        <span className="text-[#263225]">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
-                      </div>
-                      <div className="w-full bg-[#f1eadf] rounded-full h-1.5 overflow-hidden border border-[#465336]/5">
-                        <div
-                          className={`h-full rounded-full ${
-                            ch.status === 'FINALIZADA'
-                              ? 'bg-emerald-600'
-                              : ch.status === 'ATRASADA'
-                              ? 'bg-[#b85745]'
-                              : ch.status === 'PROXIMA'
-                              ? 'bg-[#c9854a]'
-                              : 'bg-[#3f5f31]'
-                          }`}
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })
-          )}
-        </div>
+              </section>
+            )}
+
+            {/* Seção: Finalizadas / Inativadas */}
+            {filteredChocadas.filter(isFinalizada).length > 0 && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-[#6f756a]" />
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#6f756a]">
+                    Finalizadas
+                  </h2>
+                  <span className="text-[10px] font-bold text-[#9a9488] ml-1">
+                    ({filteredChocadas.filter(isFinalizada).length})
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {filteredChocadas.filter(isFinalizada).map((ch) => {
+                    const registro = repo.getRegistrosNascimento(ch.id)[0];
+                    const nascidos = registro?.pintinhosNascidos ?? 0;
+                    const totalOvos = ch.quantidadeOvosInicial;
+                    const taxaEclosao = totalOvos > 0 ? Math.round((nascidos / totalOvos) * 100) : 0;
+
+                    return (
+                      <div
+                        key={ch.id}
+                        onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
+                        className="bg-[#fffdfb]/60 hover:bg-[#fffdfb] border border-[#465336]/8 hover:border-[#3f5f31]/20 rounded-xl px-4 py-3.5 flex items-center gap-4 transition-all duration-200 cursor-pointer group"
+                      >
+                        {/* Mini avatar com inicial */}
+                        <div className="w-10 h-10 rounded-xl bg-[#f1eadf] flex items-center justify-center shrink-0 group-hover:bg-[#3f5f31]/10 transition-colors">
+                          <span className="text-sm font-black text-[#6f756a] group-hover:text-[#3f5f31] transition-colors">
+                            {ch.nome.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+
+                        {/* Informações */}
+                        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                          <div className="w-full sm:w-auto min-w-0">
+                            <h3 className="font-bold text-sm text-[#263225] truncate leading-tight">{ch.nome}</h3>
+                            <p className="text-[9px] text-[#6f756a] font-semibold uppercase tracking-wider mt-0.5">
+                              {ch.tipoOvo}
+                            </p>
+                          </div>
+
+                          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[#6f756a]">
+                            <span className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Período</span>
+                            <span className="font-semibold">{repo.formatReadableDate(ch.dataInicio)}</span>
+                            <span className="text-[#9a9488]">→</span>
+                            <span className="font-semibold">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
+                          </div>
+
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div>
+                              <p className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Ovos</p>
+                              <p className="text-xs font-bold text-[#263225]">{totalOvos}</p>
+                            </div>
+                            <div className="w-px h-6 bg-[#465336]/8" />
+                            <div>
+                              <p className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Nascidos</p>
+                              <p className="text-xs font-bold text-emerald-600">{nascidos}</p>
+                            </div>
+                            <div className="w-px h-6 bg-[#465336]/8" />
+                            <div>
+                              <p className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Taxa</p>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-10 sm:w-12 bg-[#f1eadf] rounded-full h-1.5 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      taxaEclosao >= 70
+                                        ? 'bg-emerald-500'
+                                        : taxaEclosao >= 40
+                                        ? 'bg-amber-500'
+                                        : 'bg-rose-500'
+                                    }`}
+                                    style={{ width: `${taxaEclosao}%` }}
+                                  />
+                                </div>
+                                <span className={`text-[10px] font-black ${
+                                  taxaEclosao >= 70
+                                    ? 'text-emerald-600'
+                                    : taxaEclosao >= 40
+                                    ? 'text-amber-600'
+                                    : 'text-rose-600'
+                                }`}>
+                                  {taxaEclosao}%
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status + Ações */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <StatusChip status={ch.status} />
+                          <ChevronRight className="w-4 h-4 text-[#9a9488] group-hover:text-[#3f5f31] transition-colors hidden sm:block" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

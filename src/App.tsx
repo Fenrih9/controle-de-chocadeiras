@@ -4,9 +4,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Home, Egg, Settings, Landmark, LogOut, Bell, ChartNoAxesCombined, Wrench } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { Home, Egg, Settings, Landmark, LogOut, Bell, ChartNoAxesCombined, Wrench, Moon, Sun } from 'lucide-react';
 import { repo } from './repository';
 import { useAuth } from './contexts/AuthContext';
+import { AnimatedPage } from './components/GlacierUI';
 
 
 // Layout Views
@@ -34,6 +36,32 @@ export default function App() {
   const [fullWidth, setFullWidth] = useState<boolean>(false);
   const [dbResetCounter, setDbResetCounter] = useState(0);
   const [dbLoading, setDbLoading] = useState(true);
+  
+  // 🌗 Dark Mode
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('chocadeiras-theme', next);
+  };
+
+  useEffect(() => {
+    // Disable transitions on first load to avoid flash
+    document.documentElement.classList.add('no-transition');
+    const saved = localStorage.getItem('chocadeiras-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initial = saved || (prefersDark ? 'dark' : 'light');
+    setTheme(initial as 'light' | 'dark');
+    document.documentElement.setAttribute('data-theme', initial);
+    // Re-enable transitions after a small delay
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('no-transition');
+      });
+    });
+  }, []);
 
   const [dataVersion, setDataVersion] = useState(0);
 
@@ -83,16 +111,16 @@ export default function App() {
 
   if (isLoading || (isAuthenticated && dbLoading)) {
     return (
-      <div className="min-h-screen bg-[#f7f2e9] flex flex-col items-center justify-center space-y-6">
-        <div className="w-20 h-20 bg-[#3f5f31]/10 rounded-full flex items-center justify-center border border-[#3f5f31]/20 shadow-sm animate-pulse">
-          <Egg className="w-10 h-10 text-[#3f5f31] fill-[#3f5f31]/10" />
+      <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center space-y-6">
+        <div className="w-20 h-20 bg-[var(--color-brand-soft)] rounded-full flex items-center justify-center border border-[var(--color-brand)]/20 shadow-sm animate-pulse">
+          <Egg className="w-10 h-10 text-[var(--color-brand)] fill-[var(--color-brand)]/10" />
         </div>
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-bold text-[#263225] font-headline tracking-tight">
+          <h2 className="text-xl font-bold text-[var(--color-brand)]/8 font-headline tracking-tight">
             {isLoading ? "Iniciando Laranjeiras..." : "Sincronizando Nuvem..."}
           </h2>
-          <p className="text-xs text-[#5f6659] uppercase tracking-widest mt-2 font-semibold flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-[#3f5f31] rounded-full animate-ping"></span>
+          <p className="text-xs text-[var(--color-ink-secondary)] uppercase tracking-widest mt-2 font-semibold flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-[var(--color-brand)] rounded-full animate-ping"></span>
             Carregando informações
           </p>
         </div>
@@ -169,7 +197,7 @@ export default function App() {
   // Se não estiver logado, exibe apenas a tela de login cheia
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#f7f2e9] text-slate-900 flex flex-col justify-between relative overflow-hidden">
+      <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)] flex flex-col justify-between relative overflow-hidden">
         {renderScreenContent()}
       </div>
     );
@@ -177,31 +205,31 @@ export default function App() {
 
   // Se estiver logado, exibe o painel administrativo responsivo
   return (
-    <div className="min-h-screen bg-[#f7f2e9] text-slate-900 flex flex-col lg:flex-row overflow-hidden font-sans">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)] flex flex-col lg:flex-row overflow-hidden font-sans">
 
       {/* 1. SIDEBAR DE DESKTOP (Visível apenas em telas grandes lg:) */}
-      <aside className="hidden lg:flex lg:w-72 bg-[#fffaf2] border-r border-[#465336]/15 flex-col justify-between shrink-0 select-none">
+      <aside className="hidden lg:flex lg:w-72 bg-[var(--color-surface)] border-r border-[var(--color-line)] flex-col justify-between shrink-0 select-none">
         <div className="flex flex-col">
           {/* Logo */}
-          <div className="p-6 border-b border-[#465336]/10 flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#3f5f31] rounded-xl flex items-center justify-center shadow-sm">
-              <Egg className="w-5 h-5 text-[#fffaf2]" />
+          <div className="p-6 border-b border-[var(--color-line)] flex items-center gap-3">
+            <div className="w-10 h-10 bg-[var(--color-brand)] rounded-xl flex items-center justify-center shadow-sm">
+              <Egg className="w-5 h-5 text-[var(--color-surface)]" />
             </div>
             <div>
-              <h1 className="text-sm font-black text-[#263225] tracking-tight leading-none">Laranjeiras</h1>
-              <span className="text-[10px] text-[#6f756a] font-bold uppercase tracking-widest">Chocadeiras</span>
+              <h1 className="text-sm font-black text-[var(--color-brand)]/8 tracking-tight leading-none">Laranjeiras</h1>
+              <span className="text-[10px] text-[var(--color-muted)] font-bold uppercase tracking-widest">Chocadeiras</span>
             </div>
           </div>
 
           {/* Navegação Principal */}
           <nav className="p-4 space-y-1.5 flex-1">
-            <span className="px-3 text-[10px] font-bold text-[#6f756a] uppercase tracking-widest block mb-2">Painel Geral</span>
+            <span className="px-3 text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-widest block mb-2">Painel Geral</span>
 
             <button
               onClick={() => onNavigate('dashboard')}
               className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'dashboard'
-                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
-                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
                 }`}
             >
               <Home className="w-4 h-4" />
@@ -211,8 +239,8 @@ export default function App() {
             <button
               onClick={() => onNavigate('chocadas_lista')}
               className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'chocadas_lista'
-                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
-                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
                 }`}
             >
               <Egg className="w-4 h-4" />
@@ -222,13 +250,13 @@ export default function App() {
             <button
               onClick={() => onNavigate('alertas')}
               className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'alertas'
-                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
-                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
                 }`}
             >
               <div className="relative w-4 h-4 flex items-center justify-center">
                 <Bell className="w-4 h-4" />
-                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#b85745] rounded-full"></div>
+                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[var(--color-danger)] rounded-full"></div>
               </div>
               <span>Feed de Alertas</span>
             </button>
@@ -237,8 +265,8 @@ export default function App() {
               <button
                 onClick={() => onNavigate('financeiro')}
                 className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'financeiro'
-                    ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
-                    : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                    ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
+                    : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
                   }`}
               >
                 <Landmark className="w-4 h-4" />
@@ -249,8 +277,8 @@ export default function App() {
             <button
               onClick={() => onNavigate('relatorios_gerais')}
               className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'relatorios_gerais'
-                  ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
-                  : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
                 }`}
             >
               <ChartNoAxesCombined className="w-4 h-4" />
@@ -261,8 +289,8 @@ export default function App() {
               <button
                 onClick={() => onNavigate('configuracoes')}
                 className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'configuracoes'
-                    ? 'bg-[#3f5f31] text-[#fffaf2] border-[#3f5f31] shadow-sm'
-                    : 'text-[#5f6659] hover:bg-[#f1eadf] hover:text-[#263225] border-transparent'
+                    ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
+                    : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
                   }`}
               >
                 <Settings className="w-4 h-4" />
@@ -271,14 +299,14 @@ export default function App() {
             )}
 
             {currentUser?.role !== 'LEITOR' && (
-              <div className="pt-4 border-t border-[#465336]/10 mt-4">
-                <span className="px-3 text-[10px] font-bold text-[#6f756a] uppercase tracking-widest block mb-2">Cadastros</span>
+              <div className="pt-4 border-t border-[var(--color-line)] mt-4">
+                <span className="px-3 text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-widest block mb-2">Cadastros</span>
 
                 <button
                   onClick={() => onNavigate('chocadeiras_lista')}
                   className={`w-full text-left py-2 px-3.5 rounded-lg text-xs font-medium cursor-pointer transition-all flex items-center gap-3 border ${currentScreen === 'chocadeiras_lista' || currentScreen === 'chocadeira_nova'
-                      ? 'text-[#3f5f31] bg-[#3f5f31]/10 border-[#3f5f31]/10'
-                      : 'text-[#5f6659] hover:text-[#263225] border-transparent'
+                      ? 'text-[var(--color-brand)] bg-[var(--color-brand-soft)] border-[var(--color-brand)]/10'
+                      : 'text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] border-transparent'
                     }`}
                 >
                   <Wrench className="w-3.5 h-3.5" />
@@ -289,8 +317,8 @@ export default function App() {
                   <button
                     onClick={() => onNavigate('propriedade_editar')}
                     className={`w-full text-left py-2 px-3.5 rounded-lg text-xs font-medium cursor-pointer transition-all flex items-center gap-3 border ${currentScreen === 'propriedade_editar'
-                        ? 'text-[#3f5f31] bg-[#3f5f31]/10 border-[#3f5f31]/10'
-                        : 'text-[#5f6659] hover:text-[#263225] border-transparent'
+                        ? 'text-[var(--color-brand)] bg-[var(--color-brand-soft)] border-[var(--color-brand)]/10'
+                        : 'text-[var(--color-ink-secondary)] hover:text-[var(--color-ink)] border-transparent'
                       }`}
                   >
                     <Landmark className="w-3.5 h-3.5" />
@@ -303,26 +331,34 @@ export default function App() {
         </div>
 
         {/* Rodapé da Sidebar */}
-        <div className="p-4 border-t border-[#465336]/10 flex flex-col gap-3">
+        <div className="p-4 border-t border-[var(--color-line)] flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-[#465336]/15">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-[var(--color-line)]">
               <img
                 alt="Perfil"
                 className="w-full h-full object-cover"
                 src="https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=200"
               />
             </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold text-slate-100 truncate leading-none">{currentUser?.username || 'Usuário'}</h4>
-              <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mt-0.5">{currentUser?.role || 'Acesso Limitado'}</span>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-xs font-bold text-[var(--color-ink)] truncate leading-none">{currentUser?.username || 'Usuário'}</h4>
+              <span className="text-[9px] text-[var(--color-muted)] font-bold uppercase tracking-wider block mt-0.5">{currentUser?.role || 'Acesso Limitado'}</span>
             </div>
+            {/* 🌗 Toggle Tema */}
+            <button
+              onClick={toggleTheme}
+              title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+              className="p-2 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-xl text-[var(--color-muted)] hover:text-[var(--color-brand)] transition-all cursor-pointer shrink-0"
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
           </div>
           <button
             onClick={() => {
               logout();
               setCurrentScreen('dashboard');
             }}
-            className="w-full py-2 bg-[#f1eadf] border border-[#465336]/10 hover:border-[#b85745]/30 rounded-xl hover:text-[#b85745] transition-all uppercase text-[9px] font-mono cursor-pointer text-[#5f6659] text-center flex items-center justify-center gap-1.5"
+            className="w-full py-2 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-danger)]/30 rounded-xl hover:text-[var(--color-danger)] transition-all uppercase text-[9px] font-mono cursor-pointer text-[var(--color-ink-secondary)] text-center flex items-center justify-center gap-1.5"
           >
             <LogOut className="w-3 h-3" /> Sair da Conta
           </button>
@@ -333,36 +369,51 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
 
         {/* Cabeçalho para telas móveis (lg:hidden) */}
-        <header className="lg:hidden bg-[#fffaf2] border-b border-[#465336]/15 py-3.5 px-5 flex justify-between items-center shrink-0 z-40">
+        <header className="lg:hidden bg-[var(--color-surface)] border-b border-[var(--color-line)] py-3.5 px-5 flex justify-between items-center shrink-0 z-40">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[#3f5f31] rounded-lg flex items-center justify-center">
-              <Egg className="w-4 h-4 text-[#fffaf2]" />
+            <div className="w-8 h-8 bg-[var(--color-brand)] rounded-lg flex items-center justify-center">
+              <Egg className="w-4 h-4 text-[var(--color-surface)]" />
             </div>
-            <span className="text-xs font-extrabold text-[#263225] tracking-wider uppercase">Laranjeiras</span>
+            <span className="text-xs font-extrabold text-[var(--color-brand)]/8 tracking-wider uppercase">Laranjeiras</span>
           </div>
 
-          <button
-            onClick={() => {
-              logout();
-              setCurrentScreen('dashboard');
-            }}
-            className="px-2 py-1 bg-[#f1eadf] border border-[#465336]/10 rounded text-[9px] font-mono text-[#5f6659] hover:text-[#b85745]"
-          >
-            Sair
-          </button>
+          <div className="flex items-center gap-2">
+            {/* 🌗 Toggle Tema Mobile */}
+            <button
+              onClick={toggleTheme}
+              title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+              className="p-1.5 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-lg text-[var(--color-muted)] hover:text-[var(--color-brand)] transition-all cursor-pointer"
+            >
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
+
+            <button
+              onClick={() => {
+                logout();
+                setCurrentScreen('dashboard');
+              }}
+              className="px-2 py-1 bg-[var(--color-surface-hover)] border border-[var(--color-line)] rounded text-[9px] font-mono text-[var(--color-ink-secondary)] hover:text-[var(--color-danger)]"
+            >
+              Sair
+            </button>
+          </div>
         </header>
 
-        {/* Viewport Renderizado */}
-        <main className="flex-1 flex flex-col min-h-0 bg-[#f7f2e9] relative overflow-hidden">
-          {renderScreenContent()}
+        {/* Viewport Renderizado com animações */}
+        <main className="flex-1 flex flex-col min-h-0 bg-[var(--color-bg)] relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            <AnimatedPage screenKey={currentScreen}>
+              {renderScreenContent()}
+            </AnimatedPage>
+          </AnimatePresence>
         </main>
 
         {/* 3. BARRA DE NAVEGAÇÃO INFERIOR PARA MOBILE (lg:hidden) */}
         {isAuthenticated && currentScreen !== 'login' && (
-          <nav className="lg:hidden fixed bottom-0 left-0 right-0 min-h-16 bg-[#fffaf2]/95 border-t border-[#465336]/15 backdrop-blur-md grid grid-flow-col auto-cols-fr items-stretch px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] select-none z-50 shadow-[0_-10px_30px_rgba(38,50,37,0.12)]">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 min-h-16 bg-[var(--color-surface)]/95 border-t border-[var(--color-line)] backdrop-blur-md grid grid-flow-col auto-cols-fr items-stretch px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] select-none z-50 shadow-[0_-10px_30px_rgba(38,50,37,0.12)]">
             <button
               onClick={() => onNavigate('dashboard')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                 }`}
             >
               <Home className="w-5 h-5 mb-1" />
@@ -371,7 +422,7 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('chocadas_lista')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                 }`}
             >
               <Egg className="w-5 h-5 mb-1" />
@@ -380,12 +431,12 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('alertas')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                 }`}
             >
               <div className="w-5 h-5 mb-1 flex items-center justify-center relative">
                 <Bell className="w-5 h-5" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#b85745] rounded-full"></div>
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--color-danger)] rounded-full"></div>
               </div>
               <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Alertas</span>
             </button>
@@ -393,7 +444,7 @@ export default function App() {
             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
               <button
                 onClick={() => onNavigate('financeiro')}
-                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'financeiro' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'financeiro' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                   }`}
               >
                 <Landmark className="w-5 h-5 mb-1" />
@@ -404,7 +455,7 @@ export default function App() {
             {currentUser?.role === 'LEITOR' && (
               <button
                 onClick={() => onNavigate('relatorios_gerais')}
-                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                   }`}
               >
                 <ChartNoAxesCombined className="w-5 h-5 mb-1" />
@@ -415,7 +466,7 @@ export default function App() {
             {currentUser?.role === 'ADMIN' && (
               <button
                 onClick={() => onNavigate('configuracoes')}
-                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[#3f5f31] font-bold bg-[#3f5f31]/8' : 'text-[#7b8075] hover:text-[#263225]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                   }`}
               >
                 <Settings className="w-5 h-5 mb-1" />
