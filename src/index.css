@@ -7,20 +7,18 @@
 }
 
 /* ============================================
-   🎨 Design System — Chocadeiras App
-   Paleta profissional e acolhedora para
-   gestão rural / avicultura.
+   🎨 Design System — Laranjeiras
+   Azul Marinho + Branco | Moderno & Vibrante
    ============================================ */
 
-/* 🌗 Transição suave entre temas */
 html {
-  transition: background-color 0.35s ease, color 0.35s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html *,
 html *::before,
 html *::after {
-  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
 }
 
 html.no-transition *,
@@ -37,104 +35,108 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ============================================
+   ☀️ Light Mode — Padrão Moderno Vibrante
+   ============================================ */
 :root {
   color-scheme: light;
 
-  /* 🟤 Backgrounds */
-  --color-bg: #f2ede3;
-  --color-bg-warm: #ede7db;
-  --color-surface: #fefcf7;
-  --color-surface-hover: #f8f3eb;
-  --color-surface-soft: #ede5d8;
-  --color-surface-warm: #e8dfcf;
+  /* 🖤 Backgrounds — Clean whites & cool grays */
+  --color-bg: #f0f4f8;
+  --color-bg-warm: #e8eef5;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f5f8fb;
+  --color-surface-soft: #e8eef5;
+  --color-surface-warm: #dde5ed;
 
-  /* 📝 Text */
-  --color-ink: #1f2920;
-  --color-ink-secondary: #4a5147;
-  --color-muted: #7a8176;
-  --color-muted-light: #9da397;
+  /* 📝 Text — Sharp contrast */
+  --color-ink: #0f172a;
+  --color-ink-secondary: #475569;
+  --color-muted: #64748b;
+  --color-muted-light: #94a3b8;
 
-  /* 🌿 Brand / Primary */
-  --color-brand: #3a5e2e;
-  --color-brand-hover: #2e4d23;
-  --color-brand-soft: rgba(58, 94, 46, 0.10);
-  --color-brand-soft-hover: rgba(58, 94, 46, 0.18);
+  /* 🔵 Brand / Primary — Navy Blue */
+  --color-brand: #1e3a5f;
+  --color-brand-hover: #162d4a;
+  --color-brand-soft: rgba(30, 58, 95, 0.08);
+  --color-brand-soft-hover: rgba(30, 58, 95, 0.15);
 
-  /* 🔶 Accent */
-  --color-accent: #c47a3e;
-  --color-accent-soft: rgba(196, 122, 62, 0.10);
+  /* 🔶 Accent — Electric Teal */
+  --color-accent: #0ea5e9;
+  --color-accent-soft: rgba(14, 165, 233, 0.10);
 
-  /* 🔴 Danger */
-  --color-danger: #b14a3c;
-  --color-danger-soft: rgba(177, 74, 60, 0.10);
+  /* 🔴 Danger — Vibrant Red */
+  --color-danger: #dc2626;
+  --color-danger-soft: rgba(220, 38, 38, 0.08);
 
-  /* 🟢 Success */
-  --color-success: #3d7a4a;
-  --color-success-soft: rgba(61, 122, 74, 0.10);
+  /* 🟢 Success — Fresh Green */
+  --color-success: #16a34a;
+  --color-success-soft: rgba(22, 163, 74, 0.08);
 
-  /* 🟣 Info */
-  --color-info: #3b6d9e;
-  --color-info-soft: rgba(59, 109, 158, 0.10);
+  /* 🔵 Info — Sky Blue */
+  --color-info: #0284c7;
+  --color-info-soft: rgba(2, 132, 199, 0.08);
 
-  /* 🟡 Warning */
-  --color-warning: #b8863a;
-  --color-warning-soft: rgba(184, 134, 58, 0.10);
+  /* 🟡 Warning — Amber */
+  --color-warning: #d97706;
+  --color-warning-soft: rgba(217, 119, 6, 0.08);
 
   /* Borders */
-  --color-line: rgba(56, 74, 48, 0.12);
-  --color-line-strong: rgba(56, 74, 48, 0.20);
+  --color-line: rgba(15, 23, 42, 0.08);
+  --color-line-strong: rgba(15, 23, 42, 0.15);
 
-  /* Shadows */
-  --shadow-card: 0 1px 3px rgba(31, 41, 32, 0.06), 0 1px 2px rgba(31, 41, 32, 0.04);
-  --shadow-card-hover: 0 8px 25px rgba(31, 41, 32, 0.08), 0 2px 6px rgba(31, 41, 32, 0.04);
-  --shadow-elevated: 0 12px 40px rgba(31, 41, 32, 0.10), 0 3px 8px rgba(31, 41, 32, 0.05);
+  /* Shadows — Modern elevated feel */
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+  --shadow-elevated: 0 20px 40px -10px rgba(15, 23, 42, 0.12), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
+  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.15);
 }
 
 /* ============================================
-   🌙 Dark Mode — Tema escuro noturno
-   Ativado via data-theme="dark" no <html>
+   🌙 Dark Mode — Premium Dark
    ============================================ */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-bg: #0e1310;
-  --color-bg-warm: #151b17;
-  --color-surface: #1a231e;
-  --color-surface-hover: #212b25;
-  --color-surface-soft: #151b17;
-  --color-surface-warm: #111813;
+  --color-bg: #0b1120;
+  --color-bg-warm: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-surface-soft: #1e293b;
+  --color-surface-warm: #162032;
 
-  --color-ink: #e3e8e1;
-  --color-ink-secondary: #b7c0b4;
-  --color-muted: #828d82;
-  --color-muted-light: #657065;
+  --color-ink: #f1f5f9;
+  --color-ink-secondary: #cbd5e1;
+  --color-muted: #94a3b8;
+  --color-muted-light: #64748b;
 
-  --color-brand: #5fa649;
-  --color-brand-hover: #6fba58;
-  --color-brand-soft: rgba(95, 166, 73, 0.15);
-  --color-brand-soft-hover: rgba(95, 166, 73, 0.25);
+  --color-brand: #3b82f6;
+  --color-brand-hover: #60a5fa;
+  --color-brand-soft: rgba(59, 130, 246, 0.15);
+  --color-brand-soft-hover: rgba(59, 130, 246, 0.25);
 
-  --color-accent: #da9a5a;
-  --color-accent-soft: rgba(218, 154, 90, 0.15);
+  --color-accent: #38bdf8;
+  --color-accent-soft: rgba(56, 189, 248, 0.15);
 
-  --color-danger: #d15a48;
-  --color-danger-soft: rgba(209, 90, 72, 0.15);
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.12);
 
-  --color-success: #4da85e;
-  --color-success-soft: rgba(77, 168, 94, 0.15);
+  --color-success: #4ade80;
+  --color-success-soft: rgba(74, 222, 128, 0.12);
 
-  --color-info: #5a94cc;
-  --color-info-soft: rgba(90, 148, 204, 0.15);
+  --color-info: #38bdf8;
+  --color-info-soft: rgba(56, 189, 248, 0.12);
 
-  --color-warning: #daa65a;
-  --color-warning-soft: rgba(218, 166, 90, 0.15);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgba(251, 191, 36, 0.12);
 
-  --color-line: rgba(190, 210, 185, 0.08);
-  --color-line-strong: rgba(190, 210, 185, 0.15);
+  --color-line: rgba(241, 245, 249, 0.06);
+  --color-line-strong: rgba(241, 245, 249, 0.12);
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.20);
-  --shadow-card-hover: 0 8px 25px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.55), 0 3px 8px rgba(0, 0, 0, 0.30);
+  --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.50), 0 4px 6px rgba(0, 0, 0, 0.30);
+  --shadow-elevated: 0 20px 40px -10px rgba(0, 0, 0, 0.60), 0 8px 12px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.20);
 }
 
 /* 📐 Base reset */
@@ -161,7 +163,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--color-brand) !important;
-  box-shadow: 0 0 0 3px var(--color-brand-soft) !important;
+  box-shadow: 0 0 0 3px var(--color-brand-soft), var(--shadow-glow) !important;
   outline: none !important;
 }
 
@@ -205,11 +207,12 @@ button {
   border: 1px solid var(--color-line);
   border-radius: 1rem;
   box-shadow: var(--shadow-card);
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-base:hover {
   box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-line-strong);
 }
 
 .text-label {
@@ -222,4 +225,32 @@ button {
 
 .text-ink-secondary {
   color: var(--color-ink-secondary);
+}
+
+/* ✨ Vibrant micro-interactions */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(14, 165, 233, 0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
 }

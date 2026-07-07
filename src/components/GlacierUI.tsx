@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'glass';
@@ -22,9 +22,9 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyle = "w-full py-3.5 px-4 font-semibold rounded-xl text-sm transition-all duration-200 active:scale-[0.97] flex items-center justify-center gap-2 cursor-pointer select-none";
   
   const variants = {
-    primary: "bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-surface)] shadow-sm",
-    secondary: "bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink)]",
-    danger: "bg-[var(--color-danger-soft)] hover:bg-[var(--color-danger)]/20 border border-[var(--color-danger)]/25 text-[var(--color-danger)]",
+    primary: "bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-white shadow-md hover:shadow-lg",
+    secondary: "bg-[var(--color-surface)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-line)] text-[var(--color-ink)] hover:border-[var(--color-line-strong)]",
+    danger: "bg-[var(--color-danger)] hover:brightness-110 border border-[var(--color-danger)]/25 text-white shadow-md",
     glass: "bg-[var(--color-surface)]/85 backdrop-blur-md border border-[var(--color-line)] text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)]",
   };
 
@@ -34,7 +34,7 @@ export const Button: React.FC<ButtonProps> = ({
       {...props}
     >
       {isLoading ? (
-        <span className="w-5 h-5 border-2 border-[var(--color-brand)]/30 border-t-[var(--color-brand)] rounded-full animate-spin"></span>
+        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
       ) : (
         children
       )}
@@ -57,14 +57,14 @@ export const Card: React.FC<CardProps> = ({
   const accents = {
     default: "border-[var(--color-line)]",
     error: "border-[var(--color-danger)]/25",
-    warning: "border-[var(--color-accent)]/25",
+    warning: "border-[var(--color-warning)]/25",
     primary: "border-[var(--color-brand)]/25",
-    tertiary: "border-[#8a744f]/20",
+    tertiary: "border-[var(--color-accent)]/20",
   };
 
   return (
     <div
-      className={`card-base p-5 ${accents[borderAccent]} ${glow ? 'shadow-[var(--shadow-elevated)]' : ''} ${className}`}
+      className={`card-base p-5 ${accents[borderAccent]} ${glow ? 'shadow-[var(--shadow-elevated)] ring-1 ring-[var(--color-brand)]/10' : ''} ${className}`}
       {...props}
     >
       {children}
@@ -202,7 +202,7 @@ const pageVariants = {
 
 const pageTransition = {
   duration: 0.2,
-  ease: [0.25, 0.1, 0.25, 1], // ease-in-out suave
+  ease: [0.25, 0.1, 0.25, 1],
 };
 
 interface AnimatedPageProps {
@@ -255,10 +255,10 @@ export const ConfirmDialog: React.FC<DialogProps> = ({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel}></div>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel}></div>
       
       {/* Card */}
-      <div className="relative w-full max-w-sm bg-[var(--color-surface)] border border-[var(--color-danger)]/25 rounded-2xl p-6 shadow-[var(--shadow-elevated)]">
+      <div className="relative w-full max-w-sm bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-6 shadow-[var(--shadow-elevated)]">
         <div className="flex items-center gap-3 mb-4 text-[var(--color-danger)]">
           <AlertTriangle className="w-6 h-6 shrink-0" />
           <h3 className="text-lg font-bold text-[var(--color-ink)]">{title}</h3>

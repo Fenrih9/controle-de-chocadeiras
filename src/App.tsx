@@ -112,15 +112,15 @@ export default function App() {
   if (isLoading || (isAuthenticated && dbLoading)) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center space-y-6">
-        <div className="w-20 h-20 bg-[var(--color-brand-soft)] rounded-full flex items-center justify-center border border-[var(--color-brand)]/20 shadow-sm animate-pulse">
-          <Egg className="w-10 h-10 text-[var(--color-brand)] fill-[var(--color-brand)]/10" />
+        <div className="w-20 h-20 bg-[var(--color-brand)] rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+          <Egg className="w-10 h-10 text-white" />
         </div>
         <div className="flex flex-col items-center">
-          <h2 className="text-xl font-bold text-[var(--color-brand)]/8 font-headline tracking-tight">
+          <h2 className="text-xl font-bold text-[var(--color-ink)] font-headline tracking-tight">
             {isLoading ? "Iniciando Laranjeiras..." : "Sincronizando Nuvem..."}
           </h2>
-          <p className="text-xs text-[var(--color-ink-secondary)] uppercase tracking-widest mt-2 font-semibold flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-[var(--color-brand)] rounded-full animate-ping"></span>
+          <p className="text-xs text-[var(--color-muted)] uppercase tracking-widest mt-2 font-semibold flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-[var(--color-accent)] rounded-full animate-ping"></span>
             Carregando informações
           </p>
         </div>
@@ -212,11 +212,11 @@ export default function App() {
         <div className="flex flex-col">
           {/* Logo */}
           <div className="p-6 border-b border-[var(--color-line)] flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--color-brand)] rounded-xl flex items-center justify-center shadow-sm">
-              <Egg className="w-5 h-5 text-[var(--color-surface)]" />
+            <div className="w-10 h-10 bg-[var(--color-brand)] rounded-xl flex items-center justify-center shadow-md">
+              <Egg className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-black text-[var(--color-brand)]/8 tracking-tight leading-none">Laranjeiras</h1>
+              <h1 className="text-sm font-black text-[var(--color-brand)] tracking-tight leading-none">Laranjeiras</h1>
               <span className="text-[10px] text-[var(--color-muted)] font-bold uppercase tracking-widest">Chocadeiras</span>
             </div>
           </div>
@@ -227,9 +227,9 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('dashboard')}
-              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'dashboard'
-                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
-                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'dashboard'
+                  ? 'bg-[var(--color-brand)] text-white shadow-md'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <Home className="w-4 h-4" />
@@ -238,9 +238,9 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('chocadas_lista')}
-              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'chocadas_lista'
-                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
-                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'chocadas_lista'
+                  ? 'bg-[var(--color-brand)] text-white shadow-md'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <Egg className="w-4 h-4" />
@@ -249,9 +249,9 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('alertas')}
-              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'alertas'
-                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
-                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'alertas'
+                  ? 'bg-[var(--color-brand)] text-white shadow-md'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <div className="relative w-4 h-4 flex items-center justify-center">
@@ -264,9 +264,9 @@ export default function App() {
             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
               <button
                 onClick={() => onNavigate('financeiro')}
-                className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'financeiro'
-                    ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
-                    : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
+                className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'financeiro'
+                    ? 'bg-[var(--color-brand)] text-white shadow-md'
+                    : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
                   }`}
               >
                 <Landmark className="w-4 h-4" />
@@ -276,9 +276,9 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('relatorios_gerais')}
-              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'relatorios_gerais'
-                  ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
-                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
+              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'relatorios_gerais'
+                  ? 'bg-[var(--color-brand)] text-white shadow-md'
+                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <ChartNoAxesCombined className="w-4 h-4" />
@@ -288,9 +288,9 @@ export default function App() {
             {currentUser?.role === 'ADMIN' && (
               <button
                 onClick={() => onNavigate('configuracoes')}
-                className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-3 border ${selectedTab === 'configuracoes'
-                    ? 'bg-[var(--color-brand)] text-[var(--color-surface)] border-[var(--color-brand)] shadow-sm'
-                    : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)] border-transparent'
+                className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'configuracoes'
+                    ? 'bg-[var(--color-brand)] text-white shadow-md'
+                    : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
                   }`}
               >
                 <Settings className="w-4 h-4" />
@@ -371,10 +371,10 @@ export default function App() {
         {/* Cabeçalho para telas móveis (lg:hidden) */}
         <header className="lg:hidden bg-[var(--color-surface)] border-b border-[var(--color-line)] py-3.5 px-5 flex justify-between items-center shrink-0 z-40">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-[var(--color-brand)] rounded-lg flex items-center justify-center">
-              <Egg className="w-4 h-4 text-[var(--color-surface)]" />
+            <div className="w-8 h-8 bg-[var(--color-brand)] rounded-lg flex items-center justify-center shadow-md">
+              <Egg className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xs font-extrabold text-[var(--color-brand)]/8 tracking-wider uppercase">Laranjeiras</span>
+            <span className="text-xs font-extrabold text-[var(--color-brand)] tracking-wider uppercase">Laranjeiras</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -410,10 +410,10 @@ export default function App() {
 
         {/* 3. BARRA DE NAVEGAÇÃO INFERIOR PARA MOBILE (lg:hidden) */}
         {isAuthenticated && currentScreen !== 'login' && (
-          <nav className="lg:hidden fixed bottom-0 left-0 right-0 min-h-16 bg-[var(--color-surface)]/95 border-t border-[var(--color-line)] backdrop-blur-md grid grid-flow-col auto-cols-fr items-stretch px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] select-none z-50 shadow-[0_-10px_30px_rgba(38,50,37,0.12)]">
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 min-h-16 bg-[var(--color-surface)]/95 border-t border-[var(--color-line)] backdrop-blur-md grid grid-flow-col auto-cols-fr items-stretch px-1.5 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] select-none z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.10)]">
             <button
               onClick={() => onNavigate('dashboard')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'dashboard' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer ${selectedTab === 'dashboard' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <Home className="w-5 h-5 mb-1" />
@@ -422,7 +422,7 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('chocadas_lista')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer ${selectedTab === 'chocadas_lista' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <Egg className="w-5 h-5 mb-1" />
@@ -431,7 +431,7 @@ export default function App() {
 
             <button
               onClick={() => onNavigate('alertas')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
                 }`}
             >
               <div className="w-5 h-5 mb-1 flex items-center justify-center relative">
@@ -444,7 +444,7 @@ export default function App() {
             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
               <button
                 onClick={() => onNavigate('financeiro')}
-                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'financeiro' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer ${selectedTab === 'financeiro' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
                   }`}
               >
                 <Landmark className="w-5 h-5 mb-1" />
@@ -455,7 +455,7 @@ export default function App() {
             {currentUser?.role === 'LEITOR' && (
               <button
                 onClick={() => onNavigate('relatorios_gerais')}
-                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer ${selectedTab === 'relatorios_gerais' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
                   }`}
               >
                 <ChartNoAxesCombined className="w-5 h-5 mb-1" />
@@ -466,7 +466,7 @@ export default function App() {
             {currentUser?.role === 'ADMIN' && (
               <button
                 onClick={() => onNavigate('configuracoes')}
-                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer ${selectedTab === 'configuracoes' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
                   }`}
               >
                 <Settings className="w-5 h-5 mb-1" />
