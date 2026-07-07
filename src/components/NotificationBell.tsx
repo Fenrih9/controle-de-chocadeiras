@@ -4,56 +4,16 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Bell, CheckCheck, AlertTriangle, AlertCircle, Info, ChevronRight, Clock } from 'lucide-react';
+import { Bell, CheckCheck, ChevronRight, Clock } from 'lucide-react';
 import { repo } from '../repository';
 import { Notificacao } from '../types';
+import { severityConfig, timeAgo } from './notificacoes-utils';
 
 interface NotificationBellProps {
   onNavigate: (screenName: string, params?: any) => void;
 }
 
 type FiltroAba = 'TODOS' | 'NAO_LIDOS';
-
-const severityConfig = {
-  CRITICO: {
-    label: 'Crítico',
-    icon: AlertTriangle,
-    color: 'var(--color-danger)',
-    bgSoft: 'var(--color-danger-soft)',
-    borderColor: 'var(--color-danger)',
-  },
-  ATENCAO: {
-    label: 'Atenção',
-    icon: AlertCircle,
-    color: 'var(--color-warning)',
-    bgSoft: 'var(--color-warning-soft)',
-    borderColor: 'var(--color-warning)',
-  },
-  INFORMATIVO: {
-    label: 'Informativo',
-    icon: Info,
-    color: 'var(--color-info)',
-    bgSoft: 'var(--color-info-soft)',
-    borderColor: 'var(--color-info)',
-  },
-};
-
-function timeAgo(isoTimestamp: string): string {
-  if (!isoTimestamp) return '';
-  const now = new Date();
-  const date = new Date(isoTimestamp);
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMin < 1) return 'agora';
-  if (diffMin < 60) return `há ${diffMin}min`;
-  if (diffHours < 24) return `há ${diffHours}h`;
-  if (diffDays < 7) return `há ${diffDays}d`;
-  if (diffDays < 30) return `há ${Math.floor(diffDays / 7)}sem`;
-  return date.toLocaleDateString('pt-BR');
-}
 
 const NotificationBell: React.FC<NotificationBellProps> = ({ onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);

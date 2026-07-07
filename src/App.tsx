@@ -20,11 +20,11 @@ import {
   ChocadeirasListaView,
   ChocadeiraNovaView,
   PropriedadeEditarView,
-  AlertasFeedView,
   UsuariosListaView,
   UsuarioNovoView,
   AjusteEstoqueView
 } from './components/SettingsViews';
+import AlertasHistoryView from './components/AlertasHistoryView';
 import { ReportsView } from './components/ReportsView';
 import { ReportView } from './components/ReportView';
 import { FinanceiroView } from './components/FinanceiroViews';
@@ -168,7 +168,7 @@ export default function App() {
       case 'historico_geral':
         return <ReportsView onNavigate={onNavigate} />;
       case 'alertas':
-        return <AlertasFeedView onNavigate={onNavigate} />;
+        return <AlertasHistoryView onNavigate={onNavigate} />;
       case 'configuracoes':
         return <ConfiguracoesView onNavigate={onNavigate} />;
       case 'chocadeiras_lista':
