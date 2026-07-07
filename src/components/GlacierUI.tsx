@@ -114,11 +114,13 @@ export const StatusChip: React.FC<ChipProps> = ({ status }) => {
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   icon?: React.ReactNode;
+  helperText?: string;
 }
 
 export const Input: React.FC<InputProps> = ({
   label,
   icon,
+  helperText,
   className = '',
   id,
   ...props
@@ -142,6 +144,9 @@ export const Input: React.FC<InputProps> = ({
           {...props}
         />
       </div>
+      {helperText && (
+        <p className="text-[10px] text-[var(--color-muted)] px-1 mt-0.5">{helperText}</p>
+      )}
     </div>
   );
 };
