@@ -3,6 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export type SeveridadeNotificacao = 'CRITICO' | 'ATENCAO' | 'INFORMATIVO';
+
+export interface Notificacao {
+  id: string;
+  user_id: string;
+  severidade: SeveridadeNotificacao;
+  tipo_alerta: string;
+  titulo: string;
+  descricao: string;
+  entidade_relacionada?: string;
+  link_destino?: string;
+  chocada_id?: string;
+  chocadeira_id?: string;
+  timestamp_completo: string;
+  lido: boolean;
+  criado_em: string;
+  atualizado_em: string;
+}
+
 export type Role = 'ADMIN' | 'OPERADOR' | 'LEITOR';
 
 export interface Usuario {

@@ -8,28 +8,29 @@ drop policy if exists "financeiro_lancamentos_select" on public.financeiro_lanca
 drop policy if exists "financeiro_lancamentos_insert" on public.financeiro_lancamentos;
 drop policy if exists "financeiro_lancamentos_update" on public.financeiro_lancamentos;
 drop policy if exists "financeiro_lancamentos_delete" on public.financeiro_lancamentos;
+drop policy if exists "financeiro_lancamentos_policy" on public.financeiro_lancamentos;
 
 create policy "financeiro_lancamentos_select"
   on public.financeiro_lancamentos
   for select
-  to anon, authenticated
+  to authenticated
   using (true);
 
 create policy "financeiro_lancamentos_insert"
   on public.financeiro_lancamentos
   for insert
-  to anon, authenticated
+  to authenticated
   with check (true);
 
 create policy "financeiro_lancamentos_update"
   on public.financeiro_lancamentos
   for update
-  to anon, authenticated
+  to authenticated
   using (true)
   with check (true);
 
 create policy "financeiro_lancamentos_delete"
   on public.financeiro_lancamentos
   for delete
-  to anon, authenticated
+  to authenticated
   using (true);

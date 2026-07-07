@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Home, Egg, Settings, Landmark, LogOut, Bell, ChartNoAxesCombined, Wrench, Moon, Sun } from 'lucide-react';
+import { Home, Egg, Settings, Landmark, LogOut, ChartNoAxesCombined, Wrench, Moon, Sun } from 'lucide-react';
 import { repo } from './repository';
 import { useAuth } from './contexts/AuthContext';
 import { AnimatedPage } from './components/GlacierUI';
@@ -28,6 +28,7 @@ import {
 import { ReportsView } from './components/ReportsView';
 import { ReportView } from './components/ReportView';
 import { FinanceiroView } from './components/FinanceiroViews';
+import NotificationBell from './components/NotificationBell';
 
 export default function App() {
   const { currentUser, logout, isAuthenticated, isLoading } = useAuth();
@@ -81,18 +82,15 @@ export default function App() {
   useEffect(() => {
     if (isAuthenticated) {
       if (repo.hasLocalData()) {
-        // Se já possui dados locais salvos no cache, não bloqueia a tela de carregamento (Stale-While-Revalidate)
         setDbLoading(false);
         repo.loadFromSupabase()
           .then(() => {
-            // Força atualização de re-renderização com dados atualizados do banco
             setDataVersion(prev => prev + 1);
           })
           .catch((err) => {
             console.error('Erro na revalidação de dados em segundo plano:', err);
           });
       } else {
-        // Primeira carga absoluta: exibe tela de carregamento
         setDbLoading(true);
         repo.loadFromSupabase()
           .then(() => {
@@ -104,6 +102,17 @@ export default function App() {
             setDbLoading(false);
           });
       }
+      
+      // Inicializar sincronização de notificações e polling
+      repo.loadNotificacoesFromSupabase().then(() => {
+        repo.syncNotificacoesFromData();
+      });
+      // Polling a cada 60s: recarrega do Supabase e gera novas notificações
+      repo.startNotificationPolling(60000, true);
+      
+      return () => {
+        repo.stopNotificationPolling();
+      };
     } else {
       setDbLoading(false);
     }
@@ -247,20 +256,6 @@ export default function App() {
               <span>Ciclos de Chocadas</span>
             </button>
 
-            <button
-              onClick={() => onNavigate('alertas')}
-              className={`w-full text-left py-3 px-3.5 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-3 ${selectedTab === 'alertas'
-                  ? 'bg-[var(--color-brand)] text-white shadow-md'
-                  : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-brand-soft)] hover:text-[var(--color-brand)]'
-                }`}
-            >
-              <div className="relative w-4 h-4 flex items-center justify-center">
-                <Bell className="w-4 h-4" />
-                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[var(--color-danger)] rounded-full"></div>
-              </div>
-              <span>Feed de Alertas</span>
-            </button>
-
             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (
               <button
                 onClick={() => onNavigate('financeiro')}
@@ -344,6 +339,8 @@ export default function App() {
               <h4 className="text-xs font-bold text-[var(--color-ink)] truncate leading-none">{currentUser?.username || 'Usuário'}</h4>
               <span className="text-[9px] text-[var(--color-muted)] font-bold uppercase tracking-wider block mt-0.5">{currentUser?.role || 'Acesso Limitado'}</span>
             </div>
+            {/* Sino de Notificações Desktop */}
+            <NotificationBell onNavigate={onNavigate} />
             {/* 🌗 Toggle Tema */}
             <button
               onClick={toggleTheme}
@@ -378,6 +375,9 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Sino de Notificações Mobile */}
+            <NotificationBell onNavigate={onNavigate} />
+
             {/* 🌗 Toggle Tema Mobile */}
             <button
               onClick={toggleTheme}
@@ -427,18 +427,6 @@ export default function App() {
             >
               <Egg className="w-5 h-5 mb-1" />
               <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Chocadas</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('alertas')}
-              className={`min-w-0 flex flex-col items-center justify-center rounded-xl px-1 py-1.5 transition-all duration-200 cursor-pointer relative ${selectedTab === 'alertas' ? 'text-[var(--color-brand)] font-bold bg-[var(--color-brand-soft)]' : 'text-[var(--color-muted)] hover:text-[var(--color-brand)]'
-                }`}
-            >
-              <div className="w-5 h-5 mb-1 flex items-center justify-center relative">
-                <Bell className="w-5 h-5" />
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[var(--color-danger)] rounded-full"></div>
-              </div>
-              <span className="max-w-full truncate text-[8px] min-[380px]:text-[9px] uppercase tracking-wider">Alertas</span>
             </button>
 
             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'OPERADOR') && (

@@ -1,6 +1,10 @@
   -- ============================================================
-  -- SCRIPT CORRIGIDO: Criar usuários no Supabase Auth
+  -- SCRIPT: Criar usuários no Supabase Auth
   -- Execute no: Supabase Dashboard → SQL Editor → New Query
+  --
+  -- ⚠️  SEGURANÇA: Este arquivo contém senhas!
+  --     Após executar, ROTACIONE todas as senhas no Supabase Dashboard.
+  --     Este arquivo NÃO deve ser versionado no Git.
   -- ============================================================
 
   CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -31,7 +35,7 @@
         raw_app_meta_data, raw_user_meta_data, is_super_admin
       ) VALUES (
         uid_carlos, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-        'carlos@laranjeiras.com', crypt('carlos123', gen_salt('bf')),
+        'carlos@laranjeiras.com', crypt('Car$2026!xK9mP', gen_salt('bf')),
         now_ts, now_ts, now_ts, '', '', '', '',
         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
       );
@@ -48,7 +52,7 @@
         raw_app_meta_data, raw_user_meta_data, is_super_admin
       ) VALUES (
         uid_viviane, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-        'viviane@laranjeiras.com', crypt('viviane123', gen_salt('bf')),
+        'viviane@laranjeiras.com', crypt('Viv#2026!qR7nL', gen_salt('bf')),
         now_ts, now_ts, now_ts, '', '', '', '',
         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
       );
@@ -65,7 +69,7 @@
         raw_app_meta_data, raw_user_meta_data, is_super_admin
       ) VALUES (
         uid_mellyna, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-        'mellyna@laranjeiras.com', crypt('mellyna123', gen_salt('bf')),
+        'mellyna@laranjeiras.com', crypt('Mel@2026!wT4jS', gen_salt('bf')),
         now_ts, now_ts, now_ts, '', '', '', '',
         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
       );
@@ -82,7 +86,7 @@
         raw_app_meta_data, raw_user_meta_data, is_super_admin
       ) VALUES (
         uid_lourdes, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-        'lourdes@laranjeiras.com', crypt('lourdes123', gen_salt('bf')),
+        'lourdes@laranjeiras.com', crypt('Lou!2026#hM2bF', gen_salt('bf')),
         now_ts, now_ts, now_ts, '', '', '', '',
         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
       );
@@ -99,7 +103,7 @@
         raw_app_meta_data, raw_user_meta_data, is_super_admin
       ) VALUES (
         uid_zecarlos, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-        'zecarlos@laranjeiras.com', crypt('zecarlos123', gen_salt('bf')),
+        'zecarlos@laranjeiras.com', crypt('Zec@2026!kN5pW', gen_salt('bf')),
         now_ts, now_ts, now_ts, '', '', '', '',
         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
       );
@@ -116,7 +120,7 @@
         raw_app_meta_data, raw_user_meta_data, is_super_admin
       ) VALUES (
         uid_admin, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-        'admin@laranjeiras.com', crypt('admin123', gen_salt('bf')),
+        'admin@laranjeiras.com', crypt('Adm!2026#xR8mK', gen_salt('bf')),
         now_ts, now_ts, now_ts, '', '', '', '',
         '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, false
       );

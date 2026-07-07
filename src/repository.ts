@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Chocadeira, Chocada, RegistroDiario, Ovoscopia, RegistroNascimento, Propriedade, Alerta, ChocadaStatus, Usuario, LancamentoFinanceiro } from './types';
+import { Chocadeira, Chocada, RegistroDiario, Ovoscopia, RegistroNascimento, Propriedade, Alerta, ChocadaStatus, Usuario, LancamentoFinanceiro, Notificacao, SeveridadeNotificacao } from './types';
 import { supabase } from './supabaseClient';
 
 export function addDays(dateStr: string, days: number): string {
@@ -72,6 +72,7 @@ type AppCache = {
   registros_nascimentos: RegistroNascimento[];
   usuarios: Usuario[];
   financeiro_lancamentos: LancamentoFinanceiro[];
+  notificacoes: Notificacao[];
 };
 
 class AppRepository {
@@ -84,13 +85,17 @@ class AppRepository {
     registros_nascimentos: [],
     usuarios: [],
     financeiro_lancamentos: [],
+    notificacoes: [],
   };
 
   private isLoaded = false;
   private financeiroAceitaFormaPagamento = true;
+  private notificationPollInterval: ReturnType<typeof setInterval> | null = null;
+  private notificationListeners: Set<() => void> = new Set();
 
   constructor() {
     this.loadLocalCache();
+    this.loadNotificacoesFromLocalCache();
   }
 
   // Verifica se há dados locais cacheados para renderização rápida
@@ -193,8 +198,10 @@ class AppRepository {
       registros_nascimentos: [],
       usuarios: [],
       financeiro_lancamentos: [],
+      notificacoes: [],
     };
     this.isLoaded = false;
+    this.stopNotificationPolling();
     try {
       window.localStorage.removeItem('laranjeiras_repo_cache');
     } catch (e) {
@@ -1041,6 +1048,317 @@ class AppRepository {
 
     // Ordenar alertas por data (mais recentes primeiro) e retornar
     return alerts.sort((a, b) => b.data.localeCompare(a.data));
+  }
+
+  // ==========================================
+  // NOTIFICAÇÕES (Sino) — Busca, Persistência
+  // ==========================================
+
+  /**
+   * Gera notificações a partir dos dados atuais (baseado em getAlertas())
+   * com classificação por severidade e metadados de navegação.
+   */
+  public async syncNotificacoesFromData(): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const todayStr = getCurrentDateString();
+    const chocadas = this.getChocadas();
+    const novasNotificacoes: Omit<Notificacao, 'id' | 'user_id' | 'criado_em' | 'atualizado_em'>[] = [];
+
+    chocadas.forEach(ch => {
+      // 🔴 Crítico: Registro atrasado (sem registro há mais de 48h)
+      if (ch.status === 'ATRASADA') {
+        const diff = daysBetween(ch.dataPrevistaNascimento, todayStr);
+        novasNotificacoes.push({
+          severidade: 'CRITICO',
+          tipo_alerta: 'registro_atrasado',
+          titulo: `Lote atrasado: ${ch.nome}`,
+          descricao: `Lote atrasado em D+${diff} dia(s). Realize verificação sanitária imediata.`,
+          entidade_relacionada: ch.nome,
+          link_destino: 'chocada_detalhes',
+          chocada_id: ch.id,
+          chocadeira_id: ch.chocadeiraId,
+          timestamp_completo: new Date().toISOString(),
+          lido: false,
+        });
+      }
+
+      // 🟠 Atenção: Registro pendente hoje
+      const registrosHoje = this.getRegistrosDiarios(ch.id).filter(r => r.data === todayStr);
+      if (registrosHoje.length === 0 && (ch.status === 'EM_ANDAMENTO' || ch.status === 'PROXIMA')) {
+        novasNotificacoes.push({
+          severidade: 'ATENCAO',
+          tipo_alerta: 'registro_pendente',
+          titulo: `Pendente: Registro diário — ${ch.nome}`,
+          descricao: `Inspeção de hoje ainda não foi realizada. Lembre-se de verificar temperatura, umidade e virar os ovos.`,
+          entidade_relacionada: ch.nome,
+          link_destino: 'chocada_detalhes',
+          chocada_id: ch.id,
+          chocadeira_id: ch.chocadeiraId,
+          timestamp_completo: new Date().toISOString(),
+          lido: false,
+        });
+      }
+
+      // 🟠 Atenção: Nascimento próximo (≤3 dias)
+      if (ch.status === 'PROXIMA') {
+        const daysLeft = daysBetween(todayStr, ch.dataPrevistaNascimento);
+        novasNotificacoes.push({
+          severidade: 'ATENCAO',
+          tipo_alerta: 'nascimento_proximo',
+          titulo: `Nascimento próximo: ${ch.nome}`,
+          descricao: `Faltam ${daysLeft} dia(s) para o nascimento. Eleve a umidade para ~70% e prepare o ambiente.`,
+          entidade_relacionada: ch.nome,
+          link_destino: 'chocada_detalhes',
+          chocada_id: ch.id,
+          chocadeira_id: ch.chocadeiraId,
+          timestamp_completo: new Date().toISOString(),
+          lido: false,
+        });
+      }
+
+      // 🔵 Informativo: Novo lote cadastrado (últimos 3 dias)
+      const diasDesdeCriacao = daysBetween(ch.criadoEm || ch.dataInicio, todayStr);
+      if (diasDesdeCriacao >= 0 && diasDesdeCriacao <= 3) {
+        novasNotificacoes.push({
+          severidade: 'INFORMATIVO',
+          tipo_alerta: 'novo_lote',
+          titulo: `Novo lote: ${ch.nome}`,
+          descricao: `Lote iniciado com ${ch.quantidadeOvosInicial} ovos de ${ch.tipoOvo}. Previsão de nascimento: ${this.formatReadableDate(ch.dataPrevistaNascimento)}.`,
+          entidade_relacionada: ch.nome,
+          link_destino: 'chocada_detalhes',
+          chocada_id: ch.id,
+          chocadeira_id: ch.chocadeiraId,
+          timestamp_completo: new Date(ch.criadoEm || ch.dataInicio + 'T12:00:00').toISOString(),
+          lido: false,
+        });
+      }
+    });
+
+    // 🔵 Informativo: Pintinhos nascidos (últimos 3 dias)
+    const nascimentos = this.getRegistrosNascimento();
+    nascimentos.forEach(nasc => {
+      const diasDesdeNascimento = daysBetween(nasc.dataNascimentoReal, todayStr);
+      if (diasDesdeNascimento >= 0 && diasDesdeNascimento <= 3) {
+        const chocadaAssoc = this.getChocadaById(nasc.chocadaId);
+        novasNotificacoes.push({
+          severidade: 'INFORMATIVO',
+          tipo_alerta: 'pintinhos_nascidos',
+          titulo: `Pintinhos nasceram! ${chocadaAssoc?.nome || ''}`,
+          descricao: `${nasc.pintinhosNascidos} pintinhos nasceram com sucesso.`,
+          entidade_relacionada: chocadaAssoc?.nome,
+          link_destino: 'chocada_detalhes',
+          chocada_id: nasc.chocadaId,
+          chocadeira_id: chocadaAssoc?.chocadeiraId,
+          timestamp_completo: new Date(nasc.dataNascimentoReal + 'T12:00:00').toISOString(),
+          lido: false,
+        });
+      }
+    });
+
+    // 🔵 Informativo: Vendas recentes (últimos 3 dias)
+    const vendas = this.getLancamentos().filter(l => l.tipo === 'RECEITA' && l.categoria === 'Venda de Pintinhos');
+    vendas.forEach(v => {
+      const diasDesdeVenda = daysBetween(v.data, todayStr);
+      if (diasDesdeVenda >= 0 && diasDesdeVenda <= 3) {
+        novasNotificacoes.push({
+          severidade: 'INFORMATIVO',
+          tipo_alerta: 'venda_realizada',
+          titulo: 'Venda realizada!',
+          descricao: `${v.quantidadePintinhos || 0} pintinhos vendidos — R$ ${v.valor.toFixed(2)}.`,
+          link_destino: 'financeiro',
+          timestamp_completo: new Date(v.data + 'T12:00:00').toISOString(),
+          lido: false,
+        });
+      }
+    });
+
+    // Buscar notificações existentes no Supabase para preservar estado de leitura
+    const { data: notificacoesExistentes } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('user_id', userId);
+
+    // Mapa de fingerprint → notificação existente
+    const mapaExistente = new Map<string, Notificacao>();
+    (notificacoesExistentes || []).forEach(n => {
+      const fingerprint = `${n.tipo_alerta}|${n.chocada_id || ''}|${n.chocadeira_id || ''}`;
+      mapaExistente.set(fingerprint, n);
+    });
+
+    // Inserir apenas notificações que ainda não existem
+    for (const nova of novasNotificacoes) {
+      const fingerprint = `${nova.tipo_alerta}|${nova.chocada_id || ''}|${nova.chocadeira_id || ''}`;
+      if (!mapaExistente.has(fingerprint)) {
+        const payload = {
+          ...nova,
+          user_id: userId,
+        };
+        const { error } = await supabase.from('notificacoes').insert(payload);
+        if (error) {
+          console.error('Erro ao salvar notificação:', error);
+        }
+      }
+    }
+
+    // Recarregar cache de notificações
+    await this.loadNotificacoesFromSupabase();
+  }
+
+  /**
+   * Carrega notificações do Supabase para o cache local.
+   */
+  public async loadNotificacoesFromSupabase(): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const { data } = await supabase
+      .from('notificacoes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('timestamp_completo', { ascending: false });
+
+    if (data) {
+      this.cache.notificacoes = data;
+      this.saveNotificacoesCache();
+      this.notifyListeners();
+    }
+  }
+
+  /**
+   * Retorna notificações do cache local.
+   */
+  public getNotificacoes(): Notificacao[] {
+    return this.cache.notificacoes;
+  }
+
+  /**
+   * Marca uma notificação como lida/não lida.
+   */
+  public async marcarNotificacaoLida(id: string, lido: boolean = true): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const { error } = await supabase
+      .from('notificacoes')
+      .update({ lido })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Erro ao marcar notificação como lida:', error);
+      return;
+    }
+
+    // Atualizar cache local
+    const idx = this.cache.notificacoes.findIndex(n => n.id === id);
+    if (idx >= 0) {
+      this.cache.notificacoes[idx].lido = lido;
+      this.saveNotificacoesCache();
+      this.notifyListeners();
+    }
+  }
+
+  /**
+   * Marca todas as notificações do usuário como lidas.
+   */
+  public async marcarTodasNotificacoesLidas(): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const { error } = await supabase
+      .from('notificacoes')
+      .update({ lido: true })
+      .eq('user_id', userId)
+      .eq('lido', false);
+
+    if (error) {
+      console.error('Erro ao marcar todas como lidas:', error);
+      return;
+    }
+
+    this.cache.notificacoes.forEach(n => { n.lido = true; });
+    this.saveNotificacoesCache();
+    this.notifyListeners();
+  }
+
+  /**
+   * Contagem de não lidas, separadas por severidade.
+   */
+  public getContagemNotificacoes(): { critico: number; atencao: number; informativo: number; totalAcao: number } {
+    const naoLidas = this.cache.notificacoes.filter(n => !n.lido);
+    const critico = naoLidas.filter(n => n.severidade === 'CRITICO').length;
+    const atencao = naoLidas.filter(n => n.severidade === 'ATENCAO').length;
+    const informativo = naoLidas.filter(n => n.severidade === 'INFORMATIVO').length;
+    return {
+      critico,
+      atencao,
+      informativo,
+      totalAcao: critico + atencao, // Apenas Crítico + Atenção contam no badge
+    };
+  }
+
+  /**
+   * Inicia polling periódico de notificações.
+   */
+  public startNotificationPolling(intervalMs: number = 60000, autoSync: boolean = false): void {
+    this.stopNotificationPolling();
+    this.notificationPollInterval = setInterval(async () => {
+      if (autoSync) {
+        // Gera novas notificações com base nos dados atuais e recarrega do Supabase
+        await this.syncNotificacoesFromData();
+      } else {
+        await this.loadNotificacoesFromSupabase();
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Para o polling de notificações.
+   */
+  public stopNotificationPolling(): void {
+    if (this.notificationPollInterval) {
+      clearInterval(this.notificationPollInterval);
+      this.notificationPollInterval = null;
+    }
+  }
+
+  /**
+   * Registra um listener para mudanças nas notificações.
+   */
+  public onNotificacoesChange(listener: () => void): () => void {
+    this.notificationListeners.add(listener);
+    return () => {
+      this.notificationListeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    this.notificationListeners.forEach(fn => fn());
+  }
+
+  private saveNotificacoesCache(): void {
+    try {
+      window.localStorage.setItem('laranjeiras_notificacoes_cache', JSON.stringify(this.cache.notificacoes));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  private loadNotificacoesFromLocalCache(): void {
+    try {
+      const cached = window.localStorage.getItem('laranjeiras_notificacoes_cache');
+      if (cached) {
+        this.cache.notificacoes = JSON.parse(cached);
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   public formatReadableDate(dateStr: string): string {

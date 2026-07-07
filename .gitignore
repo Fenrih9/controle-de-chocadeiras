@@ -8,3 +8,6 @@ coverage/
 !.env.example
 
 .vercel
+
+# Arquivos com senhas/credenciais
+criar_usuarios_auth.sql
