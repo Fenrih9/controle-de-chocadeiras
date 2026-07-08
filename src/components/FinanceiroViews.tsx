@@ -21,7 +21,8 @@ import {
   Edit3,
   Calculator,
   ArrowDownRight,
-  ArrowUpRight
+  ArrowUpRight,
+  ArrowRightLeft
 } from 'lucide-react';
 import { repo, getCurrentDateString } from '../repository';
 import { LancamentoFinanceiro, Chocadeira, Usuario } from '../types';
@@ -114,6 +115,18 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   // Erros no formulário
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
+
+  // ============================================
+  // Transferência entre contas (dinheiro ⇆ banco)
+  // ============================================
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [transferDirection, setTransferDirection] = useState<'paraConta' | 'paraDinheiro'>('paraConta');
+  const [transferValor, setTransferValor] = useState<string>('');
+  const [transferData, setTransferData] = useState<string>(getCurrentDateString());
+  const [transferDescricao, setTransferDescricao] = useState<string>('');
+  const [transferError, setTransferError] = useState<string>('');
+  const [transferSuccess, setTransferSuccess] = useState<string>('');
+  const [transferLoading, setTransferLoading] = useState(false);
 
   // ============================================
   // Verificar se a categoria tem controle de estoque
@@ -249,8 +262,111 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   }, 0);
 
   // Categorias disponíveis por tipo
-  const categoriasReceita = ['Venda de Pintinhos', 'Venda de Ovos', 'Subsídio/Vendas Gerais', 'Outros'];
-  const categoriasDespesa = ['Compra de Ração', 'Medicamentos/Sanitários', 'Manutenção de Chocadeiras', 'Energia Elétrica', 'Outros'];
+  const categoriasReceita = ['Venda de Pintinhos', 'Venda de Ovos', 'Subsídio/Vendas Gerais', 'Transferência entre contas', 'Outros'];
+  const categoriasDespesa = ['Compra de Ração', 'Medicamentos/Sanitários', 'Manutenção de Chocadeiras', 'Energia Elétrica', 'Transferência entre contas', 'Outros'];
+
+  // ============================================
+  // Abrir modal de transferência entre contas
+  // ============================================
+  const handleOpenTransferModal = () => {
+    setTransferDirection('paraConta');
+    setTransferValor('');
+    setTransferData(getCurrentDateString());
+    setTransferDescricao('');
+    setTransferError('');
+    setTransferSuccess('');
+    setTransferLoading(false);
+    setIsTransferModalOpen(true);
+  };
+
+  // ============================================
+  // Executar transferência entre contas
+  // ============================================
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTransferError('');
+    setTransferSuccess('');
+
+    const valor = parseFloat(transferValor);
+    if (!valor || isNaN(valor) || valor <= 0) {
+      setTransferError('Por favor, insira um valor válido maior que zero.');
+      return;
+    }
+
+    if (!transferData) {
+      setTransferError('A data da transferência é obrigatória.');
+      return;
+    }
+
+    // Validar saldo disponível na origem
+    if (transferDirection === 'paraConta' && valor > saldoDinheiro) {
+      setTransferError(`Saldo em dinheiro insuficiente. Disponível: R$ ${saldoDinheiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+      return;
+    }
+    if (transferDirection === 'paraDinheiro' && valor > saldoBanco) {
+      setTransferError(`Saldo em conta insuficiente. Disponível: R$ ${saldoBanco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+      return;
+    }
+
+    setTransferLoading(true);
+
+    // Criar descrição padronizada
+    const desc = transferDescricao.trim()
+      ? `Transferência: ${transferDescricao.trim()}`
+      : `Transferência entre contas`;
+
+    const timestamp = Date.now();
+
+    // Lançamento 1: DESPESA na origem (dinheiro ou banco)
+    const saida: LancamentoFinanceiro = {
+      id: `transf-saida-${timestamp}`,
+      tipo: 'DESPESA',
+      formaPagamento: transferDirection === 'paraConta' ? 'DINHEIRO' : 'BANCO',
+      valor,
+      descricao: `${desc} (saída)`,
+      data: transferData,
+      categoria: 'Transferência entre contas',
+      excluido: false,
+      criadoEm: '',
+      atualizadoEm: '',
+    };
+
+    // Lançamento 2: RECEITA no destino (banco ou dinheiro)
+    const entrada: LancamentoFinanceiro = {
+      id: `transf-entrada-${timestamp}`,
+      tipo: 'RECEITA',
+      formaPagamento: transferDirection === 'paraConta' ? 'BANCO' : 'DINHEIRO',
+      valor,
+      descricao: `${desc} (entrada)`,
+      data: transferData,
+      categoria: 'Transferência entre contas',
+      excluido: false,
+      criadoEm: '',
+      atualizadoEm: '',
+    };
+
+    const resSaida = await repo.saveLancamento(saida);
+    if (!resSaida.success) {
+      setTransferError(`Erro ao registrar saída: ${resSaida.message}`);
+      setTransferLoading(false);
+      return;
+    }
+
+    const resEntrada = await repo.saveLancamento(entrada);
+    if (!resEntrada.success) {
+      setTransferError(`Erro ao registrar entrada: ${resEntrada.message}`);
+      setTransferLoading(false);
+      return;
+    }
+
+    setTransferSuccess(`Transferência de R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} realizada com sucesso!`);
+    carregarDados();
+    setTransferLoading(false);
+
+    setTimeout(() => {
+      setIsTransferModalOpen(false);
+    }, 1500);
+  };
 
   // Abrir modal para novo lançamento
   const handleOpenNovo = () => {
@@ -389,12 +505,20 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
         </div>
 
         {currentUser?.role !== 'LEITOR' && (
-          <button
-            onClick={handleOpenNovo}
-            className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--color-brand)] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-brand-hover)] cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Novo Lançamento
-          </button>
+          <div className="flex flex-col min-[460px]:flex-row gap-2 w-full min-[460px]:w-auto">
+            <button
+              onClick={handleOpenTransferModal}
+              className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 px-4 py-2.5 text-xs font-bold text-[var(--color-accent)] shadow-sm transition hover:bg-[var(--color-accent)]/20 cursor-pointer"
+            >
+              <ArrowRightLeft className="w-4 h-4" /> Transferir
+            </button>
+            <button
+              onClick={handleOpenNovo}
+              className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--color-brand)] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-brand-hover)] cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Novo Lançamento
+            </button>
+          </div>
         )}
       </header>
 

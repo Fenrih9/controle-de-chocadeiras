@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Home, Egg, Settings, Landmark, LogOut, ChartNoAxesCombined, Wrench, Moon, Sun } from 'lucide-react';
+import { Home, Egg, Settings, Landmark, LogOut, ChartNoAxesCombined, Wrench, Moon, Sun, Monitor } from 'lucide-react';
 import { repo } from './repository';
 import { useAuth } from './contexts/AuthContext';
 import { AnimatedPage } from './components/GlacierUI';
@@ -38,31 +38,56 @@ export default function App() {
   const [dbResetCounter, setDbResetCounter] = useState(0);
   const [dbLoading, setDbLoading] = useState(true);
   
-  // 🌗 Dark Mode
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // 🌗 Tema: Claro | Escuro | Automático
+  type ThemeMode = 'light' | 'dark' | 'auto';
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
-  const toggleTheme = () => {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('chocadeiras-theme', next);
+  const getEffectiveTheme = (mode: ThemeMode): 'light' | 'dark' => {
+    if (mode === 'auto') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return mode;
   };
 
+  const changeThemeMode = (mode: ThemeMode) => {
+    setThemeMode(mode);
+    const effective = getEffectiveTheme(mode);
+    setResolvedTheme(effective);
+    document.documentElement.setAttribute('data-theme', effective);
+    localStorage.setItem('chocadeiras-theme', mode);
+    setThemeMenuOpen(false);
+  };
+
+  // Inicialização e listener para modo automático
   useEffect(() => {
-    // Disable transitions on first load to avoid flash
     document.documentElement.classList.add('no-transition');
-    const saved = localStorage.getItem('chocadeiras-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = saved || (prefersDark ? 'dark' : 'light');
-    setTheme(initial as 'light' | 'dark');
-    document.documentElement.setAttribute('data-theme', initial);
-    // Re-enable transitions after a small delay
+    const saved = localStorage.getItem('chocadeiras-theme') as ThemeMode | null;
+    const initial = saved || 'light';
+    setThemeMode(initial);
+    const effective = getEffectiveTheme(initial);
+    setResolvedTheme(effective);
+    document.documentElement.setAttribute('data-theme', effective);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         document.documentElement.classList.remove('no-transition');
       });
     });
   }, []);
+
+  // Escuta mudanças no tema do sistema quando em modo automático
+  useEffect(() => {
+    if (themeMode !== 'auto') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => {
+      const effective = e.matches ? 'dark' : 'light';
+      setResolvedTheme(effective);
+      document.documentElement.setAttribute('data-theme', effective);
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [themeMode]);
 
   const [dataVersion, setDataVersion] = useState(0);
 
@@ -341,14 +366,51 @@ export default function App() {
             </div>
             {/* Sino de Notificações Desktop */}
             <NotificationBell onNavigate={onNavigate} />
-            {/* 🌗 Toggle Tema */}
-            <button
-              onClick={toggleTheme}
-              title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
-              className="p-2 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-xl text-[var(--color-muted)] hover:text-[var(--color-brand)] transition-all cursor-pointer shrink-0"
-            >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+            {/* 🌗 Seletor de Tema Desktop */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                title={themeMode === 'light' ? 'Tema: Claro' : themeMode === 'dark' ? 'Tema: Escuro' : 'Tema: Automático'}
+                className="p-2 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-xl text-[var(--color-muted)] hover:text-[var(--color-brand)] transition-all cursor-pointer"
+              >
+                {themeMode === 'light' ? <Sun className="w-4 h-4" /> :
+                 themeMode === 'dark' ? <Moon className="w-4 h-4" /> :
+                 <Monitor className="w-4 h-4" />}
+              </button>
+
+              {themeMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
+                  <div className="absolute bottom-full right-0 mb-2 z-50 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl shadow-[var(--shadow-elevated)] p-1.5 min-w-[170px]">
+                    {(['light', 'dark', 'auto'] as ThemeMode[]).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => changeThemeMode(mode)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          themeMode === mode
+                            ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]'
+                        }`}
+                      >
+                        {mode === 'light' ? <Sun className="w-3.5 h-3.5" /> :
+                         mode === 'dark' ? <Moon className="w-3.5 h-3.5" /> :
+                         <Monitor className="w-3.5 h-3.5" />}
+                        <span>
+                          {mode === 'light' ? 'Claro' :
+                           mode === 'dark' ? 'Escuro' :
+                           'Automático'}
+                        </span>
+                        {mode === 'auto' && (
+                          <span className="text-[9px] text-[var(--color-muted)] ml-auto">
+                            {resolvedTheme === 'dark' ? '🌙' : '☀️'}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <button
             onClick={() => {
@@ -378,14 +440,51 @@ export default function App() {
             {/* Sino de Notificações Mobile */}
             <NotificationBell onNavigate={onNavigate} />
 
-            {/* 🌗 Toggle Tema Mobile */}
-            <button
-              onClick={toggleTheme}
-              title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
-              className="p-1.5 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-lg text-[var(--color-muted)] hover:text-[var(--color-brand)] transition-all cursor-pointer"
-            >
-              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            </button>
+            {/* 🌗 Seletor de Tema Mobile */}
+            <div className="relative">
+              <button
+                onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                title={themeMode === 'light' ? 'Tema: Claro' : themeMode === 'dark' ? 'Tema: Escuro' : 'Tema: Automático'}
+                className="p-1.5 bg-[var(--color-surface-hover)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/30 rounded-lg text-[var(--color-muted)] hover:text-[var(--color-brand)] transition-all cursor-pointer"
+              >
+                {themeMode === 'light' ? <Sun className="w-4 h-4" /> :
+                 themeMode === 'dark' ? <Moon className="w-4 h-4" /> :
+                 <Monitor className="w-4 h-4" />}
+              </button>
+
+              {themeMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
+                  <div className="absolute top-full right-0 mt-2 z-50 bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl shadow-[var(--shadow-elevated)] p-1.5 min-w-[170px]">
+                    {(['light', 'dark', 'auto'] as ThemeMode[]).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => changeThemeMode(mode)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          themeMode === mode
+                            ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand)]'
+                            : 'text-[var(--color-ink-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]'
+                        }`}
+                      >
+                        {mode === 'light' ? <Sun className="w-3.5 h-3.5" /> :
+                         mode === 'dark' ? <Moon className="w-3.5 h-3.5" /> :
+                         <Monitor className="w-3.5 h-3.5" />}
+                        <span>
+                          {mode === 'light' ? 'Claro' :
+                           mode === 'dark' ? 'Escuro' :
+                           'Automático'}
+                        </span>
+                        {mode === 'auto' && (
+                          <span className="text-[9px] text-[var(--color-muted)] ml-auto">
+                            {resolvedTheme === 'dark' ? '🌙' : '☀️'}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             <button
               onClick={() => {
