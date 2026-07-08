@@ -8,7 +8,7 @@
 
 /* ============================================
    🎨 Design System — Laranjeiras
-   Azul Marinho + Branco | Moderno & Vibrante
+   Paleta Terrosa | Natural & Aconchegante
    ============================================ */
 
 html {
@@ -36,107 +36,117 @@ body {
 }
 
 /* ============================================
-   ☀️ Light Mode — Padrão Moderno Vibrante
+   ☀️ Light Mode — Paleta Terrosa Natural
    ============================================ */
 :root {
   color-scheme: light;
 
-  /* 🖤 Backgrounds — Clean whites & cool grays */
-  --color-bg: #f0f4f8;
-  --color-bg-warm: #e8eef5;
+  /* 🌾 Backgrounds — Creme, areia & tons naturais */
+  --color-bg: #fefae0;
+  --color-bg-warm: #faedcd;
   --color-surface: #ffffff;
-  --color-surface-hover: #f5f8fb;
-  --color-surface-soft: #e8eef5;
-  --color-surface-warm: #dde5ed;
+  --color-surface-hover: #fefae0;
+  --color-surface-soft: #e9edc9;
+  --color-surface-warm: #faedcd;
 
-  /* 📝 Text — Sharp contrast */
-  --color-ink: #0f172a;
-  --color-ink-secondary: #475569;
-  --color-muted: #64748b;
-  --color-muted-light: #94a3b8;
+  /* 📝 Text — Marrom escuro suave para leitura confortável */
+  --color-ink: #3d3929;
+  --color-ink-secondary: #6b6454;
+  --color-muted: #8f8875;
+  --color-muted-light: #b5ae98;
 
-  /* 🔵 Brand / Primary — Navy Blue */
-  --color-brand: #1e3a5f;
-  --color-brand-hover: #162d4a;
-  --color-brand-soft: rgba(30, 58, 95, 0.08);
-  --color-brand-soft-hover: rgba(30, 58, 95, 0.15);
+  /* 🏺 Brand / Primary — Terracota (da paleta: #d4a373) */
+  --color-brand: #d4a373;
+  --color-brand-hover: #c4935f;
+  --color-brand-soft: rgba(212, 163, 115, 0.12);
+  --color-brand-soft-hover: rgba(212, 163, 115, 0.22);
 
-  /* 🔶 Accent — Electric Teal */
-  --color-accent: #0ea5e9;
-  --color-accent-soft: rgba(14, 165, 233, 0.10);
+  /* 🌿 Accent — Sálvia suave (da paleta: #ccd5ae) */
+  --color-accent: #ccd5ae;
+  --color-accent-soft: rgba(204, 213, 174, 0.15);
 
-  /* 🔴 Danger — Vibrant Red */
-  --color-danger: #dc2626;
-  --color-danger-soft: rgba(220, 38, 38, 0.08);
+  /* 🔴 Danger — Vermelho terroso suave */
+  --color-danger: #c46a6a;
+  --color-danger-soft: rgba(196, 106, 106, 0.08);
 
-  /* 🟢 Success — Fresh Green */
-  --color-success: #16a34a;
-  --color-success-soft: rgba(22, 163, 74, 0.08);
+  /* 🟢 Success — Verde natural */
+  --color-success: #7fa86a;
+  --color-success-soft: rgba(127, 168, 106, 0.10);
 
-  /* 🔵 Info — Sky Blue */
-  --color-info: #0284c7;
-  --color-info-soft: rgba(2, 132, 199, 0.08);
+  /* 🔵 Info — Azul acinzentado suave */
+  --color-info: #8fa8b8;
+  --color-info-soft: rgba(143, 168, 184, 0.10);
 
-  /* 🟡 Warning — Amber */
-  --color-warning: #d97706;
-  --color-warning-soft: rgba(217, 119, 6, 0.08);
+  /* 🟡 Warning — Mostarda */
+  --color-warning: #c9a05a;
+  --color-warning-soft: rgba(201, 160, 90, 0.10);
 
-  /* Borders */
-  --color-line: rgba(15, 23, 42, 0.08);
-  --color-line-strong: rgba(15, 23, 42, 0.15);
+  /* Borders — Baseado no tom da tinta */
+  --color-line: rgba(61, 57, 41, 0.08);
+  --color-line-strong: rgba(61, 57, 41, 0.15);
 
-  /* Shadows — Modern elevated feel */
-  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-card-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
-  --shadow-elevated: 0 20px 40px -10px rgba(15, 23, 42, 0.12), 0 8px 12px -6px rgba(15, 23, 42, 0.06);
-  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.15);
+  /* Shadows — Sombras quentes e naturais */
+  --shadow-card: 0 1px 3px rgba(61, 57, 41, 0.04), 0 1px 2px rgba(61, 57, 41, 0.06);
+  --shadow-card-hover: 0 10px 25px -5px rgba(61, 57, 41, 0.08), 0 4px 6px -4px rgba(61, 57, 41, 0.05);
+  --shadow-elevated: 0 20px 40px -10px rgba(61, 57, 41, 0.12), 0 8px 12px -6px rgba(61, 57, 41, 0.06);
+  --shadow-glow: 0 0 20px rgba(212, 163, 115, 0.20);
 }
 
 /* ============================================
-   🌙 Dark Mode — Premium Dark
+   🌙 Dark Mode — Navy Profissional
    ============================================ */
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-bg: #0b1120;
-  --color-bg-warm: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-hover: #334155;
-  --color-surface-soft: #1e293b;
-  --color-surface-warm: #162032;
+  /* 🖤 Backgrounds — Navy escuro */
+  --color-bg: #0b2545;
+  --color-bg-warm: #0d2a4e;
+  --color-surface: #13315c;
+  --color-surface-hover: #183d6e;
+  --color-surface-soft: #13315c;
+  --color-surface-warm: #0d2a4e;
 
-  --color-ink: #f1f5f9;
-  --color-ink-secondary: #cbd5e1;
-  --color-muted: #94a3b8;
-  --color-muted-light: #64748b;
+  /* 📝 Text — Off-white + azul aço */
+  --color-ink: #eef4ed;
+  --color-ink-secondary: #8da9c4;
+  --color-muted: #6b8ca8;
+  --color-muted-light: #4a6b85;
 
-  --color-brand: #3b82f6;
-  --color-brand-hover: #60a5fa;
-  --color-brand-soft: rgba(59, 130, 246, 0.15);
-  --color-brand-soft-hover: rgba(59, 130, 246, 0.25);
+  /* 🔵 Brand / Primary — Azul aço (da paleta: #8da9c4) */
+  --color-brand: #8da9c4;
+  --color-brand-hover: #7a9ab5;
+  --color-brand-soft: rgba(141, 169, 196, 0.15);
+  --color-brand-soft-hover: rgba(141, 169, 196, 0.25);
 
-  --color-accent: #38bdf8;
-  --color-accent-soft: rgba(56, 189, 248, 0.15);
+  /* ✨ Accent — Azul aço claro */
+  --color-accent: #a0bdd8;
+  --color-accent-soft: rgba(160, 189, 216, 0.12);
 
+  /* 🔴 Danger — Vermelho */
   --color-danger: #f87171;
   --color-danger-soft: rgba(248, 113, 113, 0.12);
 
+  /* 🟢 Success — Verde */
   --color-success: #4ade80;
   --color-success-soft: rgba(74, 222, 128, 0.12);
 
-  --color-info: #38bdf8;
-  --color-info-soft: rgba(56, 189, 248, 0.12);
+  /* 🔵 Info — Azul */
+  --color-info: #60a5fa;
+  --color-info-soft: rgba(96, 165, 250, 0.12);
 
-  --color-warning: #fbbf24;
-  --color-warning-soft: rgba(251, 191, 36, 0.12);
+  /* 🟡 Warning — Dourado suave */
+  --color-warning: #d4b86a;
+  --color-warning-soft: rgba(212, 184, 106, 0.12);
 
-  --color-line: rgba(241, 245, 249, 0.06);
-  --color-line-strong: rgba(241, 245, 249, 0.12);
+  /* Borders */
+  --color-line: rgba(238, 244, 237, 0.06);
+  --color-line-strong: rgba(238, 244, 237, 0.12);
 
+  /* Shadows */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.20);
   --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.50), 0 4px 6px rgba(0, 0, 0, 0.30);
-  --shadow-elevated: 0 20px 40px -10px rgba(0, 0, 0, 0.60), 0 8px 12px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.20);
+  --shadow-elevated: 0 20px 40px -10px rgba(0, 0, 0, 0.60), 0 8px 12px rgba(0, 0, 0, 0.40);
+  --shadow-glow: 0 0 25px rgba(141, 169, 196, 0.20);
 }
 
 /* 📐 Base reset */
@@ -229,8 +239,8 @@ button {
 
 /* ✨ Vibrant micro-interactions */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.3); }
-  50% { box-shadow: 0 0 0 8px rgba(14, 165, 233, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 163, 115, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(212, 163, 115, 0); }
 }
 
 @keyframes slide-up {

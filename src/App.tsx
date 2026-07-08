@@ -3,32 +3,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Home, Egg, Settings, Landmark, LogOut, ChartNoAxesCombined, Wrench, Moon, Sun, Monitor } from 'lucide-react';
 import { repo } from './repository';
 import { useAuth } from './contexts/AuthContext';
 import { AnimatedPage } from './components/GlacierUI';
 
-
-// Layout Views
+// 🚀 Views essenciais — carregadas sempre (primeira tela)
 import { LoginView, DashboardView } from './components/DashboardView';
-import { ChocadasListaView, ChocadaDetalhesView, ChocadaNovaView } from './components/ChocadasViews';
-import { RegistroDiarioNovoView, OvoscopiaNovaView, RegistroNascimentoView } from './components/LogsViews';
-import {
-  ConfiguracoesView,
-  ChocadeirasListaView,
-  ChocadeiraNovaView,
-  PropriedadeEditarView,
-  UsuariosListaView,
-  UsuarioNovoView,
-  AjusteEstoqueView
-} from './components/SettingsViews';
-import AlertasHistoryView from './components/AlertasHistoryView';
-import { ReportsView } from './components/ReportsView';
-import { ReportView } from './components/ReportView';
-import { FinanceiroView } from './components/FinanceiroViews';
 import NotificationBell from './components/NotificationBell';
+
+// ⚡ Views secundárias — carregadas sob demanda (code splitting)
+const ChocadasListaView = React.lazy(() => import('./components/ChocadasViews').then(m => ({ default: m.ChocadasListaView })));
+const ChocadaDetalhesView = React.lazy(() => import('./components/ChocadasViews').then(m => ({ default: m.ChocadaDetalhesView })));
+const ChocadaNovaView = React.lazy(() => import('./components/ChocadasViews').then(m => ({ default: m.ChocadaNovaView })));
+
+const RegistroDiarioNovoView = React.lazy(() => import('./components/LogsViews').then(m => ({ default: m.RegistroDiarioNovoView })));
+const OvoscopiaNovaView = React.lazy(() => import('./components/LogsViews').then(m => ({ default: m.OvoscopiaNovaView })));
+const RegistroNascimentoView = React.lazy(() => import('./components/LogsViews').then(m => ({ default: m.RegistroNascimentoView })));
+
+const ConfiguracoesView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.ConfiguracoesView })));
+const ChocadeirasListaView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.ChocadeirasListaView })));
+const ChocadeiraNovaView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.ChocadeiraNovaView })));
+const PropriedadeEditarView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.PropriedadeEditarView })));
+const UsuariosListaView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.UsuariosListaView })));
+const UsuarioNovoView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.UsuarioNovoView })));
+const AjusteEstoqueView = React.lazy(() => import('./components/SettingsViews').then(m => ({ default: m.AjusteEstoqueView })));
+
+const AlertasHistoryView = React.lazy(() => import('./components/AlertasHistoryView'));
+const ReportsView = React.lazy(() => import('./components/ReportsView').then(m => ({ default: m.ReportsView })));
+const ReportView = React.lazy(() => import('./components/ReportView').then(m => ({ default: m.ReportView })));
+const FinanceiroView = React.lazy(() => import('./components/FinanceiroViews').then(m => ({ default: m.FinanceiroView })));
 
 export default function App() {
   const { currentUser, logout, isAuthenticated, isLoading } = useAuth();
@@ -91,10 +97,10 @@ export default function App() {
 
   const [dataVersion, setDataVersion] = useState(0);
 
-  const onNavigate = (screenName: string, params: any = null) => {
+  const onNavigate = useCallback((screenName: string, params: any = null) => {
     setCurrentScreen(screenName);
     setScreenParams(params);
-  };
+  }, []);
 
   const handleResetDatabase = () => {
     // Operações em LocalStorage abandonadas pelo uso do Supabase
@@ -232,7 +238,9 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-ink)] flex flex-col justify-between relative overflow-hidden">
-        {renderScreenContent()}
+        <Suspense fallback={null}>
+          {renderScreenContent()}
+        </Suspense>
       </div>
     );
   }
@@ -357,6 +365,7 @@ export default function App() {
               <img
                 alt="Perfil"
                 className="w-full h-full object-cover"
+                loading="lazy"
                 src="https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=200"
               />
             </div>
@@ -502,7 +511,16 @@ export default function App() {
         <main className="flex-1 flex flex-col min-h-0 bg-[var(--color-bg)] relative overflow-hidden">
           <AnimatePresence mode="wait">
             <AnimatedPage screenKey={currentScreen}>
-              {renderScreenContent()}
+              <Suspense fallback={
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-3 py-20">
+                    <div className="w-8 h-8 border-2 border-[var(--color-brand)]/30 border-t-[var(--color-brand)] rounded-full animate-spin"></div>
+                    <span className="text-xs text-[var(--color-muted)] font-semibold uppercase tracking-wider">Carregando...</span>
+                  </div>
+                </div>
+              }>
+                {renderScreenContent()}
+              </Suspense>
             </AnimatedPage>
           </AnimatePresence>
         </main>

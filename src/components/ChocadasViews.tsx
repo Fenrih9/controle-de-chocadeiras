@@ -11,6 +11,188 @@ import { Button, Card, StatusChip, Input, Select, ConfirmDialog } from './Glacie
 import { CircularProgressRing, TempBarChart, MiniProgressRing } from './Charts';
 import { useAuth } from '../contexts/AuthContext';
 
+// --- CARD COMPONENTS (Memoized) ---
+interface ChocadaCardEmAndamentoProps {
+  chocada: Chocada;
+  onNavigate: (screenName: string, params?: any) => void;
+  currentUser: any;
+  setDelTarget: (id: string | null) => void;
+}
+
+const ChocadaCardEmAndamento = React.memo<ChocadaCardEmAndamentoProps>(({
+  chocada: ch,
+  onNavigate,
+  currentUser,
+  setDelTarget,
+}) => {
+  const duration = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
+  const start = new Date(ch.dataInicio + 'T12:00:00');
+  const now = new Date(getCurrentDateString() + 'T12:00:00');
+  const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  const progressPercent = Math.min(100, Math.round((elapsed / duration) * 100));
+
+  return (
+    <div
+      onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
+      className="bg-[var(--color-surface)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/25 rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+    >
+      <MiniProgressRing day={elapsed} total={duration} status={ch.status} />
+
+      <div className="flex-1 space-y-2 text-[var(--color-ink)] min-w-0">
+        <div className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-start gap-2">
+          <div className="truncate">
+            <h3 className="font-bold text-sm tracking-tight truncate">{ch.nome}</h3>
+            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[var(--color-muted)] font-semibold uppercase">
+              <span className="flex items-center gap-0.5"><Egg className="w-3 h-3 text-[var(--color-brand)]" /> {ch.quantidadeOvosAtivos} ovos</span>
+              <span>•</span>
+              <span>Início: {repo.formatReadableDate(ch.dataInicio)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+            <StatusChip status={ch.status} />
+            {currentUser?.role !== 'LEITOR' && (
+              <>
+            <button
+              type="button"
+              title="Editar chocada"
+              onClick={(event) => {
+                event.stopPropagation();
+                onNavigate('chocada_editar', { id: ch.id });
+              }}
+              className="p-1.5 bg-[var(--color-surface-soft)]/50 hover:bg-[var(--color-brand-soft)] text-[var(--color-muted)] hover:text-[var(--color-brand)] rounded-lg transition-colors cursor-pointer"
+            >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+            <button
+              type="button"
+              title="Excluir chocada"
+              onClick={(event) => {
+                event.stopPropagation();
+                setDelTarget(ch.id);
+              }}
+              className="p-1.5 bg-[var(--color-surface-soft)]/50 hover:bg-[var(--color-danger-soft)] text-[var(--color-muted)] hover:text-[var(--color-danger)] rounded-lg transition-colors cursor-pointer"
+            >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[9px] font-bold text-[var(--color-muted)] uppercase">
+            <span>Previsão de Nascimento</span>
+            <span className="text-[var(--color-ink)]">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
+          </div>
+          <div className="w-full bg-[var(--color-surface-soft)] rounded-full h-1.5 overflow-hidden">
+            <div
+              className={`h-full rounded-full ${
+                ch.status === 'ATRASADA'
+                  ? 'bg-[var(--color-danger)]'
+                  : ch.status === 'PROXIMA'
+                  ? 'bg-[var(--color-warning)]'
+                  : 'bg-[var(--color-brand)]'
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+interface ChocadaCardFinalizadaProps {
+  chocada: Chocada;
+  onNavigate: (screenName: string, params?: any) => void;
+}
+
+const ChocadaCardFinalizada = React.memo<ChocadaCardFinalizadaProps>(({
+  chocada: ch,
+  onNavigate,
+}) => {
+  const registro = repo.getRegistrosNascimento(ch.id)[0];
+  const nascidos = registro?.pintinhosNascidos ?? 0;
+  const totalOvos = ch.quantidadeOvosInicial;
+  const taxaEclosao = totalOvos > 0 ? Math.round((nascidos / totalOvos) * 100) : 0;
+
+  return (
+    <div
+      onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
+      className="bg-[var(--color-surface)]/60 hover:bg-[var(--color-surface)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/20 rounded-xl px-4 py-3.5 flex items-center gap-4 transition-all duration-200 cursor-pointer group"
+    >
+      {/* Mini avatar com inicial */}
+      <div className="w-10 h-10 rounded-xl bg-[var(--color-surface-soft)] flex items-center justify-center shrink-0 group-hover:bg-[var(--color-brand-soft)] transition-colors">
+        <span className="text-sm font-black text-[var(--color-muted)] group-hover:text-[var(--color-brand)] transition-colors">
+          {ch.nome.charAt(0).toUpperCase()}
+        </span>
+      </div>
+
+      {/* Informações */}
+      <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <div className="w-full sm:w-auto min-w-0">
+          <h3 className="font-bold text-sm text-[var(--color-ink)] truncate leading-tight">{ch.nome}</h3>
+          <p className="text-[9px] text-[var(--color-muted)] font-semibold uppercase tracking-wider mt-0.5">
+            {ch.tipoOvo}
+          </p>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[var(--color-muted)]">
+          <span className="text-[9px] text-[var(--color-muted-light)] uppercase font-bold tracking-wider">Período</span>
+          <span className="font-semibold">{repo.formatReadableDate(ch.dataInicio)}</span>
+          <span className="text-[var(--color-muted-light)]">→</span>
+          <span className="font-semibold">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
+        </div>
+
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div>
+            <p className="text-[9px] text-[var(--color-muted-light)] uppercase font-bold tracking-wider">Ovos</p>
+            <p className="text-xs font-bold text-[var(--color-ink)]">{totalOvos}</p>
+          </div>
+          <div className="w-px h-6 bg-[var(--color-line)]" />
+          <div>
+            <p className="text-[9px] text-[var(--color-muted-light)] uppercase font-bold tracking-wider">Nascidos</p>
+            <p className="text-xs font-bold text-[var(--color-success)]">{nascidos}</p>
+          </div>
+          <div className="w-px h-6 bg-[var(--color-line)]" />
+          <div>
+            <p className="text-[9px] text-[var(--color-muted-light)] uppercase font-bold tracking-wider">Taxa</p>
+            <div className="flex items-center gap-1.5">
+              <div className="w-10 sm:w-12 bg-[var(--color-surface-soft)] rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${
+                    taxaEclosao >= 70
+                      ? 'bg-[var(--color-success)]'
+                      : taxaEclosao >= 40
+                      ? 'bg-[var(--color-warning)]'
+                      : 'bg-[var(--color-danger)]'
+                  }`}
+                  style={{ width: `${taxaEclosao}%` }}
+                />
+              </div>
+              <span className={`text-[10px] font-black ${
+                taxaEclosao >= 70
+                  ? 'text-[var(--color-success)]'
+                  : taxaEclosao >= 40
+                  ? 'text-[var(--color-warning)]'
+                  : 'text-[var(--color-danger)]'
+              }`}>
+                {taxaEclosao}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status + Ações */}
+      <div className="flex items-center gap-2 shrink-0">
+        <StatusChip status={ch.status} />
+        <ChevronRight className="w-4 h-4 text-[var(--color-muted-light)] group-hover:text-[var(--color-brand)] transition-colors hidden sm:block" />
+      </div>
+    </div>
+  );
+});
+
 // --- VIEW: LISTA DE CHOCADAS ---
 interface ChocadasListaProps {
   onNavigate: (screenName: string, params?: any) => void;
@@ -62,17 +244,17 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
       {/* Top Header */}
-      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3">
-          <Egg className="w-5 h-5 text-[#3f5f31] fill-[#3f5f31]/10" />
-          <h1 className="font-headline font-bold text-[#263225] text-base leading-tight">Lista de Chocadas</h1>
+          <Egg className="w-5 h-5 text-[var(--color-brand)] fill-[var(--color-brand)]/10" />
+          <h1 className="font-headline font-bold text-[var(--color-ink)] text-base leading-tight">Lista de Chocadas</h1>
         </div>
         {currentUser?.role !== 'LEITOR' && (
           <button
             onClick={() => onNavigate('chocada_nova')}
-            className="p-2 bg-[#fffaf2] border border-[#465336]/15 hover:border-[#3f5f31]/35 rounded-xl text-[#3f5f31] shadow-sm cursor-pointer hover:scale-105 transition-all"
+            className="p-2 bg-[var(--color-surface)] border border-[var(--color-line)] hover:border-[var(--color-brand)]/35 rounded-xl text-[var(--color-brand)] shadow-sm cursor-pointer hover:scale-105 transition-all"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -82,19 +264,19 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
       {/* Main Container */}
       <div className="flex-grow overflow-y-auto px-4 sm:px-5 py-5 space-y-5 scrollbar-thin pb-32 lg:pb-20">
         {deleteError && (
-          <div className="py-2.5 px-4 bg-[#fef2f2] border border-[#fee2e2] text-[#7f1d1d] text-xs rounded-xl font-bold">
+          <div className="py-2.5 px-4 bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs rounded-xl font-bold">
             {deleteError}
           </div>
         )}
 
         {/* Search bar matching photo pattern exactly */}
         <div className="relative group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6f756a] w-5 h-5" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-muted)] w-5 h-5" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#fffdf8] border border-[#465336]/15 rounded-xl py-3 pl-11 pr-4 text-[#263225] text-sm focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/20 focus:border-[#3f5f31] transition-all font-medium"
+            className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 pl-11 pr-4 text-[var(--color-ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium"
             placeholder="Buscar por lote ou espécie..."
           />
         </div>
@@ -115,8 +297,8 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
                 onClick={() => setActiveFilter(pill.code)}
                 className={`py-2 px-4 rounded-full text-xs font-semibold whitespace-nowrap border cursor-pointer transition-all ${
                   isActive
-                    ? 'bg-[#3f5f31]/10 border-[#3f5f31]/30 text-[#3f5f31] shadow-sm'
-                    : 'bg-[#f1eadf] border-transparent text-[#6f756a] hover:bg-[#e8decb] hover:text-[#263225]'
+                    ? 'bg-[var(--color-brand-soft)] border-[var(--color-brand)]/30 text-[var(--color-brand)] shadow-sm'
+                    : 'bg-[var(--color-surface-soft)] border-transparent text-[var(--color-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]'
                 }`}
               >
                 {pill.label}
@@ -127,8 +309,8 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
 
         {filteredChocadas.length === 0 ? (
           <div className="text-center py-16 space-y-3">
-            <Egg className="w-12 h-12 text-[#9a9488] mx-auto opacity-40" />
-            <p className="text-[#6f756a] font-medium text-sm">Nenhum lote correspondente.</p>
+            <Egg className="w-12 h-12 text-[var(--color-muted-light)] mx-auto opacity-40" />
+            <p className="text-[var(--color-muted)] font-medium text-sm">Nenhum lote correspondente.</p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -136,93 +318,24 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
             {filteredChocadas.filter(isEmAndamento).length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-[#3f5f31] animate-pulse" />
-                  <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#3f5f31]">
+                  <div className="w-2 h-2 rounded-full bg-[var(--color-brand)] animate-pulse" />
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--color-brand)]">
                     Em Andamento
                   </h2>
-                  <span className="text-[10px] font-bold text-[#9a9488] ml-1">
+                  <span className="text-[10px] font-bold text-[var(--color-muted-light)] ml-1">
                     ({filteredChocadas.filter(isEmAndamento).length})
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filteredChocadas.filter(isEmAndamento).map((ch) => {
-                    const duration = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
-                    const start = new Date(ch.dataInicio + 'T12:00:00');
-                    const now = new Date(getCurrentDateString() + 'T12:00:00');
-                    const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-                    const progressPercent = Math.min(100, Math.round((elapsed / duration) * 100));
-
-                    return (
-                      <div
-                        key={ch.id}
-                        onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                        className="bg-[#fffdfb] border border-[#465336]/10 hover:border-[#3f5f31]/25 rounded-2xl p-4 flex flex-col min-[460px]:flex-row gap-4 transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(70,83,54,0.08)]"
-                      >
-                        <MiniProgressRing day={elapsed} total={duration} status={ch.status} />
-
-                        <div className="flex-1 space-y-2 text-[#263225] min-w-0">
-                          <div className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-start gap-2">
-                            <div className="truncate">
-                              <h3 className="font-bold text-sm tracking-tight truncate">{ch.nome}</h3>
-                              <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#6f756a] font-semibold uppercase">
-                                <span className="flex items-center gap-0.5"><Egg className="w-3 h-3 text-[#3f5f31]" /> {ch.quantidadeOvosAtivos} ovos</span>
-                                <span>•</span>
-                                <span>Início: {repo.formatReadableDate(ch.dataInicio)}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-                              <StatusChip status={ch.status} />
-                              {currentUser?.role !== 'LEITOR' && (
-                                <>
-                                  <button
-                                    type="button"
-                                    title="Editar chocada"
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      onNavigate('chocada_editar', { id: ch.id });
-                                    }}
-                                    className="p-1.5 bg-[#f1eadf]/50 hover:bg-[#3f5f31]/10 text-[#6f756a] hover:text-[#3f5f31] rounded-lg transition-colors cursor-pointer"
-                                  >
-                                    <Pencil className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    title="Excluir chocada"
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      setDelTarget(ch.id);
-                                    }}
-                                    className="p-1.5 bg-[#f1eadf]/50 hover:bg-[#b85745]/10 text-[#6f756a] hover:text-[#b85745] rounded-lg transition-colors cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[9px] font-bold text-[#6f756a] uppercase">
-                              <span>Previsão de Nascimento</span>
-                              <span className="text-[#263225]">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
-                            </div>
-                            <div className="w-full bg-[#f1eadf] rounded-full h-1.5 overflow-hidden border border-[#465336]/5">
-                              <div
-                                className={`h-full rounded-full ${
-                                  ch.status === 'ATRASADA'
-                                    ? 'bg-[#b85745]'
-                                    : ch.status === 'PROXIMA'
-                                    ? 'bg-[#c9854a]'
-                                    : 'bg-[#3f5f31]'
-                                }`}
-                                style={{ width: `${progressPercent}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {filteredChocadas.filter(isEmAndamento).map((ch) => (
+                    <ChocadaCardEmAndamento
+                      key={ch.id}
+                      chocada={ch}
+                      onNavigate={onNavigate}
+                      currentUser={currentUser}
+                      setDelTarget={setDelTarget}
+                    />
+                  ))}
                 </div>
               </section>
             )}
@@ -231,98 +344,22 @@ export const ChocadasListaView: React.FC<ChocadasListaProps> = ({ onNavigate }) 
             {filteredChocadas.filter(isFinalizada).length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 rounded-full bg-[#6f756a]" />
-                  <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#6f756a]">
+                  <div className="w-2 h-2 rounded-full bg-[var(--color-muted)]" />
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--color-muted)]">
                     Finalizadas
                   </h2>
-                  <span className="text-[10px] font-bold text-[#9a9488] ml-1">
+                  <span className="text-[10px] font-bold text-[var(--color-muted-light)] ml-1">
                     ({filteredChocadas.filter(isFinalizada).length})
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {filteredChocadas.filter(isFinalizada).map((ch) => {
-                    const registro = repo.getRegistrosNascimento(ch.id)[0];
-                    const nascidos = registro?.pintinhosNascidos ?? 0;
-                    const totalOvos = ch.quantidadeOvosInicial;
-                    const taxaEclosao = totalOvos > 0 ? Math.round((nascidos / totalOvos) * 100) : 0;
-
-                    return (
-                      <div
-                        key={ch.id}
-                        onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                        className="bg-[#fffdfb]/60 hover:bg-[#fffdfb] border border-[#465336]/8 hover:border-[#3f5f31]/20 rounded-xl px-4 py-3.5 flex items-center gap-4 transition-all duration-200 cursor-pointer group"
-                      >
-                        {/* Mini avatar com inicial */}
-                        <div className="w-10 h-10 rounded-xl bg-[#f1eadf] flex items-center justify-center shrink-0 group-hover:bg-[#3f5f31]/10 transition-colors">
-                          <span className="text-sm font-black text-[#6f756a] group-hover:text-[#3f5f31] transition-colors">
-                            {ch.nome.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-
-                        {/* Informações */}
-                        <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-                          <div className="w-full sm:w-auto min-w-0">
-                            <h3 className="font-bold text-sm text-[#263225] truncate leading-tight">{ch.nome}</h3>
-                            <p className="text-[9px] text-[#6f756a] font-semibold uppercase tracking-wider mt-0.5">
-                              {ch.tipoOvo}
-                            </p>
-                          </div>
-
-                          <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[#6f756a]">
-                            <span className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Período</span>
-                            <span className="font-semibold">{repo.formatReadableDate(ch.dataInicio)}</span>
-                            <span className="text-[#9a9488]">→</span>
-                            <span className="font-semibold">{repo.formatReadableDate(ch.dataPrevistaNascimento)}</span>
-                          </div>
-
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <div>
-                              <p className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Ovos</p>
-                              <p className="text-xs font-bold text-[#263225]">{totalOvos}</p>
-                            </div>
-                            <div className="w-px h-6 bg-[#465336]/8" />
-                            <div>
-                              <p className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Nascidos</p>
-                              <p className="text-xs font-bold text-emerald-600">{nascidos}</p>
-                            </div>
-                            <div className="w-px h-6 bg-[#465336]/8" />
-                            <div>
-                              <p className="text-[9px] text-[#9a9488] uppercase font-bold tracking-wider">Taxa</p>
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-10 sm:w-12 bg-[#f1eadf] rounded-full h-1.5 overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${
-                                      taxaEclosao >= 70
-                                        ? 'bg-emerald-500'
-                                        : taxaEclosao >= 40
-                                        ? 'bg-amber-500'
-                                        : 'bg-rose-500'
-                                    }`}
-                                    style={{ width: `${taxaEclosao}%` }}
-                                  />
-                                </div>
-                                <span className={`text-[10px] font-black ${
-                                  taxaEclosao >= 70
-                                    ? 'text-emerald-600'
-                                    : taxaEclosao >= 40
-                                    ? 'text-amber-600'
-                                    : 'text-rose-600'
-                                }`}>
-                                  {taxaEclosao}%
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Status + Ações */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          <StatusChip status={ch.status} />
-                          <ChevronRight className="w-4 h-4 text-[#9a9488] group-hover:text-[#3f5f31] transition-colors hidden sm:block" />
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {filteredChocadas.filter(isFinalizada).map((ch) => (
+                    <ChocadaCardFinalizada
+                      key={ch.id}
+                      chocada={ch}
+                      onNavigate={onNavigate}
+                    />
+                  ))}
                 </div>
               </section>
             )}
@@ -367,7 +404,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
 
   if (!chocada) {
     return (
-      <div className="p-6 text-center text-slate-400 bg-slate-950 min-h-screen">
+      <div className="p-6 text-center text-[var(--color-muted)] bg-[var(--color-bg)] min-h-screen">
         Lote não encontrado.
         <Button onClick={() => onNavigate('chocadas_lista')} className="mt-4">Voltar</Button>
       </div>
@@ -402,14 +439,14 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
       {/* Dynamic Navigation Topbar */}
-      <header className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+      <header className="flex flex-col min-[520px]:flex-row min-[520px]:justify-between min-[520px]:items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3 w-full min-[520px]:w-auto min-w-0">
-          <button onClick={() => onNavigate('chocadas_lista')} className="p-1 px-2.5 rounded-lg bg-[#fffaf2] border border-[#465336]/15 text-[#6f756a] hover:text-[#263225] hover:border-[#3f5f31]/30 cursor-pointer select-none transition-all flex items-center shadow-sm">
+          <button onClick={() => onNavigate('chocadas_lista')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all flex items-center shadow-sm">
             <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
           </button>
-          <span className="font-headline font-bold text-[#263225] text-xs truncate">
+          <span className="font-headline font-bold text-[var(--color-ink)] text-xs truncate">
             Lote: {chocada.nome}
           </span>
         </div>
@@ -418,20 +455,20 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
             {!chocada.cancelada && (
               <button
                 onClick={() => setCancelOpen(true)}
-                className="rounded-lg border border-[#c9854a]/20 bg-[#c9854a]/10 px-2.5 py-1.5 text-[10px] font-bold text-[#c9854a] uppercase cursor-pointer hover:bg-[#c9854a]/15 transition-all"
+                className="rounded-lg border border-[var(--color-warning)]/20 bg-[var(--color-warning-soft)] px-2.5 py-1.5 text-[10px] font-bold text-[var(--color-warning)] uppercase cursor-pointer hover:bg-[var(--color-warning-soft)] transition-all"
               >
                 Inativar
               </button>
             )}
             <button
               onClick={() => onNavigate('chocada_editar', { id: chocada.id })}
-              className="rounded-lg border border-[#3f5f31]/20 bg-[#3f5f31]/10 px-2.5 py-1.5 text-[10px] font-bold text-[#3f5f31] uppercase cursor-pointer hover:bg-[#3f5f31]/15 transition-all"
+              className="rounded-lg border border-[var(--color-brand)]/20 bg-[var(--color-brand-soft)] px-2.5 py-1.5 text-[10px] font-bold text-[var(--color-brand)] uppercase cursor-pointer hover:bg-[var(--color-brand-soft)] transition-all"
             >
               Editar
             </button>
             <button
               onClick={() => setDeleteOpen(true)}
-              className="rounded-lg border border-[#b85745]/20 bg-[#b85745]/10 px-2.5 py-1.5 text-[10px] font-bold text-[#b85745] uppercase cursor-pointer hover:bg-[#b85745]/15 transition-all"
+              className="rounded-lg border border-[var(--color-danger)]/20 bg-[var(--color-danger-soft)] px-2.5 py-1.5 text-[10px] font-bold text-[var(--color-danger)] uppercase cursor-pointer hover:bg-[var(--color-danger-soft)] transition-all"
             >
               Excluir
             </button>
@@ -442,7 +479,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
       {/* Main Viewport */}
       <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20">
         {deleteError && (
-          <div className="py-2.5 px-4 bg-[#fef2f2] border border-[#fee2e2] text-[#7f1d1d] text-xs rounded-xl font-bold">
+          <div className="py-2.5 px-4 bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs rounded-xl font-bold">
             {deleteError}
           </div>
         )}
@@ -452,16 +489,16 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
           {/* Coluna Esquerda: Progresso + Info Geral */}
           <div className="space-y-6">
             {/* Frozen Arc Circle layout */}
-            <section className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl p-6 relative overflow-hidden flex flex-col items-center">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#3f5f31]/5 blur-[80px] rounded-full -mr-16 -mt-16"></div>
+            <section className="bg-[var(--color-surface)] border border-[var(--color-line)] shadow-sm rounded-2xl p-6 relative overflow-hidden flex flex-col items-center">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-brand)]/5 blur-[80px] rounded-full -mr-16 -mt-16"></div>
               <CircularProgressRing currentDay={elapsed} totalDays={duration} status={chocada.status} />
               
               <div className="mt-4 flex gap-2">
-                <span className="px-3.5 py-1.5 bg-[#3f5f31]/10 text-[#3f5f31] text-[10px] font-bold rounded-full border border-[#3f5f31]/20 uppercase tracking-widest leading-none">
+                <span className="px-3.5 py-1.5 bg-[var(--color-brand-soft)] text-[var(--color-brand)] text-[10px] font-bold rounded-full border border-[var(--color-brand)]/20 uppercase tracking-widest leading-none">
                   Ativo
                 </span>
                 {elapsed >= 18 && (
-                  <span className="px-3.5 py-1.5 bg-[#c9854a]/10 text-[#c9854a] text-[10px] font-bold rounded-full border border-[#c9854a]/20 uppercase tracking-widest leading-none italic animate-pulse">
+                  <span className="px-3.5 py-1.5 bg-[var(--color-warning-soft)] text-[var(--color-warning)] text-[10px] font-bold rounded-full border border-[var(--color-warning)]/20 uppercase tracking-widest leading-none italic animate-pulse">
                     Fase de Eclosão
                   </span>
                 )}
@@ -470,47 +507,47 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
 
             {/* Realtime Thermostats statistics */}
             <section className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3.5">
-              <div className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-xl p-4 flex flex-col gap-1.5 relative overflow-hidden group">
-                <Thermometer className="absolute right-3.5 top-3 text-[#3f5f31]/10 w-8 h-8" />
-                <span className="text-[10px] font-bold text-[#6f756a] uppercase tracking-wider">Temperatura Ideal</span>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-line)] shadow-sm rounded-xl p-4 flex flex-col gap-1.5 relative overflow-hidden group">
+                <Thermometer className="absolute right-3.5 top-3 text-[var(--color-brand)]/10 w-8 h-8" />
+                <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Temperatura Ideal</span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black text-[#263225]">{chocada.temperaturaIdeal}°C</span>
-                  <span className="text-[9px] text-[#3f5f31] font-bold">OK</span>
+                  <span className="text-2xl font-black text-[var(--color-ink)]">{chocada.temperaturaIdeal}°C</span>
+                  <span className="text-[9px] text-[var(--color-brand)] font-bold">OK</span>
                 </div>
               </div>
 
-              <div className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-xl p-4 flex flex-col gap-1.5 relative overflow-hidden group">
-                <Droplets className="absolute right-3.5 top-3 text-[#c9854a]/10 w-8 h-8" />
-                <span className="text-[10px] font-bold text-[#6f756a] uppercase tracking-wider">Umidade Ideal</span>
+              <div className="bg-[var(--color-surface)] border border-[var(--color-line)] shadow-sm rounded-xl p-4 flex flex-col gap-1.5 relative overflow-hidden group">
+                <Droplets className="absolute right-3.5 top-3 text-[var(--color-warning)]/10 w-8 h-8" />
+                <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider">Umidade Ideal</span>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl font-black text-[#263225]">{chocada.umidadeIdeal}%</span>
-                  <span className="text-[9px] text-[#c9854a] font-bold">OK</span>
+                  <span className="text-2xl font-black text-[var(--color-ink)]">{chocada.umidadeIdeal}%</span>
+                  <span className="text-[9px] text-[var(--color-warning)] font-bold">OK</span>
                 </div>
               </div>
             </section>
 
             {/* Detailed Info properties container */}
-            <section className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl p-5 space-y-4">
-              <h3 className="text-[11px] font-bold tracking-widest text-[#3f5f31] uppercase flex items-center gap-1.5">
+            <section className="bg-[var(--color-surface)] border border-[var(--color-line)] shadow-sm rounded-2xl p-5 space-y-4">
+              <h3 className="text-[11px] font-bold tracking-widest text-[var(--color-brand)] uppercase flex items-center gap-1.5">
                 <Clipboard className="w-4 h-4" /> Informações Gerais
               </h3>
               
               <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-y-4 gap-x-3 text-xs font-semibold leading-normal">
                 <div>
-                  <p className="text-[#6f756a] uppercase text-[9px] font-bold">Data de Início</p>
-                  <p className="text-[#263225] font-medium mt-0.5">{repo.formatReadableDate(chocada.dataInicio)}</p>
+                  <p className="text-[var(--color-muted)] uppercase text-[9px] font-bold">Data de Início</p>
+                  <p className="text-[var(--color-ink)] font-medium mt-0.5">{repo.formatReadableDate(chocada.dataInicio)}</p>
                 </div>
                 <div>
-                  <p className="text-[#6f756a] uppercase text-[9px] font-bold">Previsão Nascimento</p>
-                  <p className="text-[#263225] font-medium mt-0.5">{repo.formatReadableDate(chocada.dataPrevistaNascimento)}</p>
+                  <p className="text-[var(--color-muted)] uppercase text-[9px] font-bold">Previsão Nascimento</p>
+                  <p className="text-[var(--color-ink)] font-medium mt-0.5">{repo.formatReadableDate(chocada.dataPrevistaNascimento)}</p>
                 </div>
                 <div>
-                  <p className="text-[#6f756a] uppercase text-[9px] font-bold">Quantidade Inicial</p>
-                  <p className="text-[#263225] font-medium mt-0.5">{chocada.quantidadeOvosInicial} Ovos</p>
+                  <p className="text-[var(--color-muted)] uppercase text-[9px] font-bold">Quantidade Inicial</p>
+                  <p className="text-[var(--color-ink)] font-medium mt-0.5">{chocada.quantidadeOvosInicial} Ovos</p>
                 </div>
                 <div>
-                  <p className="text-[#6f756a] uppercase text-[9px] font-bold">Saldo Ativo Vigente</p>
-                  <p className="text-[#3f5f31] font-black mt-0.5">{chocada.quantidadeOvosAtivos} Ovos</p>
+                  <p className="text-[var(--color-muted)] uppercase text-[9px] font-bold">Saldo Ativo Vigente</p>
+                  <p className="text-[var(--color-brand)] font-black mt-0.5">{chocada.quantidadeOvosAtivos} Ovos</p>
                 </div>
               </div>
             </section>
@@ -519,12 +556,12 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
           {/* Coluna Direita: Gráfico + Ações */}
           <div className="space-y-6">
             {/* Temperature chart variation banner */}
-            <section className="bg-[#fffdfb] border border-[#465336]/12 shadow-sm rounded-2xl p-5 space-y-3.5">
-              <div className="flex justify-between items-center text-[#263225]">
-                <h3 className="text-[11px] font-bold tracking-widest text-[#3f5f31] uppercase flex items-center gap-1.5">
+            <section className="bg-[var(--color-surface)] border border-[var(--color-line)] shadow-sm rounded-2xl p-5 space-y-3.5">
+              <div className="flex justify-between items-center text-[var(--color-ink)]">
+                <h3 className="text-[11px] font-bold tracking-widest text-[var(--color-brand)] uppercase flex items-center gap-1.5">
                   <Activity className="w-4 h-4" /> Histórico Flutuação 24h
                 </h3>
-                <span className="text-[8px] uppercase font-mono tracking-widest text-[#6f756a] font-bold">Var: ±0.2°C</span>
+                <span className="text-[8px] uppercase font-mono tracking-widest text-[var(--color-muted)] font-bold">Var: ±0.2°C</span>
               </div>
               <TempBarChart />
             </section>
@@ -535,30 +572,30 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
                 <>
                   <button
                     onClick={() => onNavigate('registro_diario_novo', { id: chocada.id })}
-                    className="p-4 bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[#263225]"
+                    className="p-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-warm)]/50 border border-[var(--color-line)] shadow-sm rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[var(--color-ink)]"
                   >
-                    <Clipboard className="w-5 h-5 text-[#3f5f31]" />
+                    <Clipboard className="w-5 h-5 text-[var(--color-brand)]" />
                     <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Registrar Inspeção</span>
                   </button>
                   <button
                     onClick={() => onNavigate('ovoscopia_nova', { id: chocada.id })}
-                    className="p-4 bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[#263225]"
+                    className="p-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-warm)]/50 border border-[var(--color-line)] shadow-sm rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[var(--color-ink)]"
                   >
-                    <Sparkles className="w-5 h-5 text-[#c9854a]" />
+                    <Sparkles className="w-5 h-5 text-[var(--color-warning)]" />
                     <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Ovoscopia</span>
                   </button>
                   <button
                     onClick={() => onNavigate('nascimento_novo', { id: chocada.id })}
-                    className="p-4 bg-[#fffdfb] hover:bg-[#f1eadf]/50 border border-[#465336]/12 shadow-sm rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[#263225]"
+                    className="p-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-warm)]/50 border border-[var(--color-line)] shadow-sm rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[var(--color-ink)]"
                   >
                     {chocada.finalizada ? (
                       <>
-                        <Pencil className="w-5 h-5 text-amber-400" />
+                        <Pencil className="w-5 h-5 text-[var(--color-warning)]" />
                         <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Editar Nascimento</span>
                       </>
                     ) : (
                       <>
-                        <Plus className="w-5 h-5 text-emerald-400" />
+                        <Plus className="w-5 h-5 text-[var(--color-success)]" />
                         <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Registrar Nascimento</span>
                       </>
                     )}
@@ -567,7 +604,7 @@ export const ChocadaDetalhesView: React.FC<ChocadaDetalhesProps> = ({ id, onNavi
               )}
               <button
                 onClick={() => onNavigate('relatorio_chocada', { id: chocada.id })}
-                className="p-4 bg-[#7dd3fc]/5 border border-[#7dd3fc]/20 hover:bg-[#7dd3fc]/10 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-sky-300"
+                className="p-4 bg-[var(--color-info-soft)] border border-[var(--color-info)]/20 hover:bg-[var(--color-info)]/10 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 text-center cursor-pointer text-[var(--color-info)]"
               >
                 <FileText className="w-5 h-5" />
                 <span className="text-[10px] uppercase font-bold tracking-wider leading-none">Exibir Relatório</span>
@@ -685,14 +722,14 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
   };
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-[#f7f2e9]">
+    <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
       {/* Header */}
-      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-[#465336]/15 bg-[#fffaf2]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
+      <header className="flex justify-between items-center gap-3 w-full px-4 sm:px-5 py-4 border-b border-[var(--color-line)] bg-[var(--color-surface)]/85 backdrop-blur-md sticky top-0 shrink-0 z-10">
         <div className="flex items-center gap-3 min-w-0">
-          <button onClick={() => onNavigate('chocadas_lista')} className="p-1 px-2.5 rounded-lg bg-[#fffaf2] border border-[#465336]/15 text-[#6f756a] hover:text-[#263225] hover:border-[#3f5f31]/30 cursor-pointer select-none transition-all shadow-sm">
+          <button onClick={() => onNavigate('chocadas_lista')} className="p-1 px-2.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)]/30 cursor-pointer select-none transition-all shadow-sm">
             Cancelar
           </button>
-          <span className="font-headline font-bold text-[#263225] text-sm truncate">
+          <span className="font-headline font-bold text-[var(--color-ink)] text-sm truncate">
             {idToEdit ? 'Editar Ciclo' : 'Configurar Ciclo'}
           </span>
         </div>
@@ -702,14 +739,14 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
       <div className="flex-grow overflow-y-auto px-4 sm:px-5 lg:px-8 py-6 space-y-6 scrollbar-thin pb-32 lg:pb-20 max-w-4xl mx-auto w-full">
         
         {idToEdit && (
-          <div className="py-2.5 px-4 bg-[#c9854a]/10 border border-[#c9854a]/20 text-[#c9854a] text-xs rounded-xl font-semibold flex items-center gap-2">
+          <div className="py-2.5 px-4 bg-[var(--color-warning-soft)] border border-[var(--color-warning)]/20 text-[var(--color-warning)] text-xs rounded-xl font-semibold flex items-center gap-2">
             <Clipboard className="w-4 h-4 shrink-0" />
             Você está editando informações do lote cadastrado.
           </div>
         )}
 
         {errorMsg && (
-          <div className="py-2.5 px-4 bg-[#fef2f2] border border-[#fee2e2] text-[#7f1d1d] text-xs rounded-xl font-bold">
+          <div className="py-2.5 px-4 bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs rounded-xl font-bold">
             ⚠️ {errorMsg}
           </div>
         )}
@@ -766,8 +803,8 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
               />
             ) : (
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-[#6f756a] block uppercase tracking-wider">Chocadeira</label>
-                <div className="py-3 px-4 bg-[#fef2f2] text-[#7f1d1d] border border-[#fee2e2] text-xs rounded-xl font-medium">
+                <label className="text-xs font-semibold text-[var(--color-muted)] block uppercase tracking-wider">Chocadeira</label>
+                <div className="py-3 px-4 bg-[var(--color-danger-soft)] text-[var(--color-danger)] border border-[var(--color-danger)]/20 text-xs rounded-xl font-medium">
                   Sem chocadeiras disponíveis!
                 </div>
               </div>
@@ -775,22 +812,22 @@ export const ChocadaNovaView: React.FC<ChocadaNovaProps> = ({ onNavigate, idToEd
           </div>
 
           {/* Predict card auto calculating dates dynamically matching photos */}
-          <div className="bg-[#fffdfb] border border-[#465336]/12 rounded-xl p-4 border-dashed relative overflow-hidden flex flex-col min-[460px]:flex-row min-[460px]:items-center min-[460px]:justify-between gap-3 text-xs">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl p-4 border-dashed relative overflow-hidden flex flex-col min-[460px]:flex-row min-[460px]:items-center min-[460px]:justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#3f5f31]" />
-              <span className="text-[#6f756a] font-medium font-sans">Previsão Calculada de Nascimento</span>
+              <Calendar className="w-4 h-4 text-[var(--color-brand)]" />
+              <span className="text-[var(--color-muted)] font-medium font-sans">Previsão Calculada de Nascimento</span>
             </div>
-            <span className="font-extrabold text-[#3f5f31] tracking-tight">
+            <span className="font-extrabold text-[var(--color-brand)] tracking-tight">
               {repo.formatReadableDate(birthPrediction)}
             </span>
           </div>
 
           <div className="space-y-1 w-full">
-            <label className="text-xs font-semibold text-[#6f756a] px-1 block uppercase tracking-wider">
+            <label className="text-xs font-semibold text-[var(--color-muted)] px-1 block uppercase tracking-wider">
               Observações Adicionais
             </label>
             <textarea
-              className="w-full bg-[#fffdf8] border border-[#465336]/15 rounded-xl py-3 px-4 text-[#263225] placeholder:text-[#9a9488] focus:outline-none focus:ring-2 focus:ring-[#3f5f31]/20 focus:border-[#3f5f31] transition-all font-medium resize-none text-xs"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-ink)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium resize-none text-xs"
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
               placeholder="Notas sobre genética, linhagem das matrizes ou condições climáticas específicas..."

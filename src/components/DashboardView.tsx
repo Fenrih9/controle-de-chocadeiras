@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Egg, LogIn, Bell, Thermometer, Droplets, TrendingUp, Inbox, Calendar, AlertTriangle, ChevronRight, Plus, ShieldCheck, RotateCcw, Sprout } from 'lucide-react';
 import { repo, DURACAO_INCUBACAO, getCurrentDateString } from '../repository';
 import { Chocada } from '../types';
@@ -113,47 +113,162 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   );
 };
 
+// --- CARD COMPONENT (Memoized) ---
+interface DashboardChocadaCardProps {
+  chocada: Chocada;
+  onNavigate: (screenName: string, params?: any) => void;
+}
+
+const DashboardChocadaCard = React.memo<DashboardChocadaCardProps>(({ chocada: ch, onNavigate }) => {
+  const totalDays = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
+  const start = new Date(ch.dataInicio + 'T12:00:00');
+  const now = new Date(getCurrentDateString() + 'T12:00:00');
+  const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  const progressPercent = Math.min(100, Math.round((elapsed / totalDays) * 100));
+  const daysRemaining = totalDays - elapsed;
+  const isUrgent = daysRemaining <= 2 && daysRemaining > 0;
+  const isIminent = daysRemaining <= 5 && daysRemaining > 2;
+  const isOverdue = daysRemaining <= 0;
+  const chocadeiraNome = repo.getChocadeiraById(ch.chocadeiraId)?.nome || null;
+
+  const countdownColor = isOverdue
+    ? 'text-[var(--color-danger)] bg-[var(--color-danger-soft)] border-[var(--color-danger)]/20'
+    : isUrgent
+    ? 'text-[var(--color-warning)] bg-[var(--color-warning-soft)] border-[var(--color-warning)]/25'
+    : isIminent
+    ? 'text-[var(--color-warning)] bg-[var(--color-warning-soft)] border-[var(--color-warning)]/25'
+    : 'text-[var(--color-brand)] bg-[var(--color-brand-soft)] border-[var(--color-brand)]/20';
+
+  const countdownLabel = isOverdue
+    ? `+${Math.abs(daysRemaining)}d` 
+    : `-${daysRemaining}d`;
+
+  const countdownTitle = isOverdue
+    ? `${Math.abs(daysRemaining)} dia(s) em atraso`
+    : `${daysRemaining} dia(s) restante(s)`;
+
+  return (
+    <div
+      onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
+      className="bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-4 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] hover:border-[var(--color-brand)]/25 cursor-pointer shadow-sm"
+    >
+      {/* Cabeçalho com nome e status */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-sm text-[var(--color-ink)] tracking-tight truncate leading-tight">{ch.nome}</h3>
+          <p className="text-[10px] text-[var(--color-muted)] mt-0.5 uppercase tracking-wider font-semibold">
+            {ch.tipoOvo} · {ch.quantidadeOvosAtivos} ovos
+          </p>
+          {chocadeiraNome && (
+            <p className="text-[10px] text-[var(--color-brand)] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-brand)]/60"></span>
+              {chocadeiraNome}
+            </p>
+          )}
+        </div>
+        <StatusChip status={ch.status} />
+      </div>
+
+      {/* Corpo: Anel de progresso + Contagem regressiva */}
+      <div className="flex items-center gap-3">
+        <MiniProgressRing day={elapsed} total={totalDays} status={ch.status} />
+
+        <div className="flex-1 space-y-2">
+          {/* Barra de progresso */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px] font-bold text-[var(--color-muted)]">
+              <span>Progresso da Incubação</span>
+              <span>{elapsed} / {totalDays} Dias</span>
+            </div>
+            <div className="w-full bg-[var(--color-surface-soft)] rounded-full h-1.5 overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isOverdue ? 'bg-[var(--color-danger)]' :
+                  isUrgent ? 'bg-gradient-to-r from-[var(--color-warning)] to-[var(--color-danger)]' :
+                  isIminent ? 'bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-warning)]' :
+                  'bg-gradient-to-r from-[var(--color-brand)] to-[var(--color-accent)]'
+                }`}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Contagem regressiva em destaque */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider">
+              {isOverdue ? 'Nascimento esperado' : 'Faltam para nascer'}
+            </span>
+            <span
+              title={countdownTitle}
+              className={`text-xs font-black px-2 py-0.5 rounded-full border tracking-tight ${countdownColor}`}
+            >
+              {countdownLabel}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Rodapé: Data de início e seta */}
+      <div className="flex items-center justify-between pt-1 border-t border-[var(--color-line)]">
+        <p className="text-[10px] text-[var(--color-muted)] font-semibold uppercase tracking-wider">
+          Iniciou em {repo.formatReadableDate(ch.dataInicio)}
+        </p>
+        <ChevronRight className="w-4 h-4 text-[var(--color-brand)]" />
+      </div>
+    </div>
+  );
+});
+
 interface DashboardViewProps {
   onNavigate: (screenName: string, params?: any) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
   const { currentUser } = useAuth();
-  const chocadas = repo.getChocadas();
-  const alertas = repo.getAlertas();
+  
+  const chocadas = useMemo(() => repo.getChocadas(), []);
+  const alertas = useMemo(() => repo.getAlertas(), []);
+  const estoquePintinhos = useMemo(() => repo.getEstoquePintinhosGeral(), []);
 
   // Summary Metrics calculations
-  const chocadasAtivas = chocadas.filter(c => c.status === 'EM_ANDAMENTO' || c.status === 'PROXIMA' || c.status === 'ATRASADA');
-  const totalOvos = chocadasAtivas.reduce((sum, c) => sum + c.quantidadeOvosAtivos, 0);
-  const estoquePintinhos = repo.getEstoquePintinhosGeral();
+  const chocadasAtivas = useMemo(
+    () => chocadas.filter(c => c.status === 'EM_ANDAMENTO' || c.status === 'PROXIMA' || c.status === 'ATRASADA'),
+    [chocadas]
+  );
+  const totalOvos = useMemo(
+    () => chocadasAtivas.reduce((sum, c) => sum + c.quantidadeOvosAtivos, 0),
+    [chocadasAtivas]
+  );
 
   // Next birth logic
-  let proximoNascimento = "Sem previsões";
-  let proximaData = "";
-  chocadasAtivas.forEach(c => {
-    if (!proximaData || c.dataPrevistaNascimento < proximaData) {
-      proximaData = c.dataPrevistaNascimento;
+  const { proximoNascimento, proximaData } = useMemo(() => {
+    let label = "Sem previsões";
+    let data = "";
+    chocadasAtivas.forEach(c => {
+      if (!data || c.dataPrevistaNascimento < data) {
+        data = c.dataPrevistaNascimento;
+      }
+    });
+    if (data) {
+      label = repo.formatReadableDate(data);
     }
-  });
-
-  if (proximaData) {
-    const diff = repo.formatReadableDate(proximaData);
-    proximoNascimento = diff;
-  }
+    return { proximoNascimento: label, proximaData: data };
+  }, [chocadasAtivas]);
 
   // Average Hatching Rate calculations
-  const finalizadas = chocadas.filter(c => c.status === 'FINALIZADA');
-  let totalHatched = 0;
-  let totalEggCount = 0;
-  finalizadas.forEach(fn => {
-    const nascimento = repo.getRegistrosNascimento(fn.id)[0];
-    if (nascimento) {
-      totalHatched += nascimento.pintinhosNascidos;
-      totalEggCount += fn.quantidadeOvosInicial;
-    }
-  });
-
-  const taxaMediaEclosao = totalEggCount > 0 ? Math.round((totalHatched / totalEggCount) * 100) : 0;
+  const taxaMediaEclosao = useMemo(() => {
+    const finalizadas = chocadas.filter(c => c.status === 'FINALIZADA');
+    let totalHatched = 0;
+    let totalEggCount = 0;
+    finalizadas.forEach(fn => {
+      const nascimento = repo.getRegistrosNascimento(fn.id)[0];
+      if (nascimento) {
+        totalHatched += nascimento.pintinhosNascidos;
+        totalEggCount += fn.quantidadeOvosInicial;
+      }
+    });
+    return totalEggCount > 0 ? Math.round((totalHatched / totalEggCount) * 100) : 0;
+  }, [chocadas]);
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
@@ -164,6 +279,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             <img
               alt="Perfil"
               className="w-full h-full object-cover"
+              loading="lazy"
               src="https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=200"
             />
           </div>
@@ -190,6 +306,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
             <img
               alt="Ovos em incubação"
               className="h-full w-full object-cover opacity-30"
+              loading="lazy"
               src="https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&q=80&w=1600"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-brand)] via-[var(--color-brand)]/90 to-[var(--color-brand)]/70"></div>
@@ -393,106 +510,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {chocadasAtivas.map((ch) => {
-              const totalDays = DURACAO_INCUBACAO[ch.tipoOvo] || 21;
-              const start = new Date(ch.dataInicio + 'T12:00:00');
-              const now = new Date(getCurrentDateString() + 'T12:00:00');
-              const elapsed = Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-              const progressPercent = Math.min(100, Math.round((elapsed / totalDays) * 100));
-              const daysRemaining = totalDays - elapsed;
-              const isUrgent = daysRemaining <= 2 && daysRemaining > 0;
-              const isIminent = daysRemaining <= 5 && daysRemaining > 2;
-              const isOverdue = daysRemaining <= 0;
-              const chocadeiraNome = repo.getChocadeiraById(ch.chocadeiraId)?.nome || null;
-
-              const countdownColor = isOverdue
-                ? 'text-[var(--color-danger)] bg-[var(--color-danger-soft)] border-[var(--color-danger)]/20'
-                : isUrgent
-                ? 'text-[var(--color-warning)] bg-[var(--color-warning-soft)] border-[var(--color-warning)]/25'
-                : isIminent
-                ? 'text-[var(--color-warning)] bg-[var(--color-warning-soft)] border-[var(--color-warning)]/25'
-                : 'text-[var(--color-brand)] bg-[var(--color-brand-soft)] border-[var(--color-brand)]/20';
-
-              const countdownLabel = isOverdue
-                ? `+${Math.abs(daysRemaining)}d` 
-                : `-${daysRemaining}d`;
-
-              const countdownTitle = isOverdue
-                ? `${Math.abs(daysRemaining)} dia(s) em atraso`
-                : `${daysRemaining} dia(s) restante(s)`;
-
-              return (
-                <div
-                  key={ch.id}
-                  onClick={() => onNavigate('chocada_detalhes', { id: ch.id })}
-                  className="bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-4 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] hover:border-[var(--color-brand)]/25 cursor-pointer shadow-sm"
-                >
-                  {/* Cabeçalho com nome e status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-bold text-sm text-[var(--color-ink)] tracking-tight truncate leading-tight">{ch.nome}</h3>
-                      <p className="text-[10px] text-[var(--color-muted)] mt-0.5 uppercase tracking-wider font-semibold">
-                        {ch.tipoOvo} · {ch.quantidadeOvosAtivos} ovos
-                      </p>
-                      {chocadeiraNome && (
-                        <p className="text-[10px] text-[var(--color-brand)] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1">
-                          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-brand)]/60"></span>
-                          {chocadeiraNome}
-                        </p>
-                      )}
-                    </div>
-                    <StatusChip status={ch.status} />
-                  </div>
-
-                  {/* Corpo: Anel de progresso + Contagem regressiva */}
-                  <div className="flex items-center gap-3">
-                    <MiniProgressRing day={elapsed} total={totalDays} status={ch.status} />
-
-                    <div className="flex-1 space-y-2">
-                      {/* Barra de progresso */}
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-bold text-[var(--color-muted)]">
-                          <span>Progresso da Incubação</span>
-                          <span>{elapsed} / {totalDays} Dias</span>
-                        </div>
-                        <div className="w-full bg-[var(--color-surface-soft)] rounded-full h-1.5 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              isOverdue ? 'bg-[var(--color-danger)]' :
-                              isUrgent ? 'bg-gradient-to-r from-[var(--color-warning)] to-[var(--color-danger)]' :
-                              isIminent ? 'bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-warning)]' :
-                              'bg-gradient-to-r from-[var(--color-brand)] to-[var(--color-accent)]'
-                            }`}
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Contagem regressiva em destaque */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider">
-                          {isOverdue ? 'Nascimento esperado' : 'Faltam para nascer'}
-                        </span>
-                        <span
-                          title={countdownTitle}
-                          className={`text-xs font-black px-2 py-0.5 rounded-full border tracking-tight ${countdownColor}`}
-                        >
-                          {countdownLabel}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rodapé: Data de início e seta */}
-                  <div className="flex items-center justify-between pt-1 border-t border-[var(--color-line)]">
-                    <p className="text-[10px] text-[var(--color-muted)] font-semibold uppercase tracking-wider">
-                      Iniciou em {repo.formatReadableDate(ch.dataInicio)}
-                    </p>
-                    <ChevronRight className="w-4 h-4 text-[var(--color-brand)]" />
-                  </div>
-                </div>
-              );
-            })}
+            {chocadasAtivas.map((ch) => (
+              <DashboardChocadaCard
+                key={ch.id}
+                chocada={ch}
+                onNavigate={onNavigate}
+              />
+            ))}
           </div>
         </section>
       </div>

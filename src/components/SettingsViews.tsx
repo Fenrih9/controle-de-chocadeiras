@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus, Trash2, Settings, Landmark, Users, HardHat, Clock, FileChartLine, Save, MapPin, Phone, User, AlertOctagon, ChevronRight, TrendingUp, Pencil } from 'lucide-react';
 import { repo } from '../repository';
 import { Chocadeira, Propriedade, Usuario, Role, RegistroNascimento } from '../types';
@@ -17,7 +17,7 @@ interface SettingsViewsProps {
 
 export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
   const { currentUser } = useAuth();
-  const prop = repo.getPropriedade();
+  const prop = useMemo(() => repo.getPropriedade(), []);
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
@@ -122,6 +122,46 @@ export const ConfiguracoesView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
 };
 
 // --- VIEW: CHOCADEIRAS LISTA ---
+const MemoizedChocadeiraCard = React.memo<{ chocada: Chocadeira; onNavigate: (screenName: string, params?: any) => void; onDelete: (id: string) => void }>(({ chocada, onNavigate, onDelete }) => (
+  <div
+    className="card-base p-4 flex gap-4 transition-all duration-300 relative items-center hover:shadow-[var(--shadow-card-hover)]"
+  >
+    <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-soft)] border border-[var(--color-accent)]/20 flex items-center justify-center text-[var(--color-accent)] shrink-0">
+      <HardHat className="w-6 h-6" />
+    </div>
+
+    <div className="flex-grow min-w-0">
+      <h4 className="font-bold text-[var(--color-ink)] text-sm truncate">{chocada.nome}</h4>
+      <p className="text-[10px] text-[var(--color-muted)] uppercase mt-0.5 tracking-wider font-semibold truncate">
+        Mod: {chocada.modelo} • Cap: {chocada.capacidadeMaximaOvos} ovos
+      </p>
+      <div className="flex items-center gap-2 mt-1.5 text-[10px] font-semibold text-[var(--color-muted)] uppercase leading-none">
+        <span>Loc: {chocada.localizacao}</span>
+        <span>•</span>
+        <span className={chocada.status === 'Ativa' ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}>
+          {chocada.status}
+        </span>
+      </div>
+    </div>
+
+    <button
+      onClick={() => onNavigate('chocadeira_nova', { id: chocada.id })}
+      className="p-2.5 bg-[var(--color-surface-hover)] hover:bg-[var(--color-brand-soft)] text-[var(--color-muted)] hover:text-[var(--color-brand)] rounded-lg transition-colors cursor-pointer"
+      title="Editar chocadeira"
+    >
+      <Pencil className="w-4 h-4" />
+    </button>
+
+    <button
+      onClick={() => onDelete(chocada.id)}
+      className="p-2.5 bg-[var(--color-surface-hover)] hover:bg-[var(--color-danger-soft)] text-[var(--color-muted)] hover:text-[var(--color-danger)] rounded-lg transition-colors cursor-pointer"
+      title="Excluir chocadeira"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+));
+
 export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
   const [chocadeiras, setChocadeiras] = useState<Chocadeira[]>([]);
   const [delTarget, setDelTarget] = useState<string | null>(null);
@@ -172,44 +212,12 @@ export const ChocadeirasListaView: React.FC<SettingsViewsProps> = ({ onNavigate 
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
           {chocadeiras.map((ch) => (
-            <div 
-              key={ch.id} 
-              className="card-base p-4 flex gap-4 transition-all duration-300 relative items-center hover:shadow-[var(--shadow-card-hover)]"
-            >
-              <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-soft)] border border-[var(--color-accent)]/20 flex items-center justify-center text-[var(--color-accent)] shrink-0">
-                <HardHat className="w-6 h-6" />
-              </div>
-              
-              <div className="flex-grow min-w-0">
-                <h4 className="font-bold text-[var(--color-ink)] text-sm truncate">{ch.nome}</h4>
-                <p className="text-[10px] text-[var(--color-muted)] uppercase mt-0.5 tracking-wider font-semibold truncate">
-                  Mod: {ch.modelo} • Cap: {ch.capacidadeMaximaOvos} ovos
-                </p>
-                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-semibold text-[var(--color-muted)] uppercase leading-none">
-                  <span>Loc: {ch.localizacao}</span>
-                  <span>•</span>
-                  <span className={ch.status === 'Ativa' ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}>
-                    {ch.status}
-                  </span>
-                </div>
-              </div>
-
-              <button 
-                onClick={() => onNavigate('chocadeira_nova', { id: ch.id })}
-                className="p-2.5 bg-[var(--color-surface-hover)] hover:bg-[var(--color-brand-soft)] text-[var(--color-muted)] hover:text-[var(--color-brand)] rounded-lg transition-colors cursor-pointer"
-                title="Editar chocadeira"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
-
-              <button 
-                onClick={() => setDelTarget(ch.id)}
-                className="p-2.5 bg-[var(--color-surface-hover)] hover:bg-[var(--color-danger-soft)] text-[var(--color-muted)] hover:text-[var(--color-danger)] rounded-lg transition-colors cursor-pointer"
-                title="Excluir chocadeira"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            <MemoizedChocadeiraCard
+              key={ch.id}
+              chocada={ch}
+              onNavigate={onNavigate}
+              onDelete={setDelTarget}
+            />
           ))}
         </div>
       </div>
@@ -493,8 +501,38 @@ export const PropriedadeEditarView: React.FC<SettingsViewsProps> = ({ onNavigate
 
 
 // --- VIEW: ALERTA HISTORY FEED ---
+const MemoizedAlertaCard = React.memo<{ alerta: any; onNavigate: (screenName: string, params?: any) => void }>(({ alerta, onNavigate }) => (
+  <div
+    key={alerta.id}
+    onClick={() => alerta.chocadaId && onNavigate('chocada_detalhes', { id: alerta.chocadaId })}
+    className={`p-4 rounded-xl border cursor-pointer hover:shadow-[var(--shadow-card-hover)] active:scale-[0.98] transition-all flex gap-3.5 ${
+      alerta.tipo === 'error'
+        ? 'bg-[var(--color-danger-soft)] border-[var(--color-danger)]/20 text-[var(--color-danger)]'
+        : alerta.tipo === 'warning'
+        ? 'bg-[var(--color-warning-soft)] border-[var(--color-warning)]/20 text-[var(--color-warning)]'
+        : 'bg-[var(--color-info-soft)] border-[var(--color-info)]/20 text-[var(--color-info)]'
+    }`}
+  >
+    <div className={`shrink-0 flex items-center justify-center p-2 rounded-lg ${
+      alerta.tipo === 'error' ? 'bg-[var(--color-danger-soft)]' :
+      alerta.tipo === 'warning' ? 'bg-[var(--color-warning-soft)]' :
+      'bg-[var(--color-info-soft)]'
+    }`}>
+      <AlertOctagon className={`w-5 h-5 ${
+        alerta.tipo === 'error' ? 'text-[var(--color-danger)]' :
+        alerta.tipo === 'warning' ? 'text-[var(--color-warning)]' :
+        'text-[var(--color-info)]'
+      }`} />
+    </div>
+    <div>
+      <h4 className="font-extrabold text-sm leading-tight text-[var(--color-ink)]">{alerta.titulo}</h4>
+      <p className="text-xs text-[var(--color-ink-secondary)] mt-1 leading-snug">{alerta.msg}</p>
+    </div>
+  </div>
+));
+
 export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
-  const alertas = repo.getAlertas();
+  const alertas = useMemo(() => repo.getAlertas(), []);
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
@@ -514,33 +552,11 @@ export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {alertas.map((al) => (
-              <div 
+              <MemoizedAlertaCard
                 key={al.id}
-                onClick={() => al.chocadaId && onNavigate('chocada_detalhes', { id: al.chocadaId })}
-                className={`p-4 rounded-xl border cursor-pointer hover:shadow-[var(--shadow-card-hover)] active:scale-[0.98] transition-all flex gap-3.5 ${
-                  al.tipo === 'error'
-                    ? 'bg-[var(--color-danger-soft)] border-[var(--color-danger)]/20 text-[var(--color-danger)]'
-                    : al.tipo === 'warning'
-                    ? 'bg-[var(--color-warning-soft)] border-[var(--color-warning)]/20 text-[var(--color-warning)]'
-                    : 'bg-[var(--color-info-soft)] border-[var(--color-info)]/20 text-[var(--color-info)]'
-                }`}
-              >
-                <div className={`shrink-0 flex items-center justify-center p-2 rounded-lg ${
-                  al.tipo === 'error' ? 'bg-[var(--color-danger-soft)]' : 
-                  al.tipo === 'warning' ? 'bg-[var(--color-warning-soft)]' : 
-                  'bg-[var(--color-info-soft)]'
-                }`}>
-                  <AlertOctagon className={`w-5 h-5 ${
-                    al.tipo === 'error' ? 'text-[var(--color-danger)]' : 
-                    al.tipo === 'warning' ? 'text-[var(--color-warning)]' : 
-                    'text-[var(--color-info)]'
-                  }`} />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm leading-tight text-[var(--color-ink)]">{al.titulo}</h4>
-                  <p className="text-xs text-[var(--color-ink-secondary)] mt-1 leading-snug">{al.msg}</p>
-                </div>
-              </div>
+                alerta={al}
+                onNavigate={onNavigate}
+              />
             ))}
           </div>
         )}
@@ -555,6 +571,35 @@ export const AlertasFeedView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
 // ==========================================
 // USUÁRIOS E CONTAS
 // ==========================================
+const MemoizedUsuarioCard = React.memo<{ usuario: Usuario; onDelete: (id: string) => void }>(({ usuario, onDelete }) => (
+  <div className="card-base p-4 flex items-center justify-between">
+    <div className="min-w-0">
+      <p className="font-bold text-[var(--color-ink)] text-sm truncate">{usuario.username}</p>
+      <div className="flex gap-2 mt-1.5 flex-wrap">
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+          usuario.role === 'ADMIN' ? 'bg-[var(--color-warning-soft)] text-[var(--color-warning)] border-[var(--color-warning)]/20' :
+          usuario.role === 'OPERADOR' ? 'bg-[var(--color-info-soft)] text-[var(--color-info)] border-[var(--color-info)]/20' :
+          'bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/20'
+        }`}>
+          {usuario.role}
+        </span>
+        <span className="text-[10px] text-[var(--color-muted)]">
+          Criado em: {repo.formatReadableDate(usuario.criadoEm)}
+        </span>
+      </div>
+    </div>
+
+    {usuario.username !== 'admin' && (
+      <button
+        onClick={() => onDelete(usuario.id)}
+        className="w-8 h-8 rounded-full bg-[var(--color-danger-soft)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white transition-colors border border-[var(--color-danger)]/20 cursor-pointer shrink-0"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    )}
+  </div>
+));
+
 export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
@@ -562,7 +607,7 @@ export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
     setUsuarios(repo.getUsuarios().filter(u => u.ativo));
   }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (confirm('Deseja realmente remover este usuário?')) {
       const res = await repo.deleteUsuario(id);
       if (res.success) {
@@ -571,7 +616,7 @@ export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
         alert(res.message);
       }
     }
-  };
+  }, []);
 
   return (
     <div className="flex-grow flex flex-col overflow-hidden bg-[var(--color-bg)]">
@@ -596,32 +641,11 @@ export const UsuariosListaView: React.FC<SettingsViewsProps> = ({ onNavigate }) 
           </div>
         )}
         {usuarios.map(u => (
-          <div key={u.id} className="card-base p-4 flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="font-bold text-[var(--color-ink)] text-sm truncate">{u.username}</p>
-              <div className="flex gap-2 mt-1.5 flex-wrap">
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                  u.role === 'ADMIN' ? 'bg-[var(--color-warning-soft)] text-[var(--color-warning)] border-[var(--color-warning)]/20' :
-                  u.role === 'OPERADOR' ? 'bg-[var(--color-info-soft)] text-[var(--color-info)] border-[var(--color-info)]/20' :
-                  'bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/20'
-                }`}>
-                  {u.role}
-                </span>
-                <span className="text-[10px] text-[var(--color-muted)]">
-                  Criado em: {repo.formatReadableDate(u.criadoEm)}
-                </span>
-              </div>
-            </div>
-            
-            {u.username !== 'admin' && (
-              <button 
-                onClick={() => handleDelete(u.id)}
-                className="w-8 h-8 rounded-full bg-[var(--color-danger-soft)] text-[var(--color-danger)] flex items-center justify-center hover:bg-[var(--color-danger)] hover:text-white transition-colors border border-[var(--color-danger)]/20 cursor-pointer shrink-0"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+          <MemoizedUsuarioCard
+            key={u.id}
+            usuario={u}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
     </div>
@@ -712,7 +736,7 @@ export const UsuarioNovoView: React.FC<SettingsViewsProps> = ({ onNavigate }) =>
 };
 
 export const AjusteEstoqueView: React.FC<SettingsViewsProps> = ({ onNavigate }) => {
-  const chocadeiras = repo.getChocadeiras();
+  const chocadeiras = useMemo(() => repo.getChocadeiras(), []);
   const [selectedChocadeiraId, setSelectedChocadeiraId] = useState(chocadeiras[0]?.id || '');
   const [novoSaldoNascidos, setNovoSaldoNascidos] = useState(0);
   const [vendidosAtual, setVendidosAtual] = useState(0);

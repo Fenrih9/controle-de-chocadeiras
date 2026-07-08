@@ -170,6 +170,63 @@ function buildChartData(
 }
 
 // ──────────────────────────────────────────────────────
+// Table Row (Memoized)
+// ──────────────────────────────────────────────────────
+
+interface MemoizedTableRowProps {
+  chocada: Chocada;
+  chocadeiras: Chocadeira[];
+  onNavigate: (screen: string, params?: any) => void;
+}
+
+const MemoizedTableRow = React.memo<MemoizedTableRowProps>(({ chocada: c, chocadeiras, onNavigate }) => {
+  const chocadeira = chocadeiras.find(ch => ch.id === c.chocadeiraId);
+  const nac = repo.getRegistrosNascimento(c.id)[0];
+  const nascidos = nac ? nac.pintinhosNascidos : 0;
+  const ef = c.quantidadeOvosInicial > 0 ? Math.round((nascidos / c.quantidadeOvosInicial) * 100) : 0;
+
+  return (
+    <tr className="hover:bg-[var(--color-surface-hover)]/50 transition-colors">
+      <td className="px-4 py-3.5">
+        <span className="text-[var(--color-ink)] font-bold block">{c.nome}</span>
+        <span className="text-[10px] text-[var(--color-muted-light)]">{repo.formatReadableDate(c.dataInicio)}</span>
+      </td>
+      <td className="px-4 py-3.5">{chocadeira?.nome || '—'}</td>
+      <td className="px-4 py-3.5">{c.tipoOvo}</td>
+      <td className="px-4 py-3.5 text-center text-[var(--color-ink)] font-semibold">{c.quantidadeOvosInicial}</td>
+      <td className="px-4 py-3.5 text-center text-[var(--color-success)] font-bold">
+        {c.finalizada ? nascidos : <span className="text-[var(--color-muted-light)] text-[10px]">Incubando</span>}
+      </td>
+      <td className="px-4 py-3.5 text-center font-extrabold text-[var(--color-ink)]">
+        {c.finalizada ? `${ef}%` : <span className="text-[var(--color-muted-light)] text-[10px]">—</span>}
+      </td>
+      <td className="px-4 py-3.5">
+        <span className={`inline-block px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider border ${
+          c.status === 'FINALIZADA' ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand)] border-[var(--color-brand)]/20' :
+          c.status === 'ATRASADA' ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger)]/20' :
+          c.status === 'PROXIMA' ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent)]/20' :
+          c.status === 'EM_ANDAMENTO' ? 'bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/20' :
+          'bg-[var(--color-muted)]/10 text-[var(--color-muted)] border-[var(--color-muted)]/20'
+        }`}>
+          {c.status === 'FINALIZADA' ? 'Finalizado' :
+           c.status === 'ATRASADA' ? 'Atrasado' :
+           c.status === 'PROXIMA' ? 'Próximo' :
+           c.status === 'EM_ANDAMENTO' ? 'Andamento' : 'Cancelado'}
+        </span>
+      </td>
+      <td className="px-4 py-3.5 text-center">
+        <button
+          onClick={() => onNavigate('relatorio_chocada', { id: c.id })}
+          className="p-1 px-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-brand)] hover:border-[var(--color-brand)]/30 cursor-pointer text-[9px] font-bold flex items-center gap-1 mx-auto transition-all"
+        >
+          <FileText className="w-3 h-3" /> Detalhes
+        </button>
+      </td>
+    </tr>
+  );
+});
+
+// ──────────────────────────────────────────────────────
 // Main Component
 // ──────────────────────────────────────────────────────
 
@@ -205,10 +262,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
   );
 
   // Período anterior para comparação
-  const ant = getPreviousFilter(filtroPeriodo, anoSelecionado, mesSelecionado);
   const chocadasAnteriores = useMemo(
-    () => filterChocadas(chocadas, ant.periodo, ant.ano, ant.mes, chocadeiraSelecionada, tipoOvoSelecionado),
-    [chocadas, ant, chocadeiraSelecionada, tipoOvoSelecionado]
+    () => {
+      const ant = getPreviousFilter(filtroPeriodo, anoSelecionado, mesSelecionado);
+      return filterChocadas(chocadas, ant.periodo, ant.ano, ant.mes, chocadeiraSelecionada, tipoOvoSelecionado);
+    },
+    [chocadas, filtroPeriodo, anoSelecionado, mesSelecionado, chocadeiraSelecionada, tipoOvoSelecionado]
   );
 
   // Métricas
@@ -257,6 +316,23 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
       return { especie: esp, incubados, nascidos, taxa: incubados > 0 ? Math.round((nascidos / incubados) * 100) : 0 };
     }),
     [chocadasFiltradas]
+  );
+
+  // Chocadeira efficiency data
+  const dadosChocadeira = useMemo(() =>
+    chocadeiras.map(ch => {
+      const lotesCh = chocadasFiltradas.filter(c => c.chocadeiraId === ch.id);
+      let ovosCh = 0, nascidosCh = 0;
+      lotesCh.forEach(l => {
+        ovosCh += l.quantidadeOvosInicial;
+        const nac = repo.getRegistrosNascimento(l.id)[0];
+        if (nac) nascidosCh += nac.pintinhosNascidos;
+      });
+      const ef = ovosCh > 0 ? Math.round((nascidosCh / ovosCh) * 100) : 0;
+      return { ch, ovosCh, nascidosCh, ef, ciclos: lotesCh.length };
+    })
+      .sort((a, b) => b.ef - a.ef),
+    [chocadeiras, chocadasFiltradas]
   );
 
   return (
@@ -317,7 +393,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                 </div>
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold text-rose-600 bg-rose-50/50 hover:bg-rose-100/80 rounded-lg border border-rose-200/60 transition-all cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-1 text-[9px] font-bold text-[var(--color-danger)] bg-[var(--color-danger-soft)] hover:bg-[var(--color-danger-soft)] rounded-lg border border-[var(--color-danger)]/20 transition-all cursor-pointer"
                 >
                   <X className="w-3 h-3" /> Limpar filtros
                 </button>
@@ -546,7 +622,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                   Rendimento por Espécie
                 </h3>
                 <div className="space-y-2">
-                  {dadosEspecie
+                  {[...dadosEspecie]
                     .sort((a, b) => b.incubados - a.incubados)
                     .map(e => {
                       const hasData = e.incubados > 0;
@@ -572,18 +648,18 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                           {hasData ? (
                             <div className="text-right shrink-0 ml-3">
                               <span className={`font-extrabold text-sm ${
-                                e.taxa >= 80 ? 'text-emerald-600' :
-                                e.taxa >= 60 ? 'text-amber-600' :
-                                'text-rose-500'
+                                e.taxa >= 80 ? 'text-[var(--color-success)]' :
+                                e.taxa >= 60 ? 'text-[var(--color-warning)]' :
+                                'text-[var(--color-danger)]'
                               }`}>
                                 {e.taxa}%
                               </span>
                               <div className="w-16 bg-[var(--color-surface-soft)] rounded-full h-1.5 mt-1 overflow-hidden">
                                 <div
                                   className={`h-full rounded-full transition-all ${
-                                    e.taxa >= 80 ? 'bg-emerald-500' :
-                                    e.taxa >= 60 ? 'bg-amber-500' :
-                                    'bg-rose-500'
+                                    e.taxa >= 80 ? 'bg-[var(--color-success)]' :
+                                    e.taxa >= 60 ? 'bg-[var(--color-warning)]' :
+                                    'bg-[var(--color-danger)]'
                                   }`}
                                   style={{ width: `${Math.min(e.taxa, 100)}%` }}
                                 />
@@ -605,27 +681,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                   Eficiência por Chocadeira
                 </h3>
                 <div className="space-y-2">
-                  {chocadeiras
-                    .map(ch => {
-                      const lotesCh = chocadasFiltradas.filter(c => c.chocadeiraId === ch.id);
-                      let ovosCh = 0, nascidosCh = 0;
-                      lotesCh.forEach(l => {
-                        ovosCh += l.quantidadeOvosInicial;
-                        const nac = repo.getRegistrosNascimento(l.id)[0];
-                        if (nac) nascidosCh += nac.pintinhosNascidos;
-                      });
-                      const ef = ovosCh > 0 ? Math.round((nascidosCh / ovosCh) * 100) : 0;
-                      return { ch, ovosCh, nascidosCh, ef, ciclos: lotesCh.length };
-                    })
-                    .sort((a, b) => b.ef - a.ef)
-                    .map(({ ch, ovosCh, nascidosCh, ef, ciclos }) => {
+                  {dadosChocadeira.map(({ ch, ovosCh, nascidosCh, ef, ciclos }) => {
                       const isAlert = ef < 20 && ovosCh > 0;
                       return (
                         <div
                           key={ch.id}
                           className={`p-3 rounded-xl border transition-all ${
                             isAlert
-                              ? 'bg-rose-50/80 border-rose-200/60'
+                              ? 'bg-[var(--color-danger-soft)] border-[var(--color-danger)]/20'
                               : ovosCh > 0
                               ? 'bg-[var(--color-bg-warm)] border-[var(--color-line)]'
                               : 'bg-[var(--color-surface)] border-dashed border-[var(--color-line)] opacity-50'
@@ -636,7 +699,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                               <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-[var(--color-ink)] truncate">{ch.nome}</span>
                                 {isAlert && (
-                                  <span className="px-1 py-0.5 bg-rose-100 text-rose-700 rounded text-[8px] font-bold uppercase tracking-wider">Alerta</span>
+                                  <span className="px-1 py-0.5 bg-[var(--color-danger-soft)] text-[var(--color-danger)] rounded text-[8px] font-bold uppercase tracking-wider">Alerta</span>
                                 )}
                               </div>
                               <span className="text-[9px] text-[var(--color-muted)] font-semibold block leading-tight">
@@ -646,9 +709,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                             {ovosCh > 0 ? (
                               <div className="text-right shrink-0 ml-3">
                                 <span className={`font-extrabold text-sm ${
-                                  ef >= 80 ? 'text-emerald-600' :
-                                  ef >= 60 ? 'text-amber-600' :
-                                  'text-rose-500'
+                                  ef >= 80 ? 'text-[var(--color-success)]' :
+                                  ef >= 60 ? 'text-[var(--color-warning)]' :
+                                  'text-[var(--color-danger)]'
                                 }`}>
                                   {ef}%
                                 </span>
@@ -665,9 +728,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                             <div className="w-full bg-[var(--color-surface-soft)] rounded-full h-2 overflow-hidden border border-[var(--color-line)]">
                               <div
                                 className={`h-full rounded-full transition-all duration-700 ${
-                                  ef >= 80 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
-                                  ef >= 60 ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
-                                  'bg-gradient-to-r from-rose-500 to-rose-400'
+                                  ef >= 80 ? 'bg-gradient-to-r from-[var(--color-success)] to-[var(--color-success)]/60' :
+                                  ef >= 60 ? 'bg-gradient-to-r from-[var(--color-warning)] to-[var(--color-warning)]/60' :
+                                  'bg-gradient-to-r from-[var(--color-danger)] to-[var(--color-danger)]/60'
                                 }`}
                                 style={{ width: `${Math.min(ef, 100)}%` }}
                               />
@@ -707,52 +770,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ onNavigate }) => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-line)] bg-[var(--color-surface)]/50 font-medium">
-                    {chocadasFiltradas.map(c => {
-                      const chocadeira = chocadeiras.find(ch => ch.id === c.chocadeiraId);
-                      const nac = repo.getRegistrosNascimento(c.id)[0];
-                      const nascidos = nac ? nac.pintinhosNascidos : 0;
-                      const ef = c.quantidadeOvosInicial > 0 ? Math.round((nascidos / c.quantidadeOvosInicial) * 100) : 0;
-
-                      return (
-                        <tr key={c.id} className="hover:bg-[var(--color-surface-hover)]/50 transition-colors">
-                          <td className="px-4 py-3.5">
-                            <span className="text-[var(--color-ink)] font-bold block">{c.nome}</span>
-                            <span className="text-[10px] text-[var(--color-muted-light)]">{repo.formatReadableDate(c.dataInicio)}</span>
-                          </td>
-                          <td className="px-4 py-3.5">{chocadeira?.nome || '—'}</td>
-                          <td className="px-4 py-3.5">{c.tipoOvo}</td>
-                          <td className="px-4 py-3.5 text-center text-[var(--color-ink)] font-semibold">{c.quantidadeOvosInicial}</td>
-                          <td className="px-4 py-3.5 text-center text-emerald-600 font-bold">
-                            {c.finalizada ? nascidos : <span className="text-[var(--color-muted-light)] text-[10px]">Incubando</span>}
-                          </td>
-                          <td className="px-4 py-3.5 text-center font-extrabold text-[var(--color-ink)]">
-                            {c.finalizada ? `${ef}%` : <span className="text-[var(--color-muted-light)] text-[10px]">—</span>}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider border ${
-                              c.status === 'FINALIZADA' ? 'bg-[var(--color-brand-soft)] text-[var(--color-brand)] border-[var(--color-brand)]/20' :
-                              c.status === 'ATRASADA' ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] border-[var(--color-danger)]/20' :
-                              c.status === 'PROXIMA' ? 'bg-[var(--color-accent-soft)] text-[var(--color-accent)] border-[var(--color-accent)]/20' :
-                              c.status === 'EM_ANDAMENTO' ? 'bg-[var(--color-success-soft)] text-[var(--color-success)] border-[var(--color-success)]/20' :
-                              'bg-[var(--color-muted)]/10 text-[var(--color-muted)] border-[var(--color-muted)]/20'
-                            }`}>
-                              {c.status === 'FINALIZADA' ? 'Finalizado' :
-                               c.status === 'ATRASADA' ? 'Atrasado' :
-                               c.status === 'PROXIMA' ? 'Próximo' :
-                               c.status === 'EM_ANDAMENTO' ? 'Andamento' : 'Cancelado'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3.5 text-center">
-                            <button
-                              onClick={() => onNavigate('relatorio_chocada', { id: c.id })}
-                              className="p-1 px-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-brand)] hover:border-[var(--color-brand)]/30 cursor-pointer text-[9px] font-bold flex items-center gap-1 mx-auto transition-all"
-                            >
-                              <FileText className="w-3 h-3" /> Detalhes
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {chocadasFiltradas.map(c => (
+                    <MemoizedTableRow
+                      key={c.id}
+                      chocada={c}
+                      chocadeiras={chocadeiras}
+                      onNavigate={onNavigate}
+                    />
+                  ))}
                   </tbody>
                 </table>
               </div>
