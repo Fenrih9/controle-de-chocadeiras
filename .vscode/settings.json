@@ -1,0 +1,12 @@
+{
+  // Desativa o validador CSS nativo do VS Code para arquivos .css
+  // A regra @theme é válida no Tailwind CSS v4, mas o VS Code não a reconhece.
+  // Isso suprime o aviso "Unknown at rule @theme css(unknownAtRules)"
+  "css.validate": false,
+  "scss.validate": false,
+
+  // Opcional: recomenda a extensão oficial do Tailwind para suporte completo
+  "editor.quickSuggestions": {
+    "strings": "on"
+  }
+}

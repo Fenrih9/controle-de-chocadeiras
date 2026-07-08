@@ -109,7 +109,21 @@ class AppRepository {
     try {
       const cached = window.localStorage.getItem('laranjeiras_repo_cache');
       if (cached) {
-        this.cache = JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        // Merge seguro: garante que campos adicionados após o cache do usuário
+        // nunca fiquem undefined, evitando crashes ao chamar .filter() etc.
+        this.cache = {
+          propriedades: parsed.propriedades ?? [],
+          chocadeiras: parsed.chocadeiras ?? [],
+          chocadas: parsed.chocadas ?? [],
+          registros_diarios: parsed.registros_diarios ?? [],
+          ovoscopias: parsed.ovoscopias ?? [],
+          registros_nascimentos: parsed.registros_nascimentos ?? [],
+          usuarios: parsed.usuarios ?? [],
+          financeiro_lancamentos: parsed.financeiro_lancamentos ?? [],
+          notificacoes: parsed.notificacoes ?? [],
+          transferencias_agendadas: parsed.transferencias_agendadas ?? [],
+        };
       }
     } catch (e) {
       console.warn('Falha ao recuperar cache local:', e);
