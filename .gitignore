@@ -11,3 +11,7 @@ coverage/
 
 # Arquivos com senhas/credenciais
 criar_usuarios_auth.sql
+
+# Diretório de contexto do agente
+.agent/
+
