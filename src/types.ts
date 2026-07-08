@@ -130,6 +130,17 @@ export interface Alerta {
   data: string;
 }
 
+export interface TransferenciaAgendada {
+  id: string;
+  valor: number;
+  direction: 'paraConta' | 'paraDinheiro';
+  descricao: string;
+  diaVencimento: number; // 1-31, dia do mês
+  ultimaExecucao: string | null; // YYYY-MM-DD
+  ativo: boolean;
+  criadoEm: string;
+}
+
 export interface LancamentoFinanceiro {
   id: string;
   tipo: 'RECEITA' | 'DESPESA';

@@ -11,7 +11,6 @@ import {
   Plus, 
   Trash2, 
   Filter, 
-  Calendar, 
   Info, 
   Egg, 
   Layers, 
@@ -22,12 +21,25 @@ import {
   Calculator,
   ArrowDownRight,
   ArrowUpRight,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Repeat,
+  Calendar,
+  BarChart3,
+  ChartPie
 } from 'lucide-react';
 import { repo, getCurrentDateString } from '../repository';
-import { LancamentoFinanceiro, Chocadeira, Usuario } from '../types';
+import { LancamentoFinanceiro, TransferenciaAgendada, Chocadeira, Usuario } from '../types';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell,
+} from 'recharts';
 import { Button, Card, Input } from './GlacierUI';
 import { useAuth } from '../contexts/AuthContext';
+
+// Cores para gráfico de pizza
+const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#ec4899'];
+
+const MESES_NOMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 // ============================================
 // Função pura de cálculo (seção 3.1 do prompt)
@@ -127,6 +139,88 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   const [transferError, setTransferError] = useState<string>('');
   const [transferSuccess, setTransferSuccess] = useState<string>('');
   const [transferLoading, setTransferLoading] = useState(false);
+
+  // ============================================
+  // Transferências Agendadas (recorrentes)
+  // ============================================
+  const [agendamentos, setAgendamentos] = useState<TransferenciaAgendada[]>([]);
+  const [isAgendarModalOpen, setIsAgendarModalOpen] = useState(false);
+  const [agendamentoValor, setAgendamentoValor] = useState<string>('');
+  const [agendamentoDirection, setAgendamentoDirection] = useState<'paraConta' | 'paraDinheiro'>('paraConta');
+  const [agendamentoDescricao, setAgendamentoDescricao] = useState<string>('');
+  const [agendamentoDia, setAgendamentoDia] = useState<string>('5');
+  const [agendamentoError, setAgendamentoError] = useState<string>('');
+  const [agendamentoSuccess, setAgendamentoSuccess] = useState<string>('');
+  const [agendamentoLoading, setAgendamentoLoading] = useState(false);
+  const [agendamentoEditId, setAgendamentoEditId] = useState<string | null>(null);
+
+  // ============================================
+  // Relatório Mensal
+  // ============================================
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportAno, setReportAno] = useState(new Date().getFullYear().toString());
+  const [reportMes, setReportMes] = useState<string>('todas');
+
+  // Dados do relatório mensal
+  const reportData = useMemo(() => {
+    if (lancamentos.length === 0) return { meses: [], resumo: { receitas: 0, despesas: 0, saldo: 0 } };
+
+    const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    // Filtrar lançamentos do ano selecionado, excluindo transferências entre contas
+    const filtrados = lancamentos.filter(l => {
+      if (l.categoria === 'Transferência entre contas') return false;
+      return l.data.substring(0, 4) === reportAno;
+    });
+
+    // Agrupar por mês
+    const meses: { mes: number; label: string; receitas: number; despesas: number; saldo: number }[] = [];
+    for (let i = 0; i < 12; i++) {
+      const doMes = filtrados.filter(l => parseInt(l.data.substring(5, 7), 10) - 1 === i);
+      const receitas = doMes.filter(l => l.tipo === 'RECEITA').reduce((s, l) => s + l.valor, 0);
+      const despesas = doMes.filter(l => l.tipo === 'DESPESA').reduce((s, l) => s + l.valor, 0);
+      meses.push({ mes: i, label: MESES_ABREV[i], receitas, despesas, saldo: receitas - despesas });
+    }
+
+    // Se um mês específico foi selecionado, filtrar
+    const mesesExibir = reportMes === 'todas' ? meses : meses.filter(m => m.mes === parseInt(reportMes));
+
+    const receitas = filtrados.filter(l => l.tipo === 'RECEITA').reduce((s, l) => s + l.valor, 0);
+    const despesas = filtrados.filter(l => l.tipo === 'DESPESA').reduce((s, l) => s + l.valor, 0);
+    const resumo = { receitas, despesas, saldo: receitas - despesas };
+
+    return { meses: mesesExibir, resumo };
+  }, [lancamentos, reportAno, reportMes]);
+
+  // Dados para gráfico de pizza por categoria
+  const pieData = useMemo(() => {
+    const filtrados = lancamentos.filter(l => {
+      if (l.categoria === 'Transferência entre contas') return false;
+      return l.data.substring(0, 4) === reportAno;
+    });
+
+    // Categorias por tipo
+    const receitas: Record<string, number> = {};
+    const despesas: Record<string, number> = {};
+
+    filtrados.forEach(l => {
+      if (l.tipo === 'RECEITA') {
+        receitas[l.categoria] = (receitas[l.categoria] || 0) + l.valor;
+      } else {
+        despesas[l.categoria] = (despesas[l.categoria] || 0) + l.valor;
+      }
+    });
+
+    return {
+      receitas: Object.entries(receitas).map(([name, value]) => ({ name, value })),
+      despesas: Object.entries(despesas).map(([name, value]) => ({ name, value })),
+    };
+  }, [lancamentos, reportAno, reportMes]);
+
+  // Anos disponíveis para o relatório
+  const anosDisponiveisRelatorio = useMemo(() => {
+    return Array.from(new Set(lancamentos.map(l => l.data.substring(0, 4)))).sort().reverse() as string[];
+  }, [lancamentos]);
 
   // ============================================
   // Verificar se a categoria tem controle de estoque
@@ -264,6 +358,112 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
   // Categorias disponíveis por tipo
   const categoriasReceita = ['Venda de Pintinhos', 'Venda de Ovos', 'Subsídio/Vendas Gerais', 'Transferência entre contas', 'Outros'];
   const categoriasDespesa = ['Compra de Ração', 'Medicamentos/Sanitários', 'Manutenção de Chocadeiras', 'Energia Elétrica', 'Transferência entre contas', 'Outros'];
+
+  // ============================================
+  // Carregar agendamentos e executar vencidos
+  // ============================================
+  const carregarAgendamentos = () => {
+    setAgendamentos(repo.getTransferenciasAgendadas());
+  };
+
+  useEffect(() => {
+    carregarAgendamentos();
+    // Executar transferências agendadas que estão vencidas
+    repo.executarTransferenciasAgendadas().then(executadas => {
+      if (executadas > 0) {
+        carregarDados();
+        carregarAgendamentos();
+      }
+    });
+  }, []);
+
+  // ============================================
+  // Abrir modal de agendamento
+  // ============================================
+  const handleOpenAgendarModal = (editItem?: TransferenciaAgendada) => {
+    if (editItem) {
+      setAgendamentoEditId(editItem.id);
+      setAgendamentoValor(editItem.valor.toString());
+      setAgendamentoDirection(editItem.direction);
+      setAgendamentoDescricao(editItem.descricao);
+      setAgendamentoDia(editItem.diaVencimento.toString());
+    } else {
+      setAgendamentoEditId(null);
+      setAgendamentoValor('');
+      setAgendamentoDirection('paraConta');
+      setAgendamentoDescricao('');
+      setAgendamentoDia('5');
+    }
+    setAgendamentoError('');
+    setAgendamentoSuccess('');
+    setAgendamentoLoading(false);
+    setIsAgendarModalOpen(true);
+  };
+
+  // ============================================
+  // Salvar agendamento
+  // ============================================
+  const handleSaveAgendamento = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAgendamentoError('');
+    setAgendamentoSuccess('');
+
+    const valor = parseFloat(agendamentoValor);
+    if (!valor || isNaN(valor) || valor <= 0) {
+      setAgendamentoError('Por favor, insira um valor válido maior que zero.');
+      return;
+    }
+
+    const dia = parseInt(agendamentoDia);
+    if (isNaN(dia) || dia < 1 || dia > 31) {
+      setAgendamentoError('O dia deve estar entre 1 e 31.');
+      return;
+    }
+
+    setAgendamentoLoading(true);
+
+    const existing = agendamentoEditId
+      ? repo.getTransferenciasAgendadas().find(t => t.id === agendamentoEditId)
+      : undefined;
+
+    const payload: TransferenciaAgendada = {
+      id: agendamentoEditId || '',
+      valor,
+      direction: agendamentoDirection,
+      descricao: agendamentoDescricao.trim(),
+      diaVencimento: dia,
+      ultimaExecucao: existing?.ultimaExecucao || null,
+      ativo: true,
+      criadoEm: existing?.criadoEm || '',
+    };
+
+    const res = await repo.saveTransferenciaAgendada(payload);
+    if (res.success) {
+      setAgendamentoSuccess('Agendamento salvo com sucesso!');
+      carregarAgendamentos();
+      setAgendamentoLoading(false);
+      setTimeout(() => {
+        setIsAgendarModalOpen(false);
+      }, 1200);
+    } else {
+      setAgendamentoError(res.message);
+      setAgendamentoLoading(false);
+    }
+  };
+
+  // ============================================
+  // Excluir agendamento
+  // ============================================
+  const handleExcluirAgendamento = async (id: string) => {
+    if (confirm('Deseja realmente remover este agendamento?')) {
+      const res = await repo.deleteTransferenciaAgendada(id);
+      if (res.success) {
+        carregarAgendamentos();
+      } else {
+        alert(res.message);
+      }
+    }
+  };
 
   // ============================================
   // Abrir modal de transferência entre contas
@@ -512,11 +712,27 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
             >
               <ArrowRightLeft className="w-4 h-4" /> Transferir
             </button>
+            {agendamentos.length > 0 && (
+              <button
+                onClick={() => handleOpenAgendarModal()}
+                className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 px-4 py-2.5 text-xs font-bold text-[var(--color-warning)] shadow-sm transition hover:bg-[var(--color-warning)]/20 cursor-pointer"
+                title="Gerenciar transferências agendadas"
+              >
+                <Calendar className="w-4 h-4" /> Agendamentos
+              </button>
+            )}
             <button
               onClick={handleOpenNovo}
               className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--color-brand)] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-brand-hover)] cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Novo Lançamento
+            </button>
+            <button
+              onClick={() => { setReportAno(new Date().getFullYear().toString()); setReportMes('todas'); setIsReportModalOpen(true); }}
+              className="inline-flex w-full min-[460px]:w-auto items-center justify-center gap-2 rounded-xl bg-[var(--color-surface)] border border-[var(--color-line)] px-4 py-2.5 text-xs font-bold text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-surface-hover)] cursor-pointer"
+              title="Relatório Mensal"
+            >
+              <BarChart3 className="w-4 h-4" /> Relatório
             </button>
           </div>
         )}
@@ -629,6 +845,7 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                 <option value="Medicamentos/Sanitários">Medicamentos</option>
                 <option value="Manutenção de Chocadeiras">Manutenção</option>
                 <option value="Energia Elétrica">Energia Elétrica</option>
+                <option value="Transferência entre contas">Transferência entre contas</option>
                 <option value="Outros">Outras categorias</option>
               </select>
             </div>
@@ -770,6 +987,81 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
         </Card>
 
       </div>
+
+        {/* Card de Transferências Agendadas */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-2 border-b border-[var(--color-line)] pb-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Repeat className="w-4 h-4 text-[var(--color-warning)]" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--color-muted)]">Transferências Agendadas (Recorrentes)</h3>
+            </div>
+            <button
+              onClick={() => handleOpenAgendarModal()}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 text-[var(--color-warning)] text-[10px] font-bold uppercase tracking-wider transition hover:bg-[var(--color-warning)]/20 cursor-pointer"
+            >
+              <Plus className="w-3 h-3" /> Novo Agendamento
+            </button>
+          </div>
+
+          {agendamentos.length === 0 ? (
+            <div className="text-center py-6 text-[var(--color-muted)] space-y-2">
+              <Repeat className="w-8 h-8 text-[var(--color-muted)]/30 mx-auto" />
+              <p className="text-xs font-medium">Nenhum agendamento ativo.</p>
+              <button
+                onClick={() => handleOpenAgendarModal()}
+                className="text-[var(--color-warning)] text-[10px] font-bold underline hover:no-underline cursor-pointer"
+              >
+                Criar agendamento recorrente
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {agendamentos.map(t => (
+                <div key={t.id} className="flex items-center justify-between p-3 bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-sm ${
+                      t.direction === 'paraConta'
+                        ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
+                        : 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                    }`}>
+                      {t.direction === 'paraConta' ? '💵→🏦' : '🏦→💵'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-[var(--color-ink)] truncate">
+                        {t.descricao || 'Transferência recorrente'}
+                      </p>
+                      <p className="text-[10px] text-[var(--color-muted)]">
+                        <span className="font-bold">Dia {t.diaVencimento}°</span> de cada mês · 
+                        R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {t.ultimaExecucao && (
+                      <span className="text-[9px] text-[var(--color-success)] font-bold" title="Última execução">
+                        ✓ {t.ultimaExecucao.substring(8,10)}/{t.ultimaExecucao.substring(5,7)}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleOpenAgendarModal(t)}
+                      className="p-1.5 text-[var(--color-muted)] hover:text-[var(--color-brand)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-all cursor-pointer"
+                      title="Editar agendamento"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleExcluirAgendamento(t.id)}
+                      className="p-1.5 text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 rounded-lg transition-all cursor-pointer"
+                      title="Excluir agendamento"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
       {/* ============================================
           Modal CRUD Lançamento
@@ -1122,6 +1414,615 @@ export const FinanceiroView: React.FC<FinanceiroViewProps> = ({ onNavigate }) =>
                   className="flex-1 py-2.5 text-xs"
                 >
                   {isEditMode ? 'Atualizar' : 'Registrar'}
+                </Button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================
+          Modal de Agendamento Recorrente
+          ============================================ */}
+      {isAgendarModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsAgendarModalOpen(false)}></div>
+          
+          <div className="relative w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[var(--color-text)]">
+            <button
+              onClick={() => setIsAgendarModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)] rounded-lg transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-extrabold font-headline uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-[var(--color-line)] pb-3">
+              <Repeat className="w-4.5 h-4.5 text-[var(--color-warning)]" />
+              {agendamentoEditId ? 'Editar Agendamento' : 'Nova Transferência Recorrente'}
+            </h3>
+
+            <form onSubmit={handleSaveAgendamento} className="space-y-4">
+
+              {agendamentoError && (
+                <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs py-2.5 px-3.5 rounded-xl flex items-center gap-2 font-medium">
+                  <AlertCircle className="w-4.5 h-4.5 shrink-0" />
+                  <span>{agendamentoError}</span>
+                </div>
+              )}
+
+              {agendamentoSuccess && (
+                <div className="bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 text-[var(--color-success)] text-xs py-2.5 px-3.5 rounded-xl text-center font-bold">
+                  {agendamentoSuccess}
+                </div>
+              )}
+
+              {/* Direção */}
+              <div>
+                <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1.5">Direção da Transferência</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAgendamentoDirection('paraConta')}
+                    className={`py-3 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
+                      agendamentoDirection === 'paraConta'
+                        ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30 text-[var(--color-accent)] shadow-sm'
+                        : 'border-[var(--color-line)] hover:bg-[var(--color-bg)] text-[var(--color-muted)]'
+                    }`}
+                  >
+                    <span className="block mb-0.5 text-base">💵 → 🏦</span>
+                    <span>Dinheiro → Conta</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAgendamentoDirection('paraDinheiro')}
+                    className={`py-3 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
+                      agendamentoDirection === 'paraDinheiro'
+                        ? 'bg-[var(--color-success)]/10 border-[var(--color-success)]/30 text-[var(--color-success)] shadow-sm'
+                        : 'border-[var(--color-line)] hover:bg-[var(--color-bg)] text-[var(--color-muted)]'
+                    }`}
+                  >
+                    <span className="block mb-0.5 text-base">🏦 → 💵</span>
+                    <span>Conta → Dinheiro</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Valor e Dia */}
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Valor (R$)"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0,00"
+                  value={agendamentoValor}
+                  onChange={(e) => setAgendamentoValor(e.target.value)}
+                  required
+                />
+                <div>
+                  <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1.5">Dia do Mês</label>
+                  <select
+                    value={agendamentoDia}
+                    onChange={(e) => setAgendamentoDia(e.target.value)}
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium cursor-pointer text-xs"
+                  >
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map(d => (
+                      <option key={d} value={d}>Dia {d}°</option>
+                    ))}
+                    <option value={29}>Dia 29°</option>
+                    <option value={30}>Dia 30°</option>
+                    <option value={31}>Dia 31° (último dia útil)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Descrição */}
+              <div>
+                <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1">Descrição (opcional)</label>
+                <textarea
+                  value={agendamentoDescricao}
+                  onChange={(e) => setAgendamentoDescricao(e.target.value)}
+                  placeholder="Ex: Depósito mensal para a conta"
+                  className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-text)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium text-xs h-18 resize-none"
+                />
+              </div>
+
+              {/* Resumo */}
+              {agendamentoValor && parseFloat(agendamentoValor) > 0 && (
+                <div className="bg-[var(--color-warning)]/5 border border-[var(--color-warning)]/20 rounded-xl p-4 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[var(--color-warning)] text-[10px] font-bold uppercase tracking-wider">
+                    <Repeat className="w-3.5 h-3.5" /> Resumo do Agendamento
+                  </div>
+                  <div className="text-[11px] space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[var(--color-muted)]">Todo dia</span>
+                      <span className="font-bold text-[var(--color-ink)]">{agendamentoDia}° de cada mês</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--color-muted)]">Direção:</span>
+                      <span className="font-bold text-[var(--color-ink)]">
+                        {agendamentoDirection === 'paraConta' ? '💵 Dinheiro → 🏦 Conta' : '🏦 Conta → 💵 Dinheiro'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-1.5 border-t border-[var(--color-line)]">
+                      <span className="text-[var(--color-muted)] font-semibold">Valor mensal:</span>
+                      <span className="text-sm font-black text-[var(--color-warning)]">
+                        R$ {parseFloat(agendamentoValor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botões */}
+              <div className="flex flex-col min-[420px]:flex-row gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsAgendarModalOpen(false)}
+                  className="flex-1 py-2.5 text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="flex-1 py-2.5 text-xs"
+                  isLoading={agendamentoLoading}
+                  disabled={agendamentoLoading}
+                >
+                  <Repeat className="w-3.5 h-3.5" /> {agendamentoEditId ? 'Atualizar' : 'Agendar'}
+                </Button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================
+          Modal de Transferência entre Contas
+          ============================================ */}
+      {/* ============================================
+          Modal de Relatório Mensal
+          ============================================ */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReportModalOpen(false)}></div>
+          
+          <div className="relative w-full max-w-3xl max-h-[calc(100vh-2rem)] overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[var(--color-text)]">
+            <button
+              onClick={() => setIsReportModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)] rounded-lg transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-extrabold font-headline uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-[var(--color-line)] pb-3">
+              <BarChart3 className="w-4.5 h-4.5 text-[var(--color-brand)]" />
+              Relatório Mensal — Receitas vs Despesas
+            </h3>
+
+            {/* Seletor de período */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-5">
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1">Ano</label>
+                <select
+                  value={reportAno}
+                  onChange={e => setReportAno(e.target.value)}
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl py-2.5 px-3 text-xs text-[var(--color-text)] font-medium cursor-pointer"
+                >
+                  {anosDisponiveisRelatorio.length > 0 ? anosDisponiveisRelatorio.map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  )) : (
+                    <option value={new Date().getFullYear().toString()}>{new Date().getFullYear()}</option>
+                  )}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1">Mês</label>
+                <select
+                  value={reportMes}
+                  onChange={e => setReportMes(e.target.value)}
+                  className="w-full bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl py-2.5 px-3 text-xs text-[var(--color-text)] font-medium cursor-pointer"
+                >
+                  <option value="todas">Todos os meses</option>
+                  {MESES_NOMES.map((nome, i) => (
+                    <option key={i} value={i.toString()}>{nome}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Cards de resumo */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              <div className="bg-[var(--color-success)]/5 border border-[var(--color-success)]/20 rounded-xl p-4">
+                <span className="text-[10px] font-bold text-[var(--color-success)] uppercase tracking-wider flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" /> Total Receitas
+                </span>
+                <p className="text-xl font-black text-[var(--color-success)] mt-1">
+                  {fmtBRL(reportData.resumo.receitas)}
+                </p>
+              </div>
+              <div className="bg-[var(--color-danger)]/5 border border-[var(--color-danger)]/20 rounded-xl p-4">
+                <span className="text-[10px] font-bold text-[var(--color-danger)] uppercase tracking-wider flex items-center gap-1">
+                  <TrendingDown className="w-3.5 h-3.5" /> Total Despesas
+                </span>
+                <p className="text-xl font-black text-[var(--color-danger)] mt-1">
+                  {fmtBRL(reportData.resumo.despesas)}
+                </p>
+              </div>
+              <div className={`${reportData.resumo.saldo >= 0 ? 'bg-[var(--color-brand)]/5 border-[var(--color-brand)]/20' : 'bg-[var(--color-danger)]/5 border-[var(--color-danger)]/20'} rounded-xl p-4`}>
+                <span className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider flex items-center gap-1">
+                  <DollarSign className="w-3.5 h-3.5" /> Saldo do Período
+                </span>
+                <p className={`text-xl font-black mt-1 ${reportData.resumo.saldo >= 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}>
+                  {fmtBRL(reportData.resumo.saldo)}
+                </p>
+              </div>
+            </div>
+
+            {/* Gráfico de Barras: Receitas vs Despesas por mês */}
+            <div className="bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl p-4 mb-4">
+              <h4 className="text-[11px] font-bold text-[var(--color-brand)] uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                <BarChart3 className="w-4 h-4" /> Receitas vs Despesas
+                {reportMes !== 'todas' && (
+                  <span className="text-[9px] text-[var(--color-muted)] font-normal normal-case">
+                    — {MESES_NOMES[parseInt(reportMes)]}
+                  </span>
+                )}
+              </h4>
+              {reportData.meses.length === 0 || reportData.meses.every(m => m.receitas === 0 && m.despesas === 0) ? (
+                <div className="h-48 flex items-center justify-center text-[var(--color-muted)] text-xs italic rounded-xl border border-dashed border-[var(--color-line)]">
+                  Nenhum dado financeiro disponível para o período selecionado.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={reportData.meses} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: 'var(--color-muted)', fontWeight: 600 }}
+                      axisLine={{ stroke: 'var(--color-line)' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 9, fill: 'var(--color-muted)', fontFamily: 'monospace' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v: number) => `R$${v.toLocaleString('pt-BR', { notation: 'compact', minimumFractionDigits: 0 })}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--color-surface)',
+                        border: '1px solid var(--color-line)',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                      }}
+                      formatter={(value: number, name: string) => [
+                        `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+                        name === 'receitas' ? 'Receitas' : 'Despesas',
+                      ]}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                      iconType="rect"
+                      iconSize={8}
+                      formatter={(value: string) => value === 'receitas' ? 'Receitas' : 'Despesas'}
+                    />
+                    <Bar
+                      dataKey="receitas"
+                      name="receitas"
+                      fill="#10b981"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={48}
+                    />
+                    <Bar
+                      dataKey="despesas"
+                      name="despesas"
+                      fill="#ef4444"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={48}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* Linha do saldo */}
+              {reportData.meses.length > 1 && reportData.meses.some(m => m.receitas > 0 || m.despesas > 0) && (
+                <div className="mt-4 pt-3 border-t border-[var(--color-line)]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {reportData.meses.map(m => (
+                      <div key={m.mes} className="flex items-center justify-between px-3 py-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-line)]">
+                        <span className="text-[10px] font-bold text-[var(--color-muted)]">{m.label}</span>
+                        <span className={`text-[10px] font-bold ${m.saldo >= 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}>
+                          {fmtBRL(m.saldo)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Gráfico de Pizza: Distribuição por categoria */}
+            {reportMes === 'todas' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Receitas */}
+                <div className="bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl p-4">
+                  <h4 className="text-[11px] font-bold text-[var(--color-success)] uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                    <ChartPie className="w-4 h-4" /> Receitas por Categoria
+                  </h4>
+                  {pieData.receitas.length === 0 ? (
+                    <div className="h-40 flex items-center justify-center text-[var(--color-muted)] text-xs italic">
+                      Nenhuma receita no período.
+                    </div>
+                  ) : (
+                    <>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                          <Pie
+                            data={pieData.receitas}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={35}
+                            outerRadius={65}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {pieData.receitas.map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Valor']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="space-y-1 mt-2">
+                        {pieData.receitas.map((entry, index) => (
+                          <div key={entry.name} className="flex items-center justify-between text-[10px]">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
+                              <span className="text-[var(--color-text)] font-medium">{entry.name}</span>
+                            </span>
+                            <span className="font-bold text-[var(--color-text)]">
+                              {fmtBRL(entry.value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Despesas */}
+                <div className="bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl p-4">
+                  <h4 className="text-[11px] font-bold text-[var(--color-danger)] uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                    <ChartPie className="w-4 h-4" /> Despesas por Categoria
+                  </h4>
+                  {pieData.despesas.length === 0 ? (
+                    <div className="h-40 flex items-center justify-center text-[var(--color-muted)] text-xs italic">
+                      Nenhuma despesa no período.
+                    </div>
+                  ) : (
+                    <>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                          <Pie
+                            data={pieData.despesas}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={35}
+                            outerRadius={65}
+                            paddingAngle={3}
+                            dataKey="value"
+                          >
+                            {pieData.despesas.map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Valor']}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="space-y-1 mt-2">
+                        {pieData.despesas.map((entry, index) => (
+                          <div key={entry.name} className="flex items-center justify-between text-[10px]">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }} />
+                              <span className="text-[var(--color-text)] font-medium">{entry.name}</span>
+                            </span>
+                            <span className="font-bold text-[var(--color-text)]">
+                              {fmtBRL(entry.value)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================
+          Modal de Transferência entre Contas
+          ============================================ */}
+      {isTransferModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsTransferModalOpen(false)}></div>
+          
+          <div className="relative w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto bg-[var(--color-surface)] border border-[var(--color-line)] rounded-2xl p-5 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[var(--color-text)]">
+            <button
+              onClick={() => setIsTransferModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-[var(--color-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg)] rounded-lg transition-all"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-extrabold font-headline uppercase tracking-wider mb-6 flex items-center gap-2 border-b border-[var(--color-line)] pb-3">
+              <ArrowRightLeft className="w-4.5 h-4.5 text-[var(--color-accent)]" />
+              Transferir entre Contas
+            </h3>
+
+            <form onSubmit={handleTransfer} className="space-y-4">
+
+              {/* Avisos */}
+              {transferError && (
+                <div className="bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20 text-[var(--color-danger)] text-xs py-2.5 px-3.5 rounded-xl flex items-center gap-2 font-medium">
+                  <AlertCircle className="w-4.5 h-4.5 shrink-0" />
+                  <span>{transferError}</span>
+                </div>
+              )}
+
+              {transferSuccess && (
+                <div className="bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 text-[var(--color-success)] text-xs py-2.5 px-3.5 rounded-xl text-center font-bold">
+                  {transferSuccess}
+                </div>
+              )}
+
+              {/* Direção da Transferência */}
+              <div>
+                <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1.5">Direção da Transferência</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTransferDirection('paraConta')}
+                    className={`py-3 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
+                      transferDirection === 'paraConta'
+                        ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30 text-[var(--color-accent)] shadow-sm'
+                        : 'border-[var(--color-line)] hover:bg-[var(--color-bg)] text-[var(--color-muted)]'
+                    }`}
+                  >
+                    <span className="block mb-0.5 text-base">💵 → 🏦</span>
+                    <span>Dinheiro → Conta</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTransferDirection('paraDinheiro')}
+                    className={`py-3 px-3 rounded-xl font-bold text-xs border text-center transition-all cursor-pointer ${
+                      transferDirection === 'paraDinheiro'
+                        ? 'bg-[var(--color-success)]/10 border-[var(--color-success)]/30 text-[var(--color-success)] shadow-sm'
+                        : 'border-[var(--color-line)] hover:bg-[var(--color-bg)] text-[var(--color-muted)]'
+                    }`}
+                  >
+                    <span className="block mb-0.5 text-base">🏦 → 💵</span>
+                    <span>Conta → Dinheiro</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Saldos atuais */}
+              <div className="p-3 bg-[var(--color-bg)] border border-[var(--color-line)] rounded-xl space-y-1.5 text-[11px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--color-muted)]">🏦 Saldo em Conta:</span>
+                  <span className={`font-bold ${saldoBanco >= 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}>
+                    R$ {saldoBanco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--color-muted)]">💵 Saldo em Dinheiro:</span>
+                  <span className={`font-bold ${saldoDinheiro >= 0 ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}>
+                    R$ {saldoDinheiro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1.5 border-t border-[var(--color-line)]">
+                  <span className="text-[var(--color-muted)]">Destino:</span>
+                  <span className="font-bold text-[var(--color-ink)]">
+                    {transferDirection === 'paraConta' ? '🏦 Conta Bancária' : '💵 Dinheiro'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Valor */}
+              <Input
+                label="Valor a Transferir (R$)"
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="0,00"
+                value={transferValor}
+                onChange={(e) => setTransferValor(e.target.value)}
+                required
+                helperText={
+                  transferDirection === 'paraConta'
+                    ? 'Do dinheiro vivo para a conta bancária'
+                    : 'Da conta bancária para o dinheiro vivo'
+                }
+              />
+
+              {/* Data */}
+              <Input
+                label="Data da Transferência"
+                type="date"
+                value={transferData}
+                onChange={(e) => setTransferData(e.target.value)}
+                required
+              />
+
+              {/* Descrição */}
+              <div>
+                <label className="text-[10px] font-bold text-[var(--color-muted)] uppercase block mb-1">Descrição (opcional)</label>
+                <textarea
+                  value={transferDescricao}
+                  onChange={(e) => setTransferDescricao(e.target.value)}
+                  placeholder="Ex: Depósito em espécie"
+                  className="w-full bg-[var(--color-surface)] border border-[var(--color-line)] rounded-xl py-3 px-4 text-[var(--color-text)] placeholder:text-[var(--color-muted-light)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-soft)] focus:border-[var(--color-brand)] transition-all font-medium text-xs h-18 resize-none"
+                />
+              </div>
+
+              {/* Resumo */}
+              {transferValor && parseFloat(transferValor) > 0 && (
+                <div className="bg-[var(--color-brand)]/5 border border-[var(--color-brand)]/20 rounded-xl p-4 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[var(--color-brand)] text-[10px] font-bold uppercase tracking-wider">
+                    <ArrowRightLeft className="w-3.5 h-3.5" /> Resumo da Transferência
+                  </div>
+                  <div className="text-[11px] space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[var(--color-muted)]">Origem:</span>
+                      <span className="font-bold text-[var(--color-text)]">
+                        {transferDirection === 'paraConta' ? '💵 Dinheiro' : '🏦 Conta'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[var(--color-muted)]">Destino:</span>
+                      <span className="font-bold text-[var(--color-text)]">
+                        {transferDirection === 'paraConta' ? '🏦 Conta' : '💵 Dinheiro'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-1.5 border-t border-[var(--color-line)]">
+                      <span className="text-[var(--color-muted)] font-semibold">Valor:</span>
+                      <span className="text-sm font-black text-[var(--color-brand)]">
+                        R$ {parseFloat(transferValor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botões */}
+              <div className="flex flex-col min-[420px]:flex-row gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsTransferModalOpen(false)}
+                  className="flex-1 py-2.5 text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="flex-1 py-2.5 text-xs"
+                  isLoading={transferLoading}
+                  disabled={transferLoading}
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" /> Confirmar Transferência
                 </Button>
               </div>
 

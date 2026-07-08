@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Chocadeira, Chocada, RegistroDiario, Ovoscopia, RegistroNascimento, Propriedade, Alerta, ChocadaStatus, Usuario, LancamentoFinanceiro, Notificacao, SeveridadeNotificacao } from './types';
+import { Chocadeira, Chocada, RegistroDiario, Ovoscopia, RegistroNascimento, Propriedade, Alerta, ChocadaStatus, Usuario, LancamentoFinanceiro, Notificacao, SeveridadeNotificacao, TransferenciaAgendada } from './types';
 import { supabase } from './supabaseClient';
 
 export function addDays(dateStr: string, days: number): string {
@@ -73,6 +73,7 @@ type AppCache = {
   usuarios: Usuario[];
   financeiro_lancamentos: LancamentoFinanceiro[];
   notificacoes: Notificacao[];
+  transferencias_agendadas: TransferenciaAgendada[];
 };
 
 class AppRepository {
@@ -86,6 +87,7 @@ class AppRepository {
     usuarios: [],
     financeiro_lancamentos: [],
     notificacoes: [],
+    transferencias_agendadas: [],
   };
 
   private isLoaded = false;
@@ -199,6 +201,7 @@ class AppRepository {
       usuarios: [],
       financeiro_lancamentos: [],
       notificacoes: [],
+      transferencias_agendadas: [],
     };
     this.isLoaded = false;
     this.stopNotificationPolling();
@@ -1491,6 +1494,128 @@ class AppRepository {
       },
       { nascidos: 0, vendidos: 0, disponivel: 0 }
     );
+  }
+
+  // ==========================================
+  // TRANSFERÊNCIAS AGENDADAS
+  // ==========================================
+
+  public getTransferenciasAgendadas(): TransferenciaAgendada[] {
+    return this.cache.transferencias_agendadas
+      .filter(t => t.ativo)
+      .sort((a, b) => a.diaVencimento - b.diaVencimento);
+  }
+
+  public async saveTransferenciaAgendada(t: TransferenciaAgendada): Promise<{ success: boolean; message: string }> {
+    if (t.valor <= 0) return { success: false, message: 'O valor deve ser maior que zero.' };
+    if (t.diaVencimento < 1 || t.diaVencimento > 31) return { success: false, message: 'O dia de vencimento deve estar entre 1 e 31.' };
+
+    const list = this.cache.transferencias_agendadas;
+    const index = list.findIndex(item => item.id === t.id);
+
+    if (index >= 0) {
+      list[index] = { ...list[index], ...t };
+    } else {
+      t.id = t.id || `transf-agend-${Date.now()}`;
+      t.criadoEm = CURRENT_DATE_STRING;
+      t.ativo = true;
+      t.ultimaExecucao = null;
+      list.push(t);
+    }
+
+    this.saveLocalCache();
+    return { success: true, message: 'Transferência agendada salva com sucesso!' };
+  }
+
+  public async deleteTransferenciaAgendada(id: string): Promise<{ success: boolean; message: string }> {
+    const list = this.cache.transferencias_agendadas;
+    const index = list.findIndex(item => item.id === id);
+    if (index >= 0) {
+      list[index].ativo = false;
+      this.saveLocalCache();
+      return { success: true, message: 'Agendamento removido.' };
+    }
+    return { success: false, message: 'Agendamento não encontrado.' };
+  }
+
+  /**
+   * Verifica e executa transferências agendadas que estão vencidas.
+   * Retorna quantas foram executadas.
+   */
+  public async executarTransferenciasAgendadas(): Promise<number> {
+    const hoje = getCurrentDateString();
+    const hojeParts = hoje.split('-');
+    const hojeDia = parseInt(hojeParts[2]);
+    const hojeMesAno = hojeParts[0] + '-' + hojeParts[1]; // YYYY-MM
+
+    let executadas = 0;
+
+    for (const t of this.cache.transferencias_agendadas) {
+      if (!t.ativo) continue;
+
+      // Verificar se hoje é >= dia de vencimento
+      if (hojeDia < t.diaVencimento) continue;
+
+      // Verificar se já foi executada este mês
+      if (t.ultimaExecucao) {
+        const ultimaExecucaoMes = t.ultimaExecucao.substring(0, 7); // YYYY-MM
+        if (ultimaExecucaoMes === hojeMesAno) continue;
+      }
+
+      // Executar transferência
+      const timestamp = Date.now() + executadas;
+      const desc = t.descricao.trim()
+        ? `Transferência agendada: ${t.descricao.trim()}`
+        : `Transferência agendada (dia ${t.diaVencimento})`;
+
+      const saida: LancamentoFinanceiro = {
+        id: `transf-agend-saida-${timestamp}`,
+        tipo: 'DESPESA',
+        formaPagamento: t.direction === 'paraConta' ? 'DINHEIRO' : 'BANCO',
+        valor: t.valor,
+        descricao: `${desc} (saída)`,
+        data: hoje,
+        categoria: 'Transferência entre contas',
+        excluido: false,
+        criadoEm: '',
+        atualizadoEm: '',
+      };
+
+      const entrada: LancamentoFinanceiro = {
+        id: `transf-agend-entrada-${timestamp}`,
+        tipo: 'RECEITA',
+        formaPagamento: t.direction === 'paraConta' ? 'BANCO' : 'DINHEIRO',
+        valor: t.valor,
+        descricao: `${desc} (entrada)`,
+        data: hoje,
+        categoria: 'Transferência entre contas',
+        excluido: false,
+        criadoEm: '',
+        atualizadoEm: '',
+      };
+
+      const resSaida = await this.saveLancamento(saida);
+      if (!resSaida.success) {
+        console.error(`Erro ao executar transferência agendada ${t.id} (saída):`, resSaida.message);
+        continue;
+      }
+
+      const resEntrada = await this.saveLancamento(entrada);
+      if (!resEntrada.success) {
+        console.error(`Erro ao executar transferência agendada ${t.id} (entrada):`, resEntrada.message);
+        continue;
+      }
+
+      // Atualizar última execução
+      t.ultimaExecucao = hoje;
+      executadas++;
+    }
+
+    if (executadas > 0) {
+      this.saveLocalCache();
+    }
+
+    return executadas;
   }
 }
 
